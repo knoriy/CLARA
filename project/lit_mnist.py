@@ -1,12 +1,29 @@
 from argparse import ArgumentParser
 
 import torch
+from torch import nn
+
 import pytorch_lightning as pl
 from torch.nn import functional as F
 from torch.utils.data import DataLoader, random_split
 
 from torchvision.datasets.mnist import MNIST
 from torchvision import transforms
+
+
+class MyModule(nn.Module):
+	'''
+	Class_Discription
+	'''
+	def __init__(self) -> None:
+		super().__init__()
+		self.encoder = nn.Sequential(nn.Linear(28 * 28, 64), nn.ReLU(),nn.Linear(64, 3))
+		self.decoder = nn.Sequential(nn.Linear(3, 64),nn.ReLU(),nn.Linear(64, 28 * 28))
+		
+	def forward(self, x):
+		x = self.encoder(x)
+		x = self.decoder(x)
+		return x
 
 
 class LitClassifier(pl.LightningModule):
