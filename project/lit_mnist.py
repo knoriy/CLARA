@@ -2,39 +2,32 @@ from argparse import ArgumentParser
 
 import torch
 from torch import nn
-
-import pytorch_lightning as pl
 from torch.nn import functional as F
 from torch.utils.data import DataLoader, random_split
 
 from torchvision.datasets.mnist import MNIST
 from torchvision import transforms
 
+import pytorch_lightning as pl
+
+
 from typing import Optional
 
-
-class MyModule(nn.Module):
-	'''
-	Class_Discription
-	'''
-	def __init__(self, hidden_dim) -> None:
-		super().__init__()
-		self.l1 = torch.nn.Linear(28 * 28, hidden_dim)
-		self.l2 = torch.nn.Linear(hidden_dim, 10)
-		
-	def forward(self, x):
-		x = x.view(x.size(0), -1)
-		x = torch.relu(self.l1(x))
-		x = torch.relu(self.l2(x))
-		return x
-
+from clap import CLAP
 
 class LitClassifier(pl.LightningModule):
-	def __init__(self, hidden_dim=128, learning_rate=1e-3):
+	def __init__(	self, 
+					hidden_dim=128, 
+					learning_rate=1e-3, 
+					text_encoder_width=1024,
+					text_encoder_embedding=1024,
+					text_encoder_layers=1,
+					text_encoder_heads=4):
+
 		super().__init__()
 		self.save_hyperparameters()
 
-		self.model = MyModule(self.hparams.hidden_dim)
+		self.model = CLAP(self.hparams)
 
 	def forward(self, x):
 		return self.model(x)
@@ -63,8 +56,14 @@ class LitClassifier(pl.LightningModule):
 	@staticmethod
 	def add_model_specific_args(parent_parser):
 		parser = ArgumentParser(parents=[parent_parser], add_help=False)
-		parser.add_argument('--hidden_dim', type=int, default=128)
+		parser.add_argument('--hidden_dim', type=int, default=1280)
 		parser.add_argument('--learning_rate', type=float, default=0.0001)
+
+		parser.add_argument('--text_encoder_width', type=int, default=1024)
+		parser.add_argument('--text_encoder_embedding', type=int, default=1024)
+		parser.add_argument('--text_encoder_layers', type=int, default=1)
+		parser.add_argument('--text_encoder_heads', type=int, default=4)
+
 		return parser
 
 class MNISTDataModule(pl.LightningDataModule):
