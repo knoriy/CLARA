@@ -38,11 +38,9 @@ pip install -r requirements.txt
  Next, navigate to any file and run it.
 
  ```bash
-# module folder
-cd project
 
 # run module (example: mnist as your main contribution)   
-python lit_classifier_main.py    
+python project/lit_mnist.py --max_epochs 1 --accelerator cpu 
 ```
 
 ## Imports
