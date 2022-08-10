@@ -127,3 +127,4 @@ venv.bak/
 lightning_logs/
 MNIST
 .DS_Store
+DATA

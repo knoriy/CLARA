@@ -42,7 +42,7 @@ class LJSpeechDataset(Dataset):
 		self.preprocessed_path = preprocessed_path
 		self.text_cleaners = text_cleaners
 
-		self.df = pd.read_csv(os.path.join(preprocessed_path, filepath), header=None, sep=sep)[:16]
+		self.df = pd.read_csv(os.path.join(preprocessed_path, filepath), header=None, sep=sep)
 
 	def __len__(self):
 		return len(self.df)
@@ -79,15 +79,23 @@ class LJSpeechDataModule(pl.LightningDataModule):
 		self.batch_size = batch_size
 
 	def setup(self, stage:Optional[str] = None):
-		dataset = LJSpeechDataset()
-		self.train, self.val, self.test = random_split(dataset, [55000, 5500, 500])
-		
+		dataset = LJSpeechDataset(self.data_dir, 'processed.csv')
+		train, val, test = len(dataset)*0.7, len(dataset)*0.2, len(dataset)*0.1 
+		# self.train, self.val, self.test = random_split(dataset, [train, val, test])
+		self.train = self.val = self.test = dataset
 
 	def train_dataloader(self):
-		return DataLoader(self.train, batch_size=self.batch_size)
+		return DataLoader(self.train, batch_size=self.batch_size, collate_fn=self.train.collate_fn)
 
 	def val_dataloader(self):
-		return DataLoader(self.val, batch_size=self.batch_size)
+		return DataLoader(self.val, batch_size=self.batch_size, collate_fn=self.val.collate_fn)
 
 	def test_dataloader(self):
-		return DataLoader(self.test, batch_size=self.batch_size)
+		return DataLoader(self.test, batch_size=self.batch_size, collate_fn=self.test.collate_fn)
+
+
+if __name__ == '__main__':
+	ljspeech = LJSpeechDataModule('/home/knoriy/LJSpeech-1.1/')
+	ljspeech.setup()
+	
+	print(next(iter(ljspeech.train_dataloader())))
