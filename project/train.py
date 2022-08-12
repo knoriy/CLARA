@@ -11,7 +11,7 @@ from module import MyModule
 
 from datamodules import MNISTDataModule, LJSpeechDataModule
 
-class LitClassifier(pl.LightningModule):
+class PL_CLASP(pl.LightningModule):
 	def __init__(	self, 
 					hidden_dim=128, 
 					learning_rate=1e-3, 
