@@ -7,8 +7,6 @@ from torch.nn import functional as F
 import pytorch_lightning as pl
 
 from clap import CLAP
-from module import MyModule
-
 from datamodules import MNISTDataModule, LJSpeechDataModule
 
 class PL_CLASP(pl.LightningModule):
@@ -23,7 +21,7 @@ class PL_CLASP(pl.LightningModule):
 		super().__init__()
 		self.save_hyperparameters()
 
-		self.model = MyModule(self.hparams.hidden_dim)
+		self.model = CLAP(self.hparams.hidden_dim)
 
 	def forward(self, x):
 		return self.model(x)
@@ -73,7 +71,7 @@ def cli_main():
 	parser.add_argument('--num_workers', default=1, type=int)
 
 	parser = pl.Trainer.add_argparse_args(parser)
-	parser = LitClassifier.add_model_specific_args(parser)
+	parser = PL_CLASP.add_model_specific_args(parser)
 	args = parser.parse_args()
 
 	# ------------
@@ -85,7 +83,7 @@ def cli_main():
 	# ------------
 	# model
 	# ------------
-	model = LitClassifier(args.hidden_dim, args.learning_rate)
+	model = PL_CLASP(args.hidden_dim, args.learning_rate)
 
 	# ------------
 	# training
