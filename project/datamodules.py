@@ -1,15 +1,19 @@
+from itertools import count
 import os
 import torch
+import torchaudio
+
 from torch.utils.data import Dataset, DataLoader, random_split
 from torch.nn.utils.rnn import pad_sequence
-
-import pandas as pd
-import pytorch_lightning as pl
-
 from torchvision.datasets.mnist import MNIST
 from torchvision import transforms
 
+import pandas as pd
+import pytorch_lightning as pl
+import webdataset as wds
+
 from typing import Optional
+
 from text import text_to_sequence
 
 class MNISTDataModule(pl.LightningDataModule):
@@ -31,8 +35,6 @@ class MNISTDataModule(pl.LightningDataModule):
 
 	def test_dataloader(self):
 		return DataLoader(self.mnist_test, batch_size=self.batch_size)
-
-
 
 class LJSpeechDataset(Dataset):
 	'''
@@ -71,11 +73,10 @@ class LJSpeechDataset(Dataset):
 
 		return text, text_lens, mels, mel_lens
 
-
 class LJSpeechDataModule(pl.LightningDataModule):
 	def __init__(self, data_dir: str = "", batch_size: int = 32):
 		super().__init__()
-		self.data_dir = data_dir
+		self.data_dir = data_dir # 'pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/audioset/{0..10}.tar -'
 		self.batch_size = batch_size
 
 	def setup(self, stage:Optional[str] = None):
@@ -93,9 +94,49 @@ class LJSpeechDataModule(pl.LightningDataModule):
 	def test_dataloader(self):
 		return DataLoader(self.test, batch_size=self.batch_size, collate_fn=self.test.collate_fn)
 
+class WebdatasetDataModule(pl.LightningDataModule):
+	def __init__(self, data_dir:str = "", batch_size:int = 32):
+		super().__init__()
+		self.data_dir = data_dir
+		self.batch_size = batch_size
+
+	def setup(self, stage:Optional[str] = None):
+		self.train =  wds.WebDataset(self.data_dir).decode(wds.torch_audio)
+		self.val =  wds.WebDataset('pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/LJSpeech/valid/{0..4}.tar -').decode(wds.torch_audio)
+		self.test =  wds.WebDataset('pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/LJSpeech/valid/{0..1}.tar -').decode(wds.torch_audio)
+
+	def train_dataloader(self):
+		return DataLoader(self.train, batch_size=self.batch_size, collate_fn=self.collate_fn)
+
+	def val_dataloader(self):
+		return DataLoader(self.val, batch_size=self.batch_size, collate_fn=self.collate_fn)
+
+	def test_dataloader(self):
+		return DataLoader(self.test, batch_size=self.batch_size, collate_fn=self.collate_fn)
+
+	def collate_fn(self, data):
+		mel_spec_fn = torchaudio.transforms.MelSpectrogram(48000, n_mels = 80)
+
+		# split values into own varable
+		mels = [mel_spec_fn(i['flac'][0][0]).T for i in data]
+		texts = [torch.tensor(text_to_sequence(i['json']['text'][0], ["english_cleaners"])) for i in data]
+
+		# get original length of elements
+		text_lens = [text.shape[0] for text in texts]
+		mel_lens = [mel.shape[1] for mel in mels]
+
+		# zero pad
+		text = pad_sequence(texts).T
+		mels = pad_sequence(mels).permute(1,2,0)
+
+		return mels, text
 
 if __name__ == '__main__':
-	ljspeech = LJSpeechDataModule('/home/knoriy/LJSpeech-1.1/')
-	ljspeech.setup()
+	dataset = WebdatasetDataModule('/home/knoriy/phd/CLASP/test_dataset/9.tar')
+	dataset.setup()
+	_count = 0
+	for i in dataset.train_dataloader():
+		_count +=1
+		print(_count)
+		pass
 	
-	print(next(iter(ljspeech.train_dataloader())))
