@@ -11,20 +11,20 @@ on:
       - master
 
 jobs:
-  # pytest:
+  pytest:
 
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       os: [ubuntu-20.04, macOS-10.15, windows-2019]
-  #       python-version: [3.7]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04, macOS-10.15, windows-2019]
+        python-version: [3.7]
 
-  #   # Timeout: https://stackoverflow.com/a/59076067/4521646
-  #   timeout-minutes: 35
+    # Timeout: https://stackoverflow.com/a/59076067/4521646
+    timeout-minutes: 35
 
-  #   steps:
-  #   - uses: actions/checkout@v2
+    steps:
+    - uses: actions/checkout@v2
   #   - name: Set up Python ${{ matrix.python-version }}
   #     uses: actions/setup-python@v2
   #     with:
