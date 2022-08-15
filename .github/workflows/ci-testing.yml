@@ -25,10 +25,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-  #   - name: Set up Python ${{ matrix.python-version }}
-  #     uses: actions/setup-python@v2
-  #     with:
-  #       python-version: ${{ matrix.python-version }}
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
 
   #   # # Github Actions: Run step on specific OS: https://stackoverflow.com/a/57948488/4521646
   #   # - name: Setup macOS
