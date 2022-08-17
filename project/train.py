@@ -7,7 +7,7 @@ from torch.nn import functional as F
 import pytorch_lightning as pl
 
 from clap import CLAP
-from datamodules import MNISTDataModule, LJSpeechDataModule
+from datamodules import WebdatasetDataModule
 
 class PL_CLASP(pl.LightningModule):
 	def __init__(	self, 
@@ -50,7 +50,7 @@ class PL_CLASP(pl.LightningModule):
 	@staticmethod
 	def add_model_specific_args(parent_parser):
 		parser = ArgumentParser(parents=[parent_parser], add_help=False)
-		parser.add_argument('--hidden_dim', type=int, default=1280)
+		parser.add_argument('--hidden_dim', type=int, default=128)
 		parser.add_argument('--learning_rate', type=float, default=0.0001)
 
 		parser.add_argument('--text_encoder_width', type=int, default=1024)

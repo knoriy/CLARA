@@ -103,7 +103,7 @@ class WebdatasetDataModule(pl.LightningDataModule):
 	def setup(self, stage:Optional[str] = None):
 		self.train =  wds.WebDataset(self.data_dir).decode(wds.torch_audio)
 		self.val =  wds.WebDataset('pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/LJSpeech/valid/{0..4}.tar -').decode(wds.torch_audio)
-		self.test =  wds.WebDataset('pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/LJSpeech/valid/{0..1}.tar -').decode(wds.torch_audio)
+		self.test =  wds.WebDataset('pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/LJSpeech/test/{0..1}.tar -').decode(wds.torch_audio)
 
 	def train_dataloader(self):
 		return DataLoader(self.train, batch_size=self.batch_size, collate_fn=self.collate_fn)
@@ -118,25 +118,33 @@ class WebdatasetDataModule(pl.LightningDataModule):
 		mel_spec_fn = torchaudio.transforms.MelSpectrogram(48000, n_mels = 80)
 
 		# split values into own varable
-		mels = [mel_spec_fn(i['flac'][0][0]).T for i in data]
-		texts = [torch.tensor(text_to_sequence(i['json']['text'][0], ["english_cleaners"])) for i in data]
+		mels = []
+		texts = []
+		for i in data:
+			try:
+				mels.append(mel_spec_fn(i['flac'][0][0]).T)
+				texts.append(torch.tensor(text_to_sequence(i['json']['text'][0], ["english_cleaners"])))
+			except:
+				pass
+
 
 		# get original length of elements
-		text_lens = [text.shape[0] for text in texts]
-		mel_lens = [mel.shape[1] for mel in mels]
+		# text_lens = [text.shape[0] for text in texts]
+		# mel_lens = [mel.shape[1] for mel in mels]
 
 		# zero pad
-		text = pad_sequence(texts).T
+		texts = pad_sequence(texts).T
 		mels = pad_sequence(mels).permute(1,2,0)
 
-		return mels, text
+		return mels, texts, data
 
 if __name__ == '__main__':
-	dataset = WebdatasetDataModule('/home/knoriy/phd/CLASP/test_dataset/9.tar')
+	dataset = WebdatasetDataModule('pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/LJSpeech/train/0.tar -', 512)
+	# dataset = WebdatasetDataModule('/home/knoriy/0_tar.tar', 1)
 	dataset.setup()
 	_count = 0
 	for i in dataset.train_dataloader():
+		print(_count, i[2][0]['json']['filename'])
 		_count +=1
-		print(_count)
 		pass
 	
