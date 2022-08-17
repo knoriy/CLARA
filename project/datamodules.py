@@ -139,12 +139,11 @@ class WebdatasetDataModule(pl.LightningDataModule):
 		return mels, texts, data
 
 if __name__ == '__main__':
-	dataset = WebdatasetDataModule('pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/LJSpeech/train/0.tar -', 512)
-	# dataset = WebdatasetDataModule('/home/knoriy/0_tar.tar', 1)
+	dataset = WebdatasetDataModule('pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/freesound/test/{0..100}.tar -', 512)
 	dataset.setup()
 	_count = 0
 	for i in dataset.train_dataloader():
-		print(_count, i[2][0]['json']['filename'])
+		print(_count, i[2][0]['json']['text'])
 		_count +=1
 		pass
 	
