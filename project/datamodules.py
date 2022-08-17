@@ -1,4 +1,5 @@
 from itertools import count
+from operator import truediv
 import os
 import torch
 import torchaudio
@@ -101,7 +102,7 @@ class WebdatasetDataModule(pl.LightningDataModule):
 		self.batch_size = batch_size
 
 	def setup(self, stage:Optional[str] = None):
-		self.train =  wds.WebDataset(self.data_dir).decode(wds.torch_audio)
+		self.train =  wds.WebDataset(self.data_dir, verbose=True).decode(wds.torch_audio)
 		self.val =  wds.WebDataset('pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/LJSpeech/valid/{0..4}.tar -').decode(wds.torch_audio)
 		self.test =  wds.WebDataset('pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/LJSpeech/test/{0..1}.tar -').decode(wds.torch_audio)
 
@@ -139,11 +140,17 @@ class WebdatasetDataModule(pl.LightningDataModule):
 		return mels, texts, data
 
 if __name__ == '__main__':
-	dataset = WebdatasetDataModule('pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/freesound/test/{0..100}.tar -', 512)
+	dataset = WebdatasetDataModule('pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/Clotho/train/{0..2}.tar -', 512)
+	# dataset = WebdatasetDataModule('/home/knoriy/84.tar', 1)
+
 	dataset.setup()
 	_count = 0
 	for i in dataset.train_dataloader():
-		print(_count, i[2][0]['json']['text'])
+		# print(_count, i[2][0], '\n'*5)
 		_count +=1
 		pass
+
+	# for i in dataset.train:
+	# 	print(i)
+	# 	pass
 	
