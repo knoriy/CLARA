@@ -96,30 +96,57 @@ class LJSpeechDataModule(pl.LightningDataModule):
 		return DataLoader(self.test, batch_size=self.batch_size, collate_fn=self.test.collate_fn)
 
 class WebdatasetDataModule(pl.LightningDataModule):
-	def __init__(self, train_data_dir:str, test_data_dir:str, valid_data_dir:str, batch_size:int = 32):
+	def __init__(self, train_data_dir:str, test_data_dir:str, valid_data_dir:str, batch_size:int = 32, num_workers:int=0):
 		super().__init__()
 		self.train_data_dir = train_data_dir
 		self.test_data_dir = test_data_dir
 		self.valid_data_dir = valid_data_dir
 
 		self.batch_size = batch_size
+		self.num_workers = num_workers
 
 	def setup(self, stage:Optional[str] = None):
-		self.train =  wds.WebDataset(self.train_data_dir, verbose=True).decode(wds.torch_audio)
+		self.train =  wds.WebDataset(self.train_data_dir).decode(wds.torch_audio)
 		self.test =  wds.WebDataset(self.test_data_dir).decode(wds.torch_audio)
 		self.valid =  wds.WebDataset(self.valid_data_dir).decode(wds.torch_audio)
 
+		# self.train = wds.DataPipeline(
+		# 	wds.SimpleShardList(self.train_data_dir),
+		# 	wds.split_by_node,
+		# 	wds.split_by_worker,
+		# 	wds.tarfile_samples,
+		# 	# wds.shuffle(100),
+		# 	wds.decode(wds.torch_audio),
+		# )
+		# self.test = wds.DataPipeline(
+		# 	wds.SimpleShardList(self.test_data_dir),
+		# 	wds.split_by_node,
+		# 	wds.split_by_worker,
+		# 	wds.tarfile_samples,
+		# 	# wds.shuffle(100),
+		# 	wds.decode(wds.torch_audio),
+		# )
+
+		# self.valid = wds.DataPipeline(
+		# 	wds.SimpleShardList(self.valid_data_dir),
+		# 	wds.split_by_node,
+		# 	wds.split_by_worker,
+		# 	wds.tarfile_samples,
+		# 	# wds.shuffle(100),
+		# 	wds.decode(wds.torch_audio),
+		# )
+
 	def train_dataloader(self):
-		return DataLoader(self.train, batch_size=self.batch_size, collate_fn=self.collate_fn)
+		return DataLoader(self.train, batch_size=self.batch_size, collate_fn=self.collate_fn, num_workers=self.num_workers)
 
 	def val_dataloader(self):
-		return DataLoader(self.valid, batch_size=self.batch_size, collate_fn=self.collate_fn)
+		return DataLoader(self.valid, batch_size=self.batch_size, collate_fn=self.collate_fn, num_workers=self.num_workers)
 
 	def test_dataloader(self):
-		return DataLoader(self.test, batch_size=self.batch_size, collate_fn=self.collate_fn)
+		return DataLoader(self.test, batch_size=self.batch_size, collate_fn=self.collate_fn, num_workers=self.num_workers)
 
 	def collate_fn(self, data):
-		mel_spec_fn = torchaudio.transforms.MelSpectrogram(48000, n_mels = 80)
+		mel_spec_fn = torchaudio.transforms.MelSpectrogram(48000, n_mels=80)
 
 		# split values into own varable
 		texts = []
@@ -145,13 +172,14 @@ if __name__ == '__main__':
 	dataset = WebdatasetDataModule(	train_data_dir = 'pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/audiocaps/train/{0..89}.tar -', 
 									test_data_dir ='pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/audiocaps/test/{0..8}.tar -', 
 									valid_data_dir = 'pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/audiocaps/valid/{0..4}.tar -', 
-									batch_size = 512)
+									batch_size = 1)
 
 	dataset.setup()
 	_count = 0
 	for i in dataset.train_dataloader():
 		print(_count)
-		for x in i:
+		for x in i[:1]:
 			print(x.shape)
 		_count +=1
+		print(i[2])
 		# break

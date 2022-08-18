@@ -5,8 +5,10 @@ from torch import nn
 from torch.nn import functional as F
 
 import pytorch_lightning as pl
+from pytorch_lightning.callbacks import ModelCheckpoint
 
 from clap import CLAP
+from loss import CLAPLoss
 from datamodules import WebdatasetDataModule
 
 class PL_CLASP(pl.LightningModule):
@@ -22,28 +24,27 @@ class PL_CLASP(pl.LightningModule):
 		self.save_hyperparameters()
 
 		self.model = CLAP(self.hparams)
+		self.loss_fn = CLAPLoss(cache_labels=True)
 
 	def forward(self, batch):
 		texts, mels = batch
 		return self.model(texts, mels)
 
 	def training_step(self, batch, batch_idx):
-		texts, mels = batch
 		text_features, audio_features, tempeture = self(batch)
-		loss = F.cross_entropy(audio_features, mels)
-		return loss
+		loss = self.loss_fn(text_features, audio_features, tempeture)
+		self.log('train_loss', loss, sync_dist=True)
+		return {"loss": loss}
 
 	def validation_step(self, batch, batch_idx):
-		texts, mels = batch
-		text_features, audio_features, tempeture = self(texts, mels)
-		loss = F.cross_entropy(audio_features, mels)
-		self.log('valid_loss', loss)
+		text_features, audio_features, tempeture = self(batch)
+		loss = self.loss_fn(text_features, audio_features, tempeture)
+		self.log('valid_loss', loss, sync_dist=True)
 
 	def test_step(self, batch, batch_idx):
-		texts, mels = batch
-		text_features, audio_features, tempeture = self(texts, mels)
-		loss = F.cross_entropy(audio_features, mels)
-		self.log('test_loss', loss)
+		text_features, audio_features, tempeture = self(batch)
+		loss = self.loss_fn(text_features, audio_features, tempeture)
+		self.log('test_loss', loss, sync_dist=True)
 
 	def configure_optimizers(self):
 		return torch.optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
@@ -68,8 +69,8 @@ def cli_main():
 	# args
 	# ------------
 	parser = ArgumentParser()
-	parser.add_argument('--batch_size', default=32, type=int)
-	parser.add_argument('--num_workers', default=1, type=int)
+	parser.add_argument('--batch_size', default=64, type=int)
+	parser.add_argument('--num_workers', default=6, type=int)
 
 	parser = pl.Trainer.add_argparse_args(parser)
 	parser = PL_CLASP.add_model_specific_args(parser)
@@ -78,10 +79,11 @@ def cli_main():
 	# ------------
 	# data
 	# ------------
-	dataset = WebdatasetDataModule(	train_data_dir = 'pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/audiocaps/train/{0..0}.tar -',  #89
-									test_data_dir ='pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/audiocaps/test/{0..8}.tar -', 
-									valid_data_dir = 'pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/audiocaps/valid/{0..4}.tar -', 
-									batch_size = args.batch_size)
+	dataset = WebdatasetDataModule(	train_data_dir = 'pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/audiocaps/train/{0..3}.tar -', #89
+									test_data_dir ='pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/audiocaps/test/{0..3}.tar -', #8
+									valid_data_dir = 'pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/audiocaps/valid/{0..3}.tar -', #4
+									batch_size = args.batch_size,
+									num_workers = args.num_workers)
 	# ------------
 	# model
 	# ------------
@@ -90,13 +92,15 @@ def cli_main():
 	# ------------
 	# training
 	# ------------
-	trainer = pl.Trainer.from_argparse_args(args)
+	checkpoint_callback = ModelCheckpoint(save_top_k=1, monitor="valid_loss")
+	trainer = pl.Trainer.from_argparse_args(args, callbacks=[checkpoint_callback])
 	trainer.fit(model, datamodule=dataset)
+	print(checkpoint_callback.best_model_path)
 
 	# ------------
 	# testing
 	# ------------
-	trainer.test(datamodule=dataset)
+	trainer.test(ckpt_path='best', datamodule=dataset)
 
 
 if __name__ == '__main__':
