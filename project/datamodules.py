@@ -15,7 +15,7 @@ import webdataset as wds
 
 from typing import Optional
 
-from text import text_to_sequence
+from text import text_to_sequence, sequence_to_text
 
 class MNISTDataModule(pl.LightningDataModule):
 	def __init__(self, data_dir: str = "", batch_size: int = 32):
@@ -96,21 +96,24 @@ class LJSpeechDataModule(pl.LightningDataModule):
 		return DataLoader(self.test, batch_size=self.batch_size, collate_fn=self.test.collate_fn)
 
 class WebdatasetDataModule(pl.LightningDataModule):
-	def __init__(self, data_dir:str = "", batch_size:int = 32):
+	def __init__(self, train_data_dir:str, test_data_dir:str, valid_data_dir:str, batch_size:int = 32):
 		super().__init__()
-		self.data_dir = data_dir
+		self.train_data_dir = train_data_dir
+		self.test_data_dir = test_data_dir
+		self.valid_data_dir = valid_data_dir
+
 		self.batch_size = batch_size
 
 	def setup(self, stage:Optional[str] = None):
-		self.train =  wds.WebDataset(self.data_dir, verbose=True).decode(wds.torch_audio)
-		self.val =  wds.WebDataset('pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/LJSpeech/valid/{0..4}.tar -').decode(wds.torch_audio)
-		self.test =  wds.WebDataset('pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/LJSpeech/test/{0..1}.tar -').decode(wds.torch_audio)
+		self.train =  wds.WebDataset(self.train_data_dir, verbose=True).decode(wds.torch_audio)
+		self.test =  wds.WebDataset(self.test_data_dir).decode(wds.torch_audio)
+		self.valid =  wds.WebDataset(self.valid_data_dir).decode(wds.torch_audio)
 
 	def train_dataloader(self):
 		return DataLoader(self.train, batch_size=self.batch_size, collate_fn=self.collate_fn)
 
 	def val_dataloader(self):
-		return DataLoader(self.val, batch_size=self.batch_size, collate_fn=self.collate_fn)
+		return DataLoader(self.valid, batch_size=self.batch_size, collate_fn=self.collate_fn)
 
 	def test_dataloader(self):
 		return DataLoader(self.test, batch_size=self.batch_size, collate_fn=self.collate_fn)
@@ -119,15 +122,14 @@ class WebdatasetDataModule(pl.LightningDataModule):
 		mel_spec_fn = torchaudio.transforms.MelSpectrogram(48000, n_mels = 80)
 
 		# split values into own varable
-		mels = []
 		texts = []
+		mels = []
 		for i in data:
 			try:
 				mels.append(mel_spec_fn(i['flac'][0][0]).T)
-				texts.append(torch.tensor(text_to_sequence(i['json']['text'][0], ["english_cleaners"])))
+				texts.append(torch.tensor(text_to_sequence(i['json']['text'], ["english_cleaners"])))
 			except:
 				pass
-
 
 		# get original length of elements
 		# text_lens = [text.shape[0] for text in texts]
@@ -135,22 +137,21 @@ class WebdatasetDataModule(pl.LightningDataModule):
 
 		# zero pad
 		texts = pad_sequence(texts).T
-		mels = pad_sequence(mels).permute(1,2,0)
+		mels = pad_sequence(mels).permute(1,2,0).unsqueeze(1)
 
-		return mels, texts, data
+		return texts, mels
 
 if __name__ == '__main__':
-	dataset = WebdatasetDataModule('pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/Clotho/train/{0..2}.tar -', 512)
-	# dataset = WebdatasetDataModule('/home/knoriy/84.tar', 1)
+	dataset = WebdatasetDataModule(	train_data_dir = 'pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/audiocaps/train/{0..89}.tar -', 
+									test_data_dir ='pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/audiocaps/test/{0..8}.tar -', 
+									valid_data_dir = 'pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/audiocaps/valid/{0..4}.tar -', 
+									batch_size = 512)
 
 	dataset.setup()
 	_count = 0
 	for i in dataset.train_dataloader():
-		# print(_count, i[2][0], '\n'*5)
+		print(_count)
+		for x in i:
+			print(x.shape)
 		_count +=1
-		pass
-
-	# for i in dataset.train:
-	# 	print(i)
-	# 	pass
-	
+		# break

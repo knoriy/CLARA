@@ -21,27 +21,28 @@ class PL_CLASP(pl.LightningModule):
 		super().__init__()
 		self.save_hyperparameters()
 
-		self.model = CLAP(self.hparams.hidden_dim)
+		self.model = CLAP(self.hparams)
 
-	def forward(self, x):
-		return self.model(x)
+	def forward(self, batch):
+		texts, mels = batch
+		return self.model(texts, mels)
 
 	def training_step(self, batch, batch_idx):
-		x, y = batch
-		y_hat = self(x)
-		loss = F.cross_entropy(y_hat, y)
+		texts, mels = batch
+		text_features, audio_features, tempeture = self(batch)
+		loss = F.cross_entropy(audio_features, mels)
 		return loss
 
 	def validation_step(self, batch, batch_idx):
-		x, y = batch
-		y_hat = self(x)
-		loss = F.cross_entropy(y_hat, y)
+		texts, mels = batch
+		text_features, audio_features, tempeture = self(texts, mels)
+		loss = F.cross_entropy(audio_features, mels)
 		self.log('valid_loss', loss)
 
 	def test_step(self, batch, batch_idx):
-		x, y = batch
-		y_hat = self(x)
-		loss = F.cross_entropy(y_hat, y)
+		texts, mels = batch
+		text_features, audio_features, tempeture = self(texts, mels)
+		loss = F.cross_entropy(audio_features, mels)
 		self.log('test_loss', loss)
 
 	def configure_optimizers(self):
@@ -77,9 +78,10 @@ def cli_main():
 	# ------------
 	# data
 	# ------------
-	dataset = MNISTDataModule('')
-	dataset = LJSpeechDataModule()
-
+	dataset = WebdatasetDataModule(	train_data_dir = 'pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/audiocaps/train/{0..0}.tar -',  #89
+									test_data_dir ='pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/audiocaps/test/{0..8}.tar -', 
+									valid_data_dir = 'pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/audiocaps/valid/{0..4}.tar -', 
+									batch_size = args.batch_size)
 	# ------------
 	# model
 	# ------------
