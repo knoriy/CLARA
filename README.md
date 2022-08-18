@@ -41,6 +41,8 @@ pip install -r requirements.txt
 
 # run module (example: mnist as your main contribution)   
 python project/lit_mnist.py --max_epochs 1 --accelerator cpu 
+# or for distributed
+python train.py --max_epochs 1 --accelerator gpu --strategy ddp --devices 2
 ```
 
 ## Imports
