@@ -10,6 +10,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping, Learning
 from clap import CLAP
 from loss import CLAPLoss
 from datamodules import WebdatasetDataModule
+from utils.get_wds_urls import get_tar_path_s3
 
 class PL_CLASP(pl.LightningModule):
 	def __init__(	self, 
@@ -79,9 +80,17 @@ def cli_main():
 	# ------------
 	# data
 	# ------------
-	dataset = WebdatasetDataModule(	train_data_dir = 'pipe:aws s3 --cli-connect-timeout 0 --cli-read-timeout 0 cp s3://s-laion-audio/webdataset_tar/audiocaps/train/{0..1}.tar -', #89
-									test_data_dir ='pipe:aws s3 --cli-connect-timeout 0 --cli-read-timeout 0 cp s3://s-laion-audio/webdataset_tar/audiocaps/test/{0..1}.tar -', #8
-									valid_data_dir = 'pipe:aws s3 --cli-connect-timeout 0 --cli-read-timeout 0 cp s3://s-laion-audio/webdataset_tar/audiocaps/valid/{0..1}.tar -', #4
+	urls = get_tar_path_s3(
+		's-laion-audio/webdataset_tar/', 
+		['train', 'test', 'valid'],
+		['audiocaps'], 
+		cache_path='./url_cache.json',
+		recache=True,
+		)
+
+	dataset = WebdatasetDataModule(	train_data_dir = urls['train'],
+									test_data_dir = urls['test'],
+									valid_data_dir = urls['valid'],
 									batch_size = args.batch_size,
 									num_workers = args.num_workers)
 	# ------------
