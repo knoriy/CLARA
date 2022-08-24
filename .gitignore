@@ -130,3 +130,4 @@ MNIST
 DATA
 
 *.out
+test.ipynb
