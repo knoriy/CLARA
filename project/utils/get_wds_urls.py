@@ -23,7 +23,7 @@ def get_tar_path_from_dataset_name(
 			sizes = json.load(open(sizefilepath_, "r"))
 			for k in sizes.keys():
 				if islocal:
-					if dataset_path==None:
+					if dataset_path==None or os.path.exists(dataset_path):
 						raise ValueError(f'dataset_path must be provided if is_local = True')
 					tmp.append(f"{dataset_path}/{n}/{s}/{k}")
 				else:
@@ -40,7 +40,8 @@ if __name__ == '__main__':
 	urls = get_tar_path_from_dataset_name(
 		['LJSpeech'], 
 		['train', 'test', 'valid'],
-		False, 
+		True,
+		'some_path' 
 		)
 	print(urls)
 
