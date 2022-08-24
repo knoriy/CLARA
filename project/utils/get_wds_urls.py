@@ -23,8 +23,10 @@ def get_tar_path_from_dataset_name(
 			sizes = json.load(open(sizefilepath_, "r"))
 			for k in sizes.keys():
 				if islocal:
-					if dataset_path==None or os.path.exists(dataset_path):
+					if dataset_path==None:
 						raise ValueError(f'dataset_path must be provided if is_local = True')
+					if not os.path.exists(dataset_path):
+						raise ValueError(f'{dataset_path} Does not exist')
 					tmp.append(f"{dataset_path}/{n}/{s}/{k}")
 				else:
 					tmp.append(
