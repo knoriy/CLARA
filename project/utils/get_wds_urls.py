@@ -37,14 +37,46 @@ def get_tar_path_from_dataset_name(
 			output.append(tmp)
 	return sum(output, [])
 
+def get_tar_path_s3(base_s3_path:str, 
+		dataset_names:list[str]=None, 
+		train_valid_test:list[str]=['train'], 
+		cache_path:str='', 
+		recache:bool=False,
+	):
+	if os.path.isfile(cache_path) and not recache:
+		with open(cache_path) as f:
+			print("Loading Cache")
+			return json.load(f)
+	
+	if dataset_names:
+		cmds = [f'aws s3 ls s3://{os.path.join(base_s3_path, name, "")} --recursive | grep /.*.tar' for name in dataset_names]
+	else:
+		cmds = [f'aws s3 ls s3://{os.path.join("s-laion-audio/webdataset_tar/", "")} --recursive | grep /.*.tar']
+
+	urls = [os.popen(cmd).read() for cmd in cmds]
+	final_urls = [i.split(' ')[-1] for url in urls for i in url.split('\n')]
+	final_urls = [f'pipe:aws s3 --cli-connect-timeout 0 cp s3://{os.path.join(base_s3_path, i)}' for i in final_urls]
+	
+	tmp= {}
+	for state in train_valid_test:
+		tmp[state] = [url for url in final_urls if state in url] 
+
+	if cache_path:
+		with open(cache_path, 'w') as f:
+			json.dump(tmp, f)
+
+	return tmp
+
 
 if __name__ == '__main__':
-	urls = get_tar_path_from_dataset_name(
+	urls = get_tar_path_s3(
+		's-laion-audio/webdataset_tar/', 
 		['LJSpeech'], 
-		['train', 'test', 'valid'],
-		True,
-		'some_path' 
+		cache_path='./url_cache.json',
+		recache=True,
 		)
+
+	
 	print(urls)
 
 	# import boto3 
