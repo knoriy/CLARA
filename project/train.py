@@ -5,7 +5,7 @@ from torch import nn
 from torch.nn import functional as F
 
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping, LearningRateMonitor
 
 from clap import CLAP
 from loss import CLAPLoss
@@ -93,7 +93,13 @@ def cli_main():
 	# training
 	# ------------
 	checkpoint_callback = ModelCheckpoint(save_top_k=1, monitor="valid_loss")
-	trainer = pl.Trainer.from_argparse_args(args, callbacks=[checkpoint_callback])
+	early_stopping_callback = EarlyStopping(monitor="valid_loss")
+	lr_monitor = LearningRateMonitor(logging_interval='step')
+
+	trainer = pl.Trainer.from_argparse_args(args, 
+		callbacks=[checkpoint_callback, early_stopping_callback, lr_monitor],
+	)
+	
 	trainer.fit(model, datamodule=dataset)
 	print(checkpoint_callback.best_model_path)
 
