@@ -7,8 +7,8 @@ def get_tar_path_from_dataset_name(
 	dataset_names:list[str],
 	dataset_types:list[str],
 	islocal:bool,
-	dataset_path=None,
-	proportion=1,
+	dataset_path:str=None,
+	proportion:int=1,
 ):
 	"""
 	Get tar path from dataset name and type
@@ -23,12 +23,13 @@ def get_tar_path_from_dataset_name(
 			sizes = json.load(open(sizefilepath_, "r"))
 			for k in sizes.keys():
 				if islocal:
+					if dataset_path==None:
+						raise ValueError(f'dataset_path must be provided if is_local = True')
 					tmp.append(f"{dataset_path}/{n}/{s}/{k}")
 				else:
 					tmp.append(
 						f"pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/{n}/{s}/{k} -"
 					)
-				# TODO: add dataset_path to remote dataset in the future.
 			if proportion!=1:
 				tmp = random.sample(tmp, int(proportion * len(tmp)))
 			output.append(tmp)
