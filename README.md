@@ -45,6 +45,12 @@ python project/lit_mnist.py --max_epochs 1 --accelerator cpu
 python train.py --max_epochs 1 --accelerator gpu --strategy ddp --devices 2
 ```
 
+## Tensorboard
+
+```bash
+tensorboard dev upload --logdir lightning_logs
+```
+
 ## Imports
 
 This project is setup as a package which means you can now easily import any file into any other file like so:
