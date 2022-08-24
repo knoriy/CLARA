@@ -96,65 +96,66 @@ class LJSpeechDataModule(pl.LightningDataModule):
 		return DataLoader(self.test, batch_size=self.batch_size, collate_fn=self.test.collate_fn)
 
 class WebdatasetDataModule(pl.LightningDataModule):
-	def __init__(self, train_data_dir:str, test_data_dir:str, valid_data_dir:str, batch_size:int = 32, num_workers:int=0):
+	def __init__(self, train_data_dir:str, test_data_dir:str, valid_data_dir:str, epochs:int=1, batch_size:int = 32, num_workers:int=0):
 		super().__init__()
 		self.train_data_dir = train_data_dir
 		self.test_data_dir = test_data_dir
 		self.valid_data_dir = valid_data_dir
 
+		self.epochs = epochs
 		self.batch_size = batch_size
 		self.num_workers = num_workers
 
+		self.mel_spec_fn = torchaudio.transforms.MelSpectrogram(sample_rate=48000, n_mels=80, n_fft=1024, f_min=0, f_max=8000, win_length=1024, hop_length=256)
+
 	def setup(self, stage:Optional[str] = None):
-		self.train =  wds.WebDataset(self.train_data_dir).decode(wds.torch_audio)
-		self.test =  wds.WebDataset(self.test_data_dir).decode(wds.torch_audio)
-		self.valid =  wds.WebDataset(self.valid_data_dir).decode(wds.torch_audio)
+		# self.train =  wds.WebDataset(self.train_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").with_epoch(self.epochs)
+		# self.test =  wds.WebDataset(self.test_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").with_epoch(self.epochs)
+		# self.valid =  wds.WebDataset(self.valid_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").with_epoch(self.epochs)
 
-		# self.train = wds.DataPipeline(
-		# 	wds.SimpleShardList(self.train_data_dir),
-		# 	wds.split_by_node,
-		# 	wds.split_by_worker,
-		# 	wds.tarfile_samples,
-		# 	# wds.shuffle(100),
-		# 	wds.decode(wds.torch_audio),
-		# )
-		# self.test = wds.DataPipeline(
-		# 	wds.SimpleShardList(self.test_data_dir),
-		# 	wds.split_by_node,
-		# 	wds.split_by_worker,
-		# 	wds.tarfile_samples,
-		# 	# wds.shuffle(100),
-		# 	wds.decode(wds.torch_audio),
-		# )
-
-		# self.valid = wds.DataPipeline(
-		# 	wds.SimpleShardList(self.valid_data_dir),
-		# 	wds.split_by_node,
-		# 	wds.split_by_worker,
-		# 	wds.tarfile_samples,
-		# 	# wds.shuffle(100),
-		# 	wds.decode(wds.torch_audio),
-		# )
+		self.train = wds.DataPipeline(
+			wds.SimpleShardList(self.train_data_dir),
+			wds.split_by_worker,
+			wds.tarfile_samples,
+			wds.shuffle(100),
+			wds.decode(wds.torch_audio),
+			wds.to_tuple("flac", "json"),
+		)
+		self.test = wds.DataPipeline(
+			wds.SimpleShardList(self.test_data_dir),
+			wds.split_by_worker,
+			wds.tarfile_samples,
+			wds.shuffle(100),
+			wds.decode(wds.torch_audio),
+			wds.to_tuple("flac", "json"),
+		)
+		self.valid = wds.DataPipeline(
+			wds.SimpleShardList(self.valid_data_dir),
+			wds.split_by_worker,
+			wds.tarfile_samples,
+			wds.shuffle(100),
+			wds.decode(wds.torch_audio),
+			wds.to_tuple("flac", "json"),
+		)
 
 	def train_dataloader(self):
-		return DataLoader(self.train, batch_size=self.batch_size, collate_fn=self.collate_fn, num_workers=self.num_workers)
+		return wds.WebLoader(self.train, num_workers=self.num_workers, batch_size=self.batch_size, collate_fn=self.collate_fn)
 
 	def val_dataloader(self):
-		return DataLoader(self.valid, batch_size=self.batch_size, collate_fn=self.collate_fn, num_workers=self.num_workers)
+		return wds.WebLoader(self.valid, num_workers=self.num_workers, batch_size=self.batch_size, collate_fn=self.collate_fn)
 
 	def test_dataloader(self):
-		return DataLoader(self.test, batch_size=self.batch_size, collate_fn=self.collate_fn, num_workers=self.num_workers)
+		return wds.WebLoader(self.test, num_workers=self.num_workers, batch_size=self.batch_size, collate_fn=self.collate_fn)
 
 	def collate_fn(self, data):
-		mel_spec_fn = torchaudio.transforms.MelSpectrogram(48000, n_mels=80)
 
 		# split values into own varable
 		texts = []
 		mels = []
 		for i in data:
 			try:
-				mels.append(mel_spec_fn(i['flac'][0][0]).T)
-				texts.append(torch.tensor(text_to_sequence(i['json']['text'], ["english_cleaners"])))
+				mels.append(self.mel_spec_fn(i[0][0][0]).T)
+				texts.append(torch.tensor(text_to_sequence(i[1]['text'], ["english_cleaners"])))
 			except:
 				pass
 
@@ -167,19 +168,25 @@ class WebdatasetDataModule(pl.LightningDataModule):
 		mels = pad_sequence(mels).permute(1,2,0).unsqueeze(1)
 
 		return texts, mels
+		# return data
 
 if __name__ == '__main__':
+	import matplotlib.pyplot as plt
 	dataset = WebdatasetDataModule(	train_data_dir = 'pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/audiocaps/train/{0..89}.tar -', 
 									test_data_dir ='pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/audiocaps/test/{0..8}.tar -', 
 									valid_data_dir = 'pipe:aws s3 cp s3://s-laion-audio/webdataset_tar/audiocaps/valid/{0..4}.tar -', 
-									batch_size = 1)
+									batch_size = 512)
 
 	dataset.setup()
 	_count = 0
 	for i in dataset.train_dataloader():
-		print(_count)
-		for x in i[:1]:
-			print(x.shape)
-		_count +=1
-		print(i[2])
-		# break
+		for x in i[1]:
+			print(torch.count_nonzero(x))
+			plt.imsave('spec.jpeg',x[0].numpy())
+			break
+		# _count +=1
+		break
+
+	# for i in dataset.train_dataloader():
+	# 	print(i[0][1]['text'])
+	# 	break

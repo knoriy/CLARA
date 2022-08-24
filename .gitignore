@@ -128,3 +128,5 @@ lightning_logs/
 MNIST
 .DS_Store
 DATA
+
+*.out

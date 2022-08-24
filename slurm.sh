@@ -1,8 +1,9 @@
 #!/bin/bash
-#SBATCH --partition=compute-od-gpu
-#SBATCH --job-name=pl_test
-#SBATCH --nodes=10
-#SBATCH --exclusive
+#SBATCH --partition=gpu
+#SBATCH --job-name=PL_test-gpu9
+#SBATCH --gpus=8
+#SBATCH --cpus-per-gpu=6
+#SBATCH --comment clap
 #SBATCH --output=%x_%j.out
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/nccl/build/lib:/opt/aws-ofi-nccl-install/lib
@@ -19,4 +20,4 @@ export FI_PROVIDER=efa
 export FI_EFA_TX_MIN_CREDITS=64
 export NCCL_TREE_THRESHOLD=0
 
-srun /home/knoriy/fsx/miniconda3/envs/pl/bin/python /home/knoriy/deep-learning-project-template/project/lit_mnist.py --accelerator gpu --strategy ddp
+srun --comment clap /home/knoriy/fsx/miniconda3/envs/clasp/bin/python /home/knoriy/CLASP/project/train.py --max_epochs 100 --accelerator gpu --strategy ddp --devices 8

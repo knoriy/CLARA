@@ -79,9 +79,9 @@ def cli_main():
 	# ------------
 	# data
 	# ------------
-	dataset = WebdatasetDataModule(	train_data_dir = 'pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/audiocaps/train/{0..3}.tar -', #89
-									test_data_dir ='pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/audiocaps/test/{0..3}.tar -', #8
-									valid_data_dir = 'pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/audiocaps/valid/{0..3}.tar -', #4
+	dataset = WebdatasetDataModule(	train_data_dir = 'pipe:aws s3 --cli-connect-timeout 0 --cli-read-timeout 0 cp s3://s-laion-audio/webdataset_tar/audiocaps/train/{0..1}.tar -', #89
+									test_data_dir ='pipe:aws s3 --cli-connect-timeout 0 --cli-read-timeout 0 cp s3://s-laion-audio/webdataset_tar/audiocaps/test/{0..1}.tar -', #8
+									valid_data_dir = 'pipe:aws s3 --cli-connect-timeout 0 --cli-read-timeout 0 cp s3://s-laion-audio/webdataset_tar/audiocaps/valid/{0..1}.tar -', #4
 									batch_size = args.batch_size,
 									num_workers = args.num_workers)
 	# ------------
