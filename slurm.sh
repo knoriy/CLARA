@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --partition=gpu
-#SBATCH --job-name=PL_test-gpu9
+#SBATCH --job-name=PL_test
 #SBATCH --gpus=8
 #SBATCH --cpus-per-gpu=6
 #SBATCH --comment clap
