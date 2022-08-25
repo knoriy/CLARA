@@ -55,7 +55,7 @@ def get_tar_path_s3(base_s3_path:str,
 	urls = [os.popen(cmd).read() for cmd in cmds]
 	# cleaning the urls to conform with webdataset
 	final_urls = [i.split(' ')[-1] for url in urls for i in url.split('\n')]
-	final_urls = [f'pipe:aws s3 --cli-connect-timeout 0 cp s3://\{os.path.join(base_s3_path, *i.split("/")[1:])} -' for i in final_urls]
+	final_urls = [f'pipe:aws s3 --cli-connect-timeout 0 cp s3://{os.path.join(base_s3_path, *i.split("/")[1:])} -' for i in final_urls]
 	# Spliting url by state e.g. train, test and valud
 	final_urls = {state:[url for url in final_urls if state in url] for state in train_valid_test}
 
@@ -69,7 +69,7 @@ if __name__ == '__main__':
 	urls = get_tar_path_s3(
 		's-laion-audio/webdataset_tar/', 
 		['train', 'test', 'valid'],
-		['LJSpeech'], 
+		['EmoV_DB'], 
 		cache_path='./url_cache.json',
 		recache=True,
 		)
