@@ -29,6 +29,7 @@ class PL_CLASP(pl.LightningModule):
 
 	def forward(self, batch):
 		texts, mels = batch
+		texts, mels = texts.squeeze(0), mels.permute(1,0,2,3)
 		return self.model(texts, mels)
 
 	def training_step(self, batch, batch_idx):

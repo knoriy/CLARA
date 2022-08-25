@@ -114,7 +114,7 @@ if __name__ == '__main__':
 	urls = get_tar_path_s3(
 		's-laion-audio/webdataset_tar/', 
 		['train', 'test', 'valid'],
-		['EmoV_DB'], 
+		# ['EmoV_DB'], 
 		# cache_path='./url_cache.json',
 		# recache=True,
 		)
@@ -125,14 +125,12 @@ if __name__ == '__main__':
 									num_workers=0)
 
 	dataset.setup()
+
 	for i in dataset.train_dataloader():
 		for j in i[2]:
 			print(j[1]['text'])
-		# pass
-		break
+	# 	break
 	# for i in dataset.test_dataloader():
 	# 	print(i[1].shape)
-	# 	pass
 	# for i in dataset.val_dataloader():
 	# 	print(i[1].shape)
-	# 	pass
