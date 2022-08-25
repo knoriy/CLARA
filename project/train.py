@@ -83,9 +83,9 @@ def cli_main():
 	urls = get_tar_path_s3(
 		's-laion-audio/webdataset_tar/', 
 		['train', 'test', 'valid'],
-		['audiocaps'], 
-		cache_path='./url_cache.json',
-		recache=True,
+		['EmoV_DB'], 
+		# cache_path='./url_cache.json',
+		# recache=True,
 		)
 
 	dataset = WebdatasetDataModule(	train_data_dir = urls['train'],
