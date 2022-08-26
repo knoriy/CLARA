@@ -77,13 +77,6 @@ class WebdatasetDataModule(pl.LightningDataModule):
 	def test_dataloader(self):
 		return wds.WebLoader(self.test, num_workers=self.num_workers)
 
-	# def collate_fn(self, data):
-	# 	raw_audios, raw_texts = data
-	# 	# split values into own varable
-	# 	mel, _  = Audio.tools.get_mel_from_wav(raw_audios[0][0].numpy(), self.stft_fn)
-	# 	mel = torch.tensor(mel).T
-	# 	text = torch.tensor(text_to_sequence(raw_texts['text'][0], ["english_cleaners"]))
-
 	# 	return text, mel
 	def collate_fn(self, data):
 		raw_audios, raw_texts = data
@@ -97,40 +90,58 @@ class WebdatasetDataModule(pl.LightningDataModule):
 
 		return texts, mels
 	
-	def zero_pad(self, batch):
-		texts = [data[0] for data in batch]
-		mels = [data[1] for data in batch]
-
-		# zero pad
-		texts = pad_sequence(texts).T
-		mels = pad_sequence(mels).permute(1,2,0)
-
-		return texts, mels
-
 if __name__ == '__main__':
-	import matplotlib.pyplot as plt
+	import tqdm
 	from utils.get_wds_urls import get_tar_path_s3
-
+	dataset_names = [
+		# '130000_MIDI_SONGS', #FAIL
+		# 'BBCSoundEffects', #FAIL
+		# 'CREMA-D', #PASS
+		# 'Clotho', #PASS
+		# 'CoVoST_2',#FAIL
+		'EmoV_DB', #PASS
+		# 'FMA_updated', #FAIL
+		# 'FSD50K', #PASS
+		# 'LJSpeech', #FAIL
+		# 'Urbansound8K', #FAIL
+		# 'VocalSketch', #FAIL
+		# 'YT_dataset', #FAIL
+		# 'audiocaps', #PASS
+		# 'audioset', #FAIL
+		# 'audiostock', #FAIL
+		# 'cambridge_dictionary', #FAIL
+		# 'clotho_mixed', #FAIL
+		# 'esc50', #FAIL
+		# 'free_to_use_sounds', #FAIL
+		# 'freesound', #FAIL
+		# 'midi50k', #FAIL
+		# 'paramount_motion', #FAIL
+		# 'ravdess', #FAIL Pipe
+		# 'sonniss_game_effects', #FAIL
+		# # 'tmp_eval',
+		'wesoundeffects', #FAIL
+	]
 	urls = get_tar_path_s3(
 		's-laion-audio/webdataset_tar/', 
 		['train', 'test', 'valid'],
-		# ['EmoV_DB'], 
+		dataset_names,
 		# cache_path='./url_cache.json',
 		# recache=True,
 		)
-	dataset = WebdatasetDataModule(	train_data_dir = urls['train'], 
-									test_data_dir =urls['test'], 
-									valid_data_dir = urls['valid'], 
-									batch_size = 1,
-									num_workers=0)
+	print(urls)
+	for url in urls.values():
+		print(len(url))
+	# dataset = WebdatasetDataModule(	train_data_dir = urls['train'], 
+	# 								test_data_dir =urls['test'], 
+	# 								valid_data_dir = urls['valid'], 
+	# 								batch_size = 64,
+	# 								num_workers=0)
 
-	dataset.setup()
+	# dataset.setup()
 
-	for i in dataset.train_dataloader():
-		for j in i[2]:
-			print(j[1]['text'])
-	# 	break
-	# for i in dataset.test_dataloader():
-	# 	print(i[1].shape)
-	# for i in dataset.val_dataloader():
-	# 	print(i[1].shape)
+	# for i in tqdm.tqdm(dataset.train_dataloader()):
+	# 	pass
+	# for i in tqdm.tqdm(dataset.train_dataloader()):
+	# 	pass
+	# for i in tqdm.tqdm(dataset.train_dataloader()):
+	# 	pass
