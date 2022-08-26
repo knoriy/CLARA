@@ -20,4 +20,4 @@ export FI_PROVIDER=efa
 export FI_EFA_TX_MIN_CREDITS=64
 export NCCL_TREE_THRESHOLD=0
 
-srun --comment clap /home/knoriy/fsx/miniconda3/envs/clasp/bin/python /home/knoriy/CLASP/project/train.py --max_epochs 100 --accelerator gpu --strategy ddp --devices 8
+srun --comment clap /home/knoriy/fsx/miniconda3/envs/clasp/bin/python /home/knoriy/CLASP/project/train.py --max_epochs 1 --accelerator gpu --strategy ddp --devices 8
