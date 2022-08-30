@@ -81,13 +81,18 @@ def cli_main():
 	# ------------
 	# data
 	# ------------
-	urls = get_tar_path_s3(
-		's-laion-audio/webdataset_tar/', 
-		['train', 'test', 'valid'],
-		['EmoV_DB'], 
-		# cache_path='./url_cache.json',
-		# recache=True,
-		)
+	# urls = get_tar_path_s3(
+	# 	base_s3_path		= 's-laion-audio/webdataset_tar/', 
+	# 	train_valid_test	= ['train', 'test', 'valid'],
+	# 	dataset_names		= ['EmoV_DB'], 
+	# 	# cache_path='./url_cache.json',
+	# 	# recache=True,
+	# 	)
+	urls = {
+		'train':'pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/EmoV_DB/train/{0..2}.tar -',
+		'test':'pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/EmoV_DB/test/0.tar -',
+		'valid':'pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/EmoV_DB/valid/0.tar -',
+	}
 
 	dataset = WebdatasetDataModule(	train_data_dir = urls['train'],
 									test_data_dir = urls['test'],

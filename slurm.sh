@@ -1,8 +1,9 @@
 #!/bin/bash
 #SBATCH --partition=gpu
-#SBATCH --job-name=PL_test
-#SBATCH --gpus=8
-#SBATCH --cpus-per-gpu=6
+#SBATCH --job-name=CLAP_MultiNode_test
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=8
+#SBATCH --exclusive
 #SBATCH --comment clap
 #SBATCH --output=%x_%j.out
 
@@ -20,4 +21,6 @@ export FI_PROVIDER=efa
 export FI_EFA_TX_MIN_CREDITS=64
 export NCCL_TREE_THRESHOLD=0
 
-srun --comment clap /home/knoriy/fsx/miniconda3/envs/clasp/bin/python /home/knoriy/CLASP/project/train.py --max_epochs 1 --accelerator gpu --strategy ddp --devices 8
+echo Running job on $SLURM_JOB_NUM_NODES nodes
+
+srun --comment clap /home/knoriy/fsx/miniconda3/envs/clasp/bin/python /home/knoriy/CLASP/project/train.py --max_epochs 10 --accelerator gpu --strategy ddp --num_nodes $SLURM_JOB_NUM_NODES --devices 8
