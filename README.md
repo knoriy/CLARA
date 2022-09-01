@@ -56,22 +56,22 @@ tensorboard dev upload --logdir lightning_logs
 This project is setup as a package which means you can now easily import any file into any other file like so:
 
 ```python
-from project.datasets.mnist import mnist
-from project.lit_classifier_main import LitClassifier
+from project.datamodules import WebdatasetDataModule
+from project.clasp import CLASP
 from pytorch_lightning import Trainer
 
 # model
-model = LitClassifier()
+model = CLASP(...)
 
 # data
-train, val, test = mnist()
+dataset = WebdatasetDataModule(...)
 
 # train
 trainer = Trainer()
-trainer.fit(model, train, val)
+trainer.fit(model, datamodule=dataset)
 
 # test using the best model!
-trainer.test(test_dataloaders=test)
+trainer.test(ckpt_path='best', datamodule=dataset)
 ```
 
 ### Citation
