@@ -1,2 +1,2 @@
-pytorch-lightning
-torchvision
+pytorch-lightning==1.7.2
+torchaudio
