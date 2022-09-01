@@ -27,22 +27,22 @@ First, install dependencies
 
 ```bash
 # clone project   
-git clone https://github.com/YourGithubName/deep-learning-project-template
+git clone https://github.com/knoriy/CLASP.git
 
 # install project   
-cd deep-learning-project-template 
+cd CLASP
 pip install -e .   
-pip install -r requirements.txt
+pip install -r enrioments/requirements.txt
  ```
 
  Next, navigate to any file and run it.
 
  ```bash
 
-# run module (example: mnist as your main contribution)   
-python project/lit_mnist.py --max_epochs 1 --accelerator cpu 
+# run module
+python project/train.py --max_epochs 1 --accelerator gpu
 # or for distributed
-python train.py --max_epochs 1 --accelerator gpu --strategy ddp --devices 2
+python project/train.py --max_epochs 1 --accelerator gpu --strategy ddp --devices 2
 ```
 
 ## Tensorboard

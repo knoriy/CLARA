@@ -7,7 +7,7 @@ from torch.nn import functional as F
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping, LearningRateMonitor
 
-from clap import CLAP
+from clasp import CLASP
 from loss import CLAPLoss
 from datamodules import WebdatasetDataModule
 from utils.get_wds_urls import get_tar_path_s3
@@ -24,7 +24,7 @@ class PL_CLASP(pl.LightningModule):
 		super().__init__()
 		self.save_hyperparameters()
 
-		self.model = CLAP(self.hparams)
+		self.model = CLASP(self.hparams)
 		self.loss_fn = CLAPLoss(cache_labels=True)
 
 	def forward(self, batch):

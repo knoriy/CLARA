@@ -76,14 +76,7 @@ class Cnn10(nn.Module):
 
         self.fc1 = nn.Linear(1024, 1024, bias=True)
         self.fc_audioset = nn.Linear(1024, classes_num, bias=True)
-        
-    #     self.init_weight()
 
-    # def init_weight(self):
-    #     init_bn(self.bn0)
-    #     init_layer(self.fc1)
-    #     init_layer(self.fc_audioset)
- 
     def forward(self, input, mixup_lambda=None):
         """
         Input: (batch_size, data_length)"""
