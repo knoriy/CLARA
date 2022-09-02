@@ -33,49 +33,24 @@ class WebdatasetDataModule(pl.LightningDataModule):
 		)
 
 	def setup(self, stage:Optional[str] = None):
-		self.train =  wds.WebDataset(self.train_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").batched(self.batch_size).map(self.collate_fn)
-		self.test =  wds.WebDataset(self.test_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").batched(self.batch_size).map(self.collate_fn)
-		self.valid =  wds.WebDataset(self.valid_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").batched(self.batch_size).map(self.collate_fn)
-
-		# self.train = wds.DataPipeline(
-		# 	wds.SimpleShardList(self.train_data_dir),
-		# 	# wds.split_by_worker,
-		# 	wds.tarfile_to_samples(),
-		# 	wds.shuffle(100),
-		# 	wds.decode(wds.torch_audio),
-		# 	wds.to_tuple("flac", "json"),
-		# 	wds.map(self.collate_fn),
-		# 	wds.batched(16),
-		# )
-		# self.test = wds.DataPipeline(
-		# 	wds.SimpleShardList(self.test_data_dir),
-		# 	# wds.split_by_worker,
-		# 	wds.tarfile_to_samples(),
-		# 	wds.shuffle(100),
-		# 	wds.decode(wds.torch_audio),
-		# 	wds.to_tuple("flac", "json"),
-		# 	wds.map(self.collate_fn),
-		# 	wds.batched(16),
-		# )
-		# self.valid = wds.DataPipeline(
-		# 	wds.SimpleShardList(self.valid_data_dir),
-		# 	# wds.split_by_worker,
-		# 	wds.tarfile_to_samples(),
-		# 	wds.shuffle(100),
-		# 	wds.decode(wds.torch_audio),
-		# 	wds.to_tuple("flac", "json"),
-		# 	wds.map(self.collate_fn),
-		# 	wds.batched(16),
-		# )
+		if len(self.train_data_dir)>0:
+			self.train =  wds.WebDataset(self.train_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").batched(self.batch_size).map(self.collate_fn)
+		if len(self.test_data_dir)>0:
+			self.test =  wds.WebDataset(self.test_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").batched(self.batch_size).map(self.collate_fn)
+		if len(self.valid_data_dir)>0:
+			self.valid =  wds.WebDataset(self.valid_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").batched(self.batch_size).map(self.collate_fn)
 
 	def train_dataloader(self):
-		return wds.WebLoader(self.train, num_workers=self.num_workers)
+		if self.train:
+			return wds.WebLoader(self.train, num_workers=self.num_workers)
 
 	def val_dataloader(self):
-		return wds.WebLoader(self.valid, num_workers=self.num_workers)
+		if self.valid:
+			return wds.WebLoader(self.valid, num_workers=self.num_workers)
 
 	def test_dataloader(self):
-		return wds.WebLoader(self.test, num_workers=self.num_workers)
+		if self.test:
+			return wds.WebLoader(self.test, num_workers=self.num_workers)
 
 	# 	return text, mel
 	def collate_fn(self, data):
@@ -94,32 +69,32 @@ if __name__ == '__main__':
 	import tqdm
 	from utils.get_wds_urls import get_tar_path_s3
 	dataset_names = [
-		# '130000_MIDI_SONGS', #FAIL
+		# '130000_MIDI_SONGS', #PASS
 		# 'BBCSoundEffects', #FAIL
 		# 'CREMA-D', #PASS
 		# 'Clotho', #PASS
-		# 'CoVoST_2',#FAIL
-		'EmoV_DB', #PASS
+		# 'CoVoST_2',#PASS
+		# 'EmoV_DB', #PASS
 		# 'FMA_updated', #FAIL
 		# 'FSD50K', #PASS
 		# 'LJSpeech', #FAIL
-		# 'Urbansound8K', #FAIL
+		# 'Urbansound8K', #PASS
 		# 'VocalSketch', #FAIL
 		# 'YT_dataset', #FAIL
 		# 'audiocaps', #PASS
-		# 'audioset', #FAIL
-		# 'audiostock', #FAIL
-		# 'cambridge_dictionary', #FAIL
+		# 'audioset', #PASS
+		# 'audiostock', #PASS
+		# 'cambridge_dictionary', #PASS
 		# 'clotho_mixed', #FAIL
-		# 'esc50', #FAIL
-		# 'free_to_use_sounds', #FAIL
-		# 'freesound', #FAIL
-		# 'midi50k', #FAIL
-		# 'paramount_motion', #FAIL
-		# 'ravdess', #FAIL Pipe
-		# 'sonniss_game_effects', #FAIL
+		# 'esc50', #PASS
+		# 'free_to_use_sounds', #PASS
+		# 'freesound', #PASS
+		# 'midi50k', #PASS
+		# 'paramount_motion', #PASS
+		# 'ravdess', #FAIL
+		# 'sonniss_game_effects', #PASS
 		# # 'tmp_eval',
-		'wesoundeffects', #FAIL
+		# 'wesoundeffects', #PASS
 	]
 	urls = get_tar_path_s3(
 		's-laion-audio/webdataset_tar/', 
@@ -128,19 +103,18 @@ if __name__ == '__main__':
 		# cache_path='./url_cache.json',
 		# recache=True,
 		)
-	print(urls)
 	for url in urls.values():
 		print(len(url))
-	# dataset = WebdatasetDataModule(	train_data_dir = urls['train'], 
-	# 								test_data_dir =urls['test'], 
-	# 								valid_data_dir = urls['valid'], 
-	# 								batch_size = 64,
-	# 								num_workers=0)
+	dataset = WebdatasetDataModule(	train_data_dir = urls['train'], 
+									test_data_dir =urls['test'], 
+									valid_data_dir = urls['valid'], 
+									batch_size = 64,
+									num_workers=0)
 
-	# dataset.setup()
+	dataset.setup()
 
-	# for i in tqdm.tqdm(dataset.train_dataloader()):
-	# 	pass
+	for i in tqdm.tqdm(dataset.train_dataloader()):
+		pass
 	# for i in tqdm.tqdm(dataset.train_dataloader()):
 	# 	pass
 	# for i in tqdm.tqdm(dataset.train_dataloader()):
