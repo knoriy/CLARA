@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import Dataset, DataLoader, random_split
 from torch.nn.utils.rnn import pad_sequence
+import torchaudio
 
 import pytorch_lightning as pl
 import webdataset as wds
@@ -12,8 +13,11 @@ import audio as Audio
 
 
 class WebdatasetDataModule(pl.LightningDataModule):
-	def __init__(self, train_data_dir:str, test_data_dir:str, valid_data_dir:str, epochs:int=1, batch_size:int = 32, num_workers:int=0):
+	def __init__(self, train_data_dir:str, test_data_dir:str, valid_data_dir:str, epochs:int=1, batch_size:int = 32, num_workers:int=0, audio_backend:str=None):
 		super().__init__()
+		# if not audio_backend:
+		torchaudio.set_audio_backend('soundfile') # Forching backend to soundfile, due to known bug in torch audio (https://github.com/pytorch/audio/issues/2356)
+
 		self.train_data_dir = train_data_dir
 		self.test_data_dir = test_data_dir
 		self.valid_data_dir = valid_data_dir
@@ -71,7 +75,7 @@ if __name__ == '__main__':
 	dataset_names = [
 		# '130000_MIDI_SONGS', #PASS
 		# 'BBCSoundEffects', #FAIL
-		# 'CREMA-D', #PASS
+		'CREMA-D', #PASS
 		# 'Clotho', #PASS
 		# 'CoVoST_2',#PASS
 		# 'EmoV_DB', #PASS
@@ -100,7 +104,7 @@ if __name__ == '__main__':
 		's-laion-audio/webdataset_tar/', 
 		['train', 'test', 'valid'],
 		dataset_names,
-		# cache_path='./url_cache.json',
+		cache_path='/tmp/url_cache.json',
 		# recache=True,
 		)
 	for url in urls.values():
@@ -108,14 +112,14 @@ if __name__ == '__main__':
 	dataset = WebdatasetDataModule(	train_data_dir = urls['train'], 
 									test_data_dir =urls['test'], 
 									valid_data_dir = urls['valid'], 
-									batch_size = 64,
-									num_workers=0)
+									batch_size = 512,
+									num_workers=6)
 
 	dataset.setup()
 
 	for i in tqdm.tqdm(dataset.train_dataloader()):
 		pass
-	# for i in tqdm.tqdm(dataset.train_dataloader()):
-	# 	pass
-	# for i in tqdm.tqdm(dataset.train_dataloader()):
-	# 	pass
+	# # for i in tqdm.tqdm(dataset.val_dataloader()):
+	# # 	pass
+	# # for i in tqdm.tqdm(dataset.test_dataloader()):
+	# # 	pass
