@@ -72,33 +72,32 @@ class WebdatasetDataModule(pl.LightningDataModule):
 if __name__ == '__main__':
 	import tqdm
 	from utils.get_wds_urls import get_tar_path_s3
-	dataset_names = [
-		# '130000_MIDI_SONGS', #PASS
-		# 'BBCSoundEffects', #FAIL
+	dataset_names = ['130000_MIDI_SONGS', #PASS
 		'CREMA-D', #PASS
-		# 'Clotho', #PASS
-		# 'CoVoST_2',#PASS
-		# 'EmoV_DB', #PASS
+		'Clotho', #PASS
+		'CoVoST_2',#PASS
+		'EmoV_DB', #PASS
+		'FSD50K', #PASS
+		'Urbansound8K', #PASS
+		'audiocaps', #PASS
+		'audioset', #PASS
+		'audiostock', #PASS
+		'cambridge_dictionary', #PASS
+		'esc50', #PASS
+		'free_to_use_sounds', #PASS
+		'freesound', #PASS
+		'midi50k', #PASS
+		'paramount_motion', #PASS
+		'sonniss_game_effects', #PASS
+		'wesoundeffects', #PASS
 		# 'FMA_updated', #FAIL
-		# 'FSD50K', #PASS
 		# 'LJSpeech', #FAIL
-		# 'Urbansound8K', #PASS
 		# 'VocalSketch', #FAIL
 		# 'YT_dataset', #FAIL
-		# 'audiocaps', #PASS
-		# 'audioset', #PASS
-		# 'audiostock', #PASS
-		# 'cambridge_dictionary', #PASS
 		# 'clotho_mixed', #FAIL
-		# 'esc50', #PASS
-		# 'free_to_use_sounds', #PASS
-		# 'freesound', #PASS
-		# 'midi50k', #PASS
-		# 'paramount_motion', #PASS
 		# 'ravdess', #FAIL
-		# 'sonniss_game_effects', #PASS
 		# # 'tmp_eval',
-		# 'wesoundeffects', #PASS
+		# 'BBCSoundEffects', #FAIL
 	]
 	urls = get_tar_path_s3(
 		's-laion-audio/webdataset_tar/', 
