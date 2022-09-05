@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='clasp',
-    version='0.0.1',
+    version='0.0.2',
     description='Describe Your Cool Project',
     author='Kari Noriy',
     author_email='knoriy72@gmail.com',
