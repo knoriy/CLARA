@@ -81,24 +81,25 @@ def cli_main():
 	# ------------
 	# data
 	# ------------
-	dataset_names = ['130000_MIDI_SONGS', #PASS
+	dataset_names = [
+		# '130000_MIDI_SONGS', #PASS
 		'CREMA-D', #PASS
-		'Clotho', #PASS
-		'CoVoST_2',#PASS
-		'EmoV_DB', #PASS
-		'FSD50K', #PASS
+		# 'Clotho', #PASS
+		# 'CoVoST_2',#PASS
+		# 'EmoV_DB', #PASS
+		# 'FSD50K', #PASS
 		'Urbansound8K', #PASS
-		'audiocaps', #PASS
+		# 'audiocaps', #PASS
 		'audioset', #PASS
-		'audiostock', #PASS
-		'cambridge_dictionary', #PASS
+		# 'audiostock', #PASS
+		# 'cambridge_dictionary', #PASS
 		'esc50', #PASS
-		'free_to_use_sounds', #PASS
-		'freesound', #PASS
-		'midi50k', #PASS
-		'paramount_motion', #PASS
-		'sonniss_game_effects', #PASS
-		'wesoundeffects', #PASS
+		# 'free_to_use_sounds', #PASS
+		# 'freesound', #PASS
+		# 'midi50k', #PASS
+		# 'paramount_motion', #PASS
+		# 'sonniss_game_effects', #PASS
+		# 'wesoundeffects', #PASS
 		# 'FMA_updated', #FAIL
 		# 'LJSpeech', #FAIL
 		# 'VocalSketch', #FAIL
@@ -113,7 +114,7 @@ def cli_main():
 		train_valid_test	= ['train', 'test', 'valid'],
 		dataset_names		= dataset_names, 
 		cache_path			= '/tmp/url_cache.json',
-		# recache				= True,
+		recache				= True,
 		)
 	# urls = {
 	# 	'train':'pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/EmoV_DB/train/{0..2}.tar -',

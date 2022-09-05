@@ -16,7 +16,7 @@ class WebdatasetDataModule(pl.LightningDataModule):
 	def __init__(self, train_data_dir:str, test_data_dir:str, valid_data_dir:str, epochs:int=1, batch_size:int = 32, num_workers:int=0, audio_backend:str=None):
 		super().__init__()
 		# if not audio_backend:
-		torchaudio.set_audio_backend('soundfile') # Forching backend to soundfile, due to known bug in torch audio (https://github.com/pytorch/audio/issues/2356)
+		# torchaudio.set_audio_backend('soundfile') # Forching backend to soundfile, due to known bug in torch audio (https://github.com/pytorch/audio/issues/2356)
 
 		self.train_data_dir = train_data_dir
 		self.test_data_dir = test_data_dir
@@ -72,24 +72,25 @@ class WebdatasetDataModule(pl.LightningDataModule):
 if __name__ == '__main__':
 	import tqdm
 	from utils.get_wds_urls import get_tar_path_s3
-	dataset_names = ['130000_MIDI_SONGS', #PASS
-		'CREMA-D', #PASS
-		'Clotho', #PASS
-		'CoVoST_2',#PASS
-		'EmoV_DB', #PASS
-		'FSD50K', #PASS
-		'Urbansound8K', #PASS
-		'audiocaps', #PASS
-		'audioset', #PASS
-		'audiostock', #PASS
-		'cambridge_dictionary', #PASS
+	dataset_names = [
+		# '130000_MIDI_SONGS', #PASS
+		# 'CREMA-D', #PASS
+		# 'Clotho', #PASS
+		# 'CoVoST_2',#PASS
+		# 'EmoV_DB', #PASS
+		# 'FSD50K', #PASS
+		# 'Urbansound8K', #PASS
+		# 'audiocaps', #PASS
+		# 'audioset', #PASS
+		# 'audiostock', #PASS
+		# 'cambridge_dictionary', #PASS
 		'esc50', #PASS
-		'free_to_use_sounds', #PASS
-		'freesound', #PASS
-		'midi50k', #PASS
-		'paramount_motion', #PASS
-		'sonniss_game_effects', #PASS
-		'wesoundeffects', #PASS
+		# 'free_to_use_sounds', #PASS
+		# 'freesound', #PASS
+		# 'midi50k', #PASS
+		# 'paramount_motion', #PASS
+		# 'sonniss_game_effects', #PASS
+		# 'wesoundeffects', #PASS
 		# 'FMA_updated', #FAIL
 		# 'LJSpeech', #FAIL
 		# 'VocalSketch', #FAIL
@@ -104,7 +105,7 @@ if __name__ == '__main__':
 		['train', 'test', 'valid'],
 		dataset_names,
 		cache_path='/tmp/url_cache.json',
-		# recache=True,
+		recache=True,
 		)
 	for url in urls.values():
 		print(len(url))
@@ -116,7 +117,7 @@ if __name__ == '__main__':
 
 	dataset.setup()
 
-	for i in tqdm.tqdm(dataset.train_dataloader()):
+	for i in tqdm.tqdm(zip(dataset.train_dataloader())):
 		pass
 	# for i in tqdm.tqdm(dataset.val_dataloader()):
 	# 	pass
