@@ -83,17 +83,17 @@ def cli_main():
 	# ------------
 	dataset_names = [
 		# '130000_MIDI_SONGS', #PASS
-		'CREMA-D', #PASS
+		# 'CREMA-D', #PASS
 		# 'Clotho', #PASS
 		# 'CoVoST_2',#PASS
-		# 'EmoV_DB', #PASS
+		'EmoV_DB', #PASS
 		# 'FSD50K', #PASS
-		'Urbansound8K', #PASS
+		# 'Urbansound8K', #PASS
 		# 'audiocaps', #PASS
-		'audioset', #PASS
+		# 'audioset', #PASS
 		# 'audiostock', #PASS
 		# 'cambridge_dictionary', #PASS
-		'esc50', #PASS
+		# 'esc50', #PASS
 		# 'free_to_use_sounds', #PASS
 		# 'freesound', #PASS
 		# 'midi50k', #PASS
@@ -113,8 +113,8 @@ def cli_main():
 		base_s3_path		= 's-laion-audio/webdataset_tar/', 
 		train_valid_test	= ['train', 'test', 'valid'],
 		dataset_names		= dataset_names, 
-		cache_path			= '/tmp/url_cache.json',
-		recache				= True,
+		# cache_path			= '/tmp/url_cache.json',
+		# recache				= True,
 		)
 	# urls = {
 	# 	'train':'pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/EmoV_DB/train/{0..2}.tar -',
@@ -135,7 +135,7 @@ def cli_main():
 	# ------------
 	# training
 	# ------------
-	checkpoint_callback = ModelCheckpoint(save_top_k=1, monitor="valid_loss")
+	checkpoint_callback = ModelCheckpoint(save_top_k=1, every_n_train_steps=1000, monitor="valid_loss")
 	early_stopping_callback = EarlyStopping(monitor="valid_loss")
 	lr_monitor = LearningRateMonitor(logging_interval='step')
 

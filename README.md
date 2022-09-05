@@ -26,10 +26,10 @@ What it does
 First, install dependencies
 
 ```bash
-# clone project   
+# clone clasp   
 git clone https://github.com/knoriy/CLASP.git
 
-# install project   
+# install clasp   
 cd CLASP
 pip install -e .   
 pip install -r enrioments/requirements.txt
@@ -40,9 +40,9 @@ pip install -r enrioments/requirements.txt
  ```bash
 
 # run module
-python project/train.py --max_epochs 1 --accelerator gpu
+python clasp/train.py --max_epochs 1 --accelerator gpu
 # or for distributed
-python project/train.py --max_epochs 1 --accelerator gpu --strategy ddp --devices 2
+python clasp/train.py --max_epochs 1 --accelerator gpu --strategy ddp --devices 8
 ```
 
 ## Tensorboard
@@ -53,11 +53,11 @@ tensorboard dev upload --logdir lightning_logs
 
 ## Imports
 
-This project is setup as a package which means you can now easily import any file into any other file like so:
+This clasp is setup as a package which means you can now easily import any file into any other file like so:
 
 ```python
-from project.datamodules import WebdatasetDataModule
-from project.clasp import CLASP
+from clasp.datamodules import WebdatasetDataModule
+from clasp.clasp import CLASP
 from pytorch_lightning import Trainer
 
 # model
