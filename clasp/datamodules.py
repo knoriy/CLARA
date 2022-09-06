@@ -119,6 +119,7 @@ if __name__ == '__main__':
 	dataset = WebdatasetDataModule(	train_data_dir = urls['train'], 
 									test_data_dir =urls['test'], 
 									valid_data_dir = urls['valid'], 
+									epochs=1,
 									batch_size = 512,
 									num_workers=6)
 
