@@ -38,11 +38,11 @@ class WebdatasetDataModule(pl.LightningDataModule):
 
 	def setup(self, stage:Optional[str] = None):
 		if len(self.train_data_dir)>0:
-			self.train =  wds.WebDataset(self.train_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").batched(self.batch_size).map(self.collate_fn)
+			self.train =  wds.WebDataset(self.train_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").batched(self.batch_size).map(self.collate_fn).with_epoch(1)
 		if len(self.test_data_dir)>0:
-			self.test =  wds.WebDataset(self.test_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").batched(self.batch_size).map(self.collate_fn)
+			self.test =  wds.WebDataset(self.test_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").batched(self.batch_size).map(self.collate_fn).with_epoch(1)
 		if len(self.valid_data_dir)>0:
-			self.valid =  wds.WebDataset(self.valid_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").batched(self.batch_size).map(self.collate_fn)
+			self.valid =  wds.WebDataset(self.valid_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").batched(self.batch_size).map(self.collate_fn).with_epoch(1)
 
 	def train_dataloader(self):
 		if self.train:
@@ -117,12 +117,10 @@ if __name__ == '__main__':
 
 	dataset.setup()
 
-	# for i in tqdm.tqdm(dataset.train_dataloader()):
-	# 	print(i[0].shape)
+	for i in tqdm.tqdm(dataset.train_dataloader()):
+		print(i[0].shape)
 	# 	break
 	# for i in tqdm.tqdm(dataset.val_dataloader()):
 	# 	pass
 	# for i in tqdm.tqdm(dataset.test_dataloader()):
 	# 	pass
-
-	print(dataset.train_dataloader().batch_size)
