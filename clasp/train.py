@@ -123,9 +123,9 @@ def cli_main():
 		# recache				= True,
 		)
 
-	dataset = WebdatasetDataModule(	train_data_dir = urls['train'][:2],
-									test_data_dir = urls['test'][0],
-									valid_data_dir = urls['valid'][0],
+	dataset = WebdatasetDataModule(	train_data_dir = urls['train'],
+									test_data_dir = urls['test'],
+									valid_data_dir = urls['valid'],
 									epochs = args.max_epochs,
 									batch_size = args.batch_size,
 									num_workers = args.num_workers)
