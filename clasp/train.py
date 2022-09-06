@@ -125,6 +125,7 @@ def cli_main():
 	dataset = WebdatasetDataModule(	train_data_dir = urls['train'],
 									test_data_dir = urls['test'],
 									valid_data_dir = urls['valid'],
+									epochs = args.max_epochs,
 									batch_size = args.batch_size,
 									num_workers = args.num_workers)
 	# ------------
@@ -135,16 +136,18 @@ def cli_main():
 	# ------------
 	# training
 	# ------------
-	checkpoint_callback = ModelCheckpoint(save_top_k=1, every_n_train_steps=1000, monitor="valid_loss")
+	checkpoint_callback = ModelCheckpoint(monitor="valid_loss")
 	early_stopping_callback = EarlyStopping(monitor="valid_loss")
 	lr_monitor = LearningRateMonitor(logging_interval='step')
 
 	trainer = pl.Trainer.from_argparse_args(args, 
-		callbacks=[checkpoint_callback, early_stopping_callback, lr_monitor],
+		callbacks=[
+			checkpoint_callback,
+			early_stopping_callback, 
+			lr_monitor],
 	)
 	
 	trainer.fit(model, datamodule=dataset)
-	print(checkpoint_callback.best_model_path)
 
 	# ------------
 	# testing
