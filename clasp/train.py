@@ -50,14 +50,19 @@ class PL_CLASP(pl.LightningModule):
 		self.log('test_loss', loss, sync_dist=True)
 
 	def configure_optimizers(self):
-		return torch.optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
+		optimizer = torch.optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
+		# lr_scheduler = {
+		# 	'scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer),
+		# 	'name': 'lr_scheduler',
+		# 	'monitor': 'valid_loss',
+		# }
+		return optimizer
 
 	@staticmethod
 	def add_model_specific_args(parent_parser):
 		parser = ArgumentParser(parents=[parent_parser], add_help=False)
 		parser.add_argument('--hidden_dim', type=int, default=128)
-		parser.add_argument('--learning_rate', type=float, default=0.0001)
-
+		parser.add_argument('--learning_rate', type=float, default=1e-3)
 		parser.add_argument('--text_encoder_width', type=int, default=1024)
 		parser.add_argument('--text_encoder_embedding', type=int, default=1024)
 		parser.add_argument('--text_encoder_layers', type=int, default=1)
@@ -89,12 +94,12 @@ def cli_main():
 		# 'CoVoST_2',#PASS
 		'EmoV_DB', #PASS
 		# 'FSD50K', #PASS
-		'Urbansound8K', #PASS
+		# 'Urbansound8K', #PASS
 		# 'audiocaps', #PASS
-		'audioset', #PASS
+		# 'audioset', #PASS
 		# 'audiostock', #PASS
 		# 'cambridge_dictionary', #PASS
-		'esc50', #PASS
+		# 'esc50', #PASS
 		# 'free_to_use_sounds', #PASS
 		# 'freesound', #PASS
 		# 'midi50k', #PASS
@@ -118,9 +123,9 @@ def cli_main():
 		# recache				= True,
 		)
 
-	dataset = WebdatasetDataModule(	train_data_dir = urls['train'],
-									test_data_dir = urls['test'],
-									valid_data_dir = urls['valid'],
+	dataset = WebdatasetDataModule(	train_data_dir = urls['train'][:2],
+									test_data_dir = urls['test'][0],
+									valid_data_dir = urls['valid'][0],
 									epochs = args.max_epochs,
 									batch_size = args.batch_size,
 									num_workers = args.num_workers)
@@ -134,7 +139,7 @@ def cli_main():
 	# ------------
 	checkpoint_callback = ModelCheckpoint(monitor="valid_loss")
 	early_stopping_callback = EarlyStopping(monitor="valid_loss")
-	lr_monitor = LearningRateMonitor(logging_interval='step')
+	lr_monitor = LearningRateMonitor()
 
 	trainer = pl.Trainer.from_argparse_args(args, 
 		callbacks=[
