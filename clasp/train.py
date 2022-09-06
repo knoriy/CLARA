@@ -29,9 +29,7 @@ class PL_CLASP(pl.LightningModule):
 
 	def forward(self, batch):
 		texts, mels = batch
-		print("#"*100)
 		texts, mels = texts.squeeze(0), mels.permute(1,0,2,3)
-		print(texts.shape, mels.shape)
 		# torch.Size([512, 118]) torch.Size([512, 80, 2451]) > torch.Size([1, 512, 121]) torch.Size([1, 512, 80, 2451])
 		return self.model(texts, mels)
 
@@ -74,7 +72,7 @@ def cli_main():
 	# args
 	# ------------
 	parser = ArgumentParser()
-	parser.add_argument('--batch_size', default=256, type=int)
+	parser.add_argument('--batch_size', default=64, type=int)
 	parser.add_argument('--num_workers', default=6, type=int)
 
 	parser = pl.Trainer.add_argparse_args(parser)
@@ -119,11 +117,6 @@ def cli_main():
 		# cache_path			= '/tmp/url_cache.json',
 		# recache				= True,
 		)
-	# urls = {
-	# 	'train':'pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/EmoV_DB/train/{0..2}.tar -',
-	# 	'test':'pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/EmoV_DB/test/0.tar -',
-	# 	'valid':'pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/EmoV_DB/valid/0.tar -',
-	# }
 
 	dataset = WebdatasetDataModule(	train_data_dir = urls['train'],
 									test_data_dir = urls['test'],
