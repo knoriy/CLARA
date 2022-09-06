@@ -13,7 +13,7 @@ import audio as Audio
 
 
 class WebdatasetDataModule(pl.LightningDataModule):
-	def __init__(self, train_data_dir:str, test_data_dir:str, valid_data_dir:str, epochs:int, batch_size:int = 32, num_workers:int=0, audio_backend:str=None):
+	def __init__(self, train_data_dir:str, test_data_dir:str, valid_data_dir:str, epochs:int=1, batch_size:int = 32, num_workers:int=0, audio_backend:str=None):
 		super().__init__()
 		# if not audio_backend:
 		# torchaudio.set_audio_backend('soundfile') # Forching backend to soundfile, due to known bug in torch audio (https://github.com/pytorch/audio/issues/2356)
@@ -38,23 +38,23 @@ class WebdatasetDataModule(pl.LightningDataModule):
 
 	def setup(self, stage:Optional[str] = None):
 		if len(self.train_data_dir)>0:
-			self.train =  wds.WebDataset(self.train_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").batched(self.batch_size).map(self.collate_fn).with_epoch(1)
+			self.train =  wds.WebDataset(self.train_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").batched(self.batch_size).map(self.collate_fn)
 		if len(self.test_data_dir)>0:
-			self.test =  wds.WebDataset(self.test_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").batched(self.batch_size).map(self.collate_fn).with_epoch(1)
+			self.test =  wds.WebDataset(self.test_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").batched(self.batch_size).map(self.collate_fn)
 		if len(self.valid_data_dir)>0:
-			self.valid =  wds.WebDataset(self.valid_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").batched(self.batch_size).map(self.collate_fn).with_epoch(1)
+			self.valid =  wds.WebDataset(self.valid_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").batched(self.batch_size).map(self.collate_fn)
 
 	def train_dataloader(self):
 		if self.train:
-			return DataLoader(self.train, num_workers=self.num_workers)
+			return wds.WebLoader(self.train, num_workers=self.num_workers)
 
 	def val_dataloader(self):
 		if self.valid:
-			return DataLoader(self.valid, num_workers=self.num_workers)
+			return wds.WebLoader(self.valid, num_workers=self.num_workers)
 
 	def test_dataloader(self):
 		if self.test:
-			return DataLoader(self.test, num_workers=self.num_workers)
+			return wds.WebLoader(self.test, num_workers=self.num_workers)
 
 	# 	return text, mel
 	def collate_fn(self, data):
@@ -100,37 +100,29 @@ if __name__ == '__main__':
 		# # 'tmp_eval',
 		# 'BBCSoundEffects', #FAIL
 	]
-	# urls = get_tar_path_s3(
-	# 	's-laion-audio/webdataset_tar/', 
-	# 	['train', 'test', 'valid'],
-	# 	dataset_names,
-	# 	cache_path='/tmp/url_cache.json',
-	# 	recache=True,
-	# 	)
-	# for url in urls.values():
-	# 	print(len(url))
-
-
-	urls = {
-		'train':'pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/EmoV_DB/train/0.tar -',
-		'test':'pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/EmoV_DB/test/0.tar -',
-		'valid':'pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/EmoV_DB/valid/0.tar -',
-	}
+	urls = get_tar_path_s3(
+		's-laion-audio/webdataset_tar/', 
+		['train', 'test', 'valid'],
+		dataset_names,
+		cache_path='/tmp/url_cache.json',
+		recache=True,
+		)
+	for url in urls.values():
+		print(len(url))
 	dataset = WebdatasetDataModule(	train_data_dir = urls['train'], 
 									test_data_dir =urls['test'], 
 									valid_data_dir = urls['valid'], 
-									epochs=1,
 									batch_size = 512,
 									num_workers=6)
 
 	dataset.setup()
 
-
-	for i in tqdm.tqdm(dataset.train_dataloader()):
-		continue
-
+	# for i in tqdm.tqdm(dataset.train_dataloader()):
+	# 	print(i[0].shape)
+	# 	break
 	# for i in tqdm.tqdm(dataset.val_dataloader()):
-	# 	continue
+	# 	pass
 	# for i in tqdm.tqdm(dataset.test_dataloader()):
-	# 	continue
-	print('THE END')
+	# 	pass
+
+	print(dataset.train_dataloader().batch_size)

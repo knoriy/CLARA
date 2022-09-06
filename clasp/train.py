@@ -29,7 +29,10 @@ class PL_CLASP(pl.LightningModule):
 
 	def forward(self, batch):
 		texts, mels = batch
+		print("#"*100)
 		texts, mels = texts.squeeze(0), mels.permute(1,0,2,3)
+		print(texts.shape, mels.shape)
+		# torch.Size([512, 118]) torch.Size([512, 80, 2451]) > torch.Size([1, 512, 121]) torch.Size([1, 512, 80, 2451])
 		return self.model(texts, mels)
 
 	def training_step(self, batch, batch_idx):
@@ -71,7 +74,7 @@ def cli_main():
 	# args
 	# ------------
 	parser = ArgumentParser()
-	parser.add_argument('--batch_size', default=64, type=int)
+	parser.add_argument('--batch_size', default=256, type=int)
 	parser.add_argument('--num_workers', default=6, type=int)
 
 	parser = pl.Trainer.add_argparse_args(parser)
@@ -88,12 +91,12 @@ def cli_main():
 		# 'CoVoST_2',#PASS
 		'EmoV_DB', #PASS
 		# 'FSD50K', #PASS
-		# 'Urbansound8K', #PASS
+		'Urbansound8K', #PASS
 		# 'audiocaps', #PASS
-		# 'audioset', #PASS
+		'audioset', #PASS
 		# 'audiostock', #PASS
 		# 'cambridge_dictionary', #PASS
-		# 'esc50', #PASS
+		'esc50', #PASS
 		# 'free_to_use_sounds', #PASS
 		# 'freesound', #PASS
 		# 'midi50k', #PASS
@@ -142,9 +145,10 @@ def cli_main():
 
 	trainer = pl.Trainer.from_argparse_args(args, 
 		callbacks=[
-			checkpoint_callback,
-			early_stopping_callback, 
-			lr_monitor],
+			# checkpoint_callback,
+			# early_stopping_callback, 
+			# lr_monitor,
+			],
 	)
 	
 	trainer.fit(model, datamodule=dataset)
