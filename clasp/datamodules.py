@@ -54,7 +54,7 @@ class WebdatasetDataModule(pl.LightningDataModule):
 				wds.SimpleShardList(self.test_data_dir),
 				wds.tarfile_to_samples(),
 				wds.detshuffle(),
-				# wds.split_by_node,
+				wds.split_by_node,
 				wds.split_by_worker,
 				wds.decode(wds.torch_audio),
 				wds.to_tuple("flac", "json"),
@@ -66,7 +66,7 @@ class WebdatasetDataModule(pl.LightningDataModule):
 				wds.SimpleShardList(self.valid_data_dir),
 				wds.tarfile_to_samples(),
 				wds.detshuffle(),
-				# wds.split_by_node,
+				wds.split_by_node,
 				wds.split_by_worker,
 				wds.decode(wds.torch_audio),
 				wds.to_tuple("flac", "json"),
@@ -88,12 +88,15 @@ class WebdatasetDataModule(pl.LightningDataModule):
 	# 	return text, mel
 	def collate_fn(self, data):
 		raw_audios, raw_texts = data
-		# # split values into own varable
 		mels = [Audio.tools.get_mel_from_wav(audio[0][0].numpy(), self.stft_fn)[0] for audio in raw_audios]
-		# mels = [Audio.tools.get_mel_from_wav(audio[0][0][0].numpy(), self.stft_fn)[0] for audio in data]
 		mels = [torch.tensor(mel).T for mel in mels]
-		texts = [torch.tensor(text_to_sequence(text['text'][0], ["english_cleaners"])) for text in raw_texts]
-		# texts = [torch.tensor(text_to_sequence(text[1]['text'][0], ["english_cleaners"])) for text in data]
+
+		if isinstance(raw_texts[0]['text'], list):
+			texts = [torch.tensor(text_to_sequence(text['text'][0], ["english_cleaners"])) for text in raw_texts]
+		elif isinstance(raw_texts[0]['text'], str):
+			texts = [torch.tensor(text_to_sequence(text['text'], ["english_cleaners"])) for text in raw_texts]
+		else:
+			raise ValueError('Unsupoted text type, must be list[str] or str')
 
 		texts = pad_sequence(texts).T
 		mels = pad_sequence(mels).permute(1,2,0)
@@ -104,18 +107,18 @@ if __name__ == '__main__':
 	import tqdm
 	from utils.get_wds_urls import get_tar_path_s3
 	dataset_names = [
+		# 'Urbansound8K', #PASS
+		'audioset', #PASS The text is not stored in a list
+		# 'esc50', #PASS
 		# '130000_MIDI_SONGS', #PASS
 		# 'CREMA-D', #PASS
 		# 'Clotho', #PASS
 		# 'CoVoST_2',#PASS
-		'EmoV_DB', #PASS
+		# 'EmoV_DB', #PASS
 		# 'FSD50K', #PASS
-		# 'Urbansound8K', #PASS
 		# 'audiocaps', #PASS
-		# 'audioset', #PASS
 		# 'audiostock', #PASS
 		# 'cambridge_dictionary', #PASS
-		# 'esc50', #PASS
 		# 'free_to_use_sounds', #PASS
 		# 'freesound', #PASS
 		# 'midi50k', #PASS
@@ -151,8 +154,8 @@ if __name__ == '__main__':
 
 	for i in tqdm.tqdm(dataset.train_dataloader()):
 		# print(i)
-		print(i[0].shape)
-		# break
+		print(i[0].shape, i[1].shape)
+		break
 	# for i in tqdm.tqdm(dataset.val_dataloader()):
 	# 	pass
 	# for i in tqdm.tqdm(dataset.test_dataloader()):
