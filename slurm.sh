@@ -5,7 +5,7 @@
 #SBATCH --ntasks-per-node=8
 #SBATCH --exclusive
 #SBATCH --comment clap
-#SBATCH --output=%x_%j.out
+#SBATCH --output=lightning_logs/slurm_outs/%x_%j.out
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/nccl/build/lib:/opt/aws-ofi-nccl-install/lib
 export NCCL_PROTO=simple
