@@ -29,7 +29,7 @@ class PL_CLASP(pl.LightningModule):
 
 	def forward(self, batch):
 		texts, mels = batch
-		texts, mels = texts.squeeze(0), mels.permute(1,0,2,3)
+		texts, mels = texts.squeeze(0), mels.unsqueeze(1)
 		return self.model(texts, mels)
 
 	def training_step(self, batch, batch_idx):
@@ -88,10 +88,10 @@ def cli_main():
 	# ------------
 	dataset_names = [
 		# '130000_MIDI_SONGS', #PASS
-		'CREMA-D', #PASS
+		# 'CREMA-D', #PASS
 		# 'Clotho', #PASS
 		# 'CoVoST_2',#PASS
-		# 'EmoV_DB', #PASS
+		'EmoV_DB', #PASS
 		# 'FSD50K', #PASS
 		# 'Urbansound8K', #PASS
 		# 'audiocaps', #PASS
