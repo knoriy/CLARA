@@ -38,31 +38,62 @@ class WebdatasetDataModule(pl.LightningDataModule):
 
 	def setup(self, stage:Optional[str] = None):
 		if len(self.train_data_dir)>0:
-			self.train =  wds.WebDataset(self.train_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").batched(self.batch_size).map(self.collate_fn).with_epoch(1)
+			self.train = wds.DataPipeline(
+				wds.SimpleShardList(self.train_data_dir),
+				wds.tarfile_to_samples(),
+				wds.detshuffle(),
+				wds.split_by_node,
+				wds.split_by_worker,
+				wds.decode(wds.torch_audio),
+				wds.to_tuple("flac", "json"),
+				wds.batched(self.batch_size),
+				wds.map(self.collate_fn),
+			)
 		if len(self.test_data_dir)>0:
-			self.test =  wds.WebDataset(self.test_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").batched(self.batch_size).map(self.collate_fn).with_epoch(1)
+			self.test =  wds.DataPipeline(
+				wds.SimpleShardList(self.test_data_dir),
+				wds.tarfile_to_samples(),
+				wds.detshuffle(),
+				# wds.split_by_node,
+				wds.split_by_worker,
+				wds.decode(wds.torch_audio),
+				wds.to_tuple("flac", "json"),
+				wds.batched(self.batch_size),
+				wds.map(self.collate_fn),
+			)
 		if len(self.valid_data_dir)>0:
-			self.valid =  wds.WebDataset(self.valid_data_dir, resampled=True).decode(wds.torch_audio).to_tuple("flac", "json").batched(self.batch_size).map(self.collate_fn).with_epoch(1)
-
+			self.valid =  wds.DataPipeline(
+				wds.SimpleShardList(self.valid_data_dir),
+				wds.tarfile_to_samples(),
+				wds.detshuffle(),
+				# wds.split_by_node,
+				wds.split_by_worker,
+				wds.decode(wds.torch_audio),
+				wds.to_tuple("flac", "json"),
+				wds.batched(self.batch_size),
+				wds.map(self.collate_fn),
+			)
 	def train_dataloader(self):
 		if self.train:
-			return wds.WebLoader(self.train, num_workers=self.num_workers)
+			return wds.WebLoader(self.train, batch_size=None, shuffle=False, num_workers=self.num_workers)
 
 	def val_dataloader(self):
 		if self.valid:
-			return wds.WebLoader(self.valid, num_workers=self.num_workers)
+			return wds.WebLoader(self.valid, batch_size=None, shuffle=False, num_workers=self.num_workers)
 
 	def test_dataloader(self):
 		if self.test:
-			return wds.WebLoader(self.test, num_workers=self.num_workers)
+			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers)
 
 	# 	return text, mel
 	def collate_fn(self, data):
 		raw_audios, raw_texts = data
 		# # split values into own varable
 		mels = [Audio.tools.get_mel_from_wav(audio[0][0].numpy(), self.stft_fn)[0] for audio in raw_audios]
+		# mels = [Audio.tools.get_mel_from_wav(audio[0][0][0].numpy(), self.stft_fn)[0] for audio in data]
 		mels = [torch.tensor(mel).T for mel in mels]
 		texts = [torch.tensor(text_to_sequence(text['text'][0], ["english_cleaners"])) for text in raw_texts]
+		# texts = [torch.tensor(text_to_sequence(text[1]['text'][0], ["english_cleaners"])) for text in data]
 
 		texts = pad_sequence(texts).T
 		mels = pad_sequence(mels).permute(1,2,0)
@@ -77,14 +108,14 @@ if __name__ == '__main__':
 		# 'CREMA-D', #PASS
 		# 'Clotho', #PASS
 		# 'CoVoST_2',#PASS
-		# 'EmoV_DB', #PASS
+		'EmoV_DB', #PASS
 		# 'FSD50K', #PASS
 		# 'Urbansound8K', #PASS
 		# 'audiocaps', #PASS
 		# 'audioset', #PASS
 		# 'audiostock', #PASS
 		# 'cambridge_dictionary', #PASS
-		'esc50', #PASS
+		# 'esc50', #PASS
 		# 'free_to_use_sounds', #PASS
 		# 'freesound', #PASS
 		# 'midi50k', #PASS
@@ -109,17 +140,19 @@ if __name__ == '__main__':
 		)
 	for url in urls.values():
 		print(len(url))
-	dataset = WebdatasetDataModule(	train_data_dir = urls['train'], 
+	dataset = WebdatasetDataModule(	train_data_dir = urls['train'][0], 
 									test_data_dir =urls['test'], 
 									valid_data_dir = urls['valid'], 
-									batch_size = 512,
-									num_workers=6)
+									batch_size = 64,
+									num_workers=18)
 
 	dataset.setup()
+	print(len(urls['train'][:2]), len([1,2]))
 
 	for i in tqdm.tqdm(dataset.train_dataloader()):
+		# print(i)
 		print(i[0].shape)
-	# 	break
+		# break
 	# for i in tqdm.tqdm(dataset.val_dataloader()):
 	# 	pass
 	# for i in tqdm.tqdm(dataset.test_dataloader()):
