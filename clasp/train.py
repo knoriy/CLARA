@@ -93,12 +93,12 @@ def cli_main():
 		# 'CoVoST_2',#PASS
 		'EmoV_DB', #PASS
 		# 'FSD50K', #PASS
-		# 'Urbansound8K', #PASS
+		'Urbansound8K', #PASS
 		# 'audiocaps', #PASS
-		# 'audioset', #PASS
+		'audioset', #PASS
 		# 'audiostock', #PASS
 		# 'cambridge_dictionary', #PASS
-		# 'esc50', #PASS
+		'esc50', #PASS
 		# 'free_to_use_sounds', #PASS
 		# 'freesound', #PASS
 		# 'midi50k', #PASS
