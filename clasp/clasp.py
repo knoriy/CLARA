@@ -7,9 +7,9 @@ import numpy as np
 
 from typing import Tuple, Union, Callable, Optional
 from collections import OrderedDict
-from encoders.audio_encoders.pann_model import Cnn10
 from text.symbols import symbols
 from encoders.text_encoders.Simple_transformer import SimpleTransformer 
+from encoders.audio_encoders import WhisperAudioEncoder, Cnn10
 from encoders.modules import PositionalEncoding, LayerNorm, MLPLayers
 
 class CLASP(nn.Module):
