@@ -8,7 +8,7 @@ import webdataset as wds
 
 from typing import Optional
 
-from text.simple_cleaner import text_to_sequence
+from clasp.text import text_to_sequence
 from text.whisper.tokenizer import get_tokenizer
 from text.whisper.normalizers import EnglishTextNormalizer
 
