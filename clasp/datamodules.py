@@ -219,7 +219,7 @@ if __name__ == '__main__':
 		)
 	for url in urls.values():
 		print(len(url))
-	dataset = WhisperWebdatasetDataModule(	
+	dataset = MultilingualWebdatasetDataModule(	
 									train_data_dir = urls['train'][0], 
 									test_data_dir =urls['test'], 
 									valid_data_dir = urls['valid'], 
