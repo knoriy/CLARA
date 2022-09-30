@@ -8,10 +8,86 @@ import webdataset as wds
 
 from typing import Optional
 
-from text import text_to_sequence
+from text.simple_cleaner import text_to_sequence
+from text.whisper.tokenizer import get_tokenizer
+from text.whisper.normalizers import EnglishTextNormalizer
+
 import audio as Audio
 
+class MultilingualWebdatasetDataModule(pl.LightningDataModule):
+	def __init__(self, train_data_dir:str, test_data_dir:str, valid_data_dir:str, epochs:int=1, batch_size:int = 32, num_workers:int=0, audio_backend:str=None):
+		super().__init__()
+		# if not audio_backend:
+		# torchaudio.set_audio_backend('soundfile') # Forching backend to soundfile, due to known bug in torch audio (https://github.com/pytorch/audio/issues/2356)
 
+		self.train_data_dir = train_data_dir
+		self.test_data_dir = test_data_dir
+		self.valid_data_dir = valid_data_dir
+
+		self.epochs = epochs
+		self.batch_size = batch_size
+		self.num_workers = num_workers
+
+		self.cleaner = EnglishTextNormalizer()
+		self.tokenizer = get_tokenizer(True)
+		self.stft_fn =Audio.stft.TacotronSTFT(
+			filter_length=1024,
+			hop_length=256,
+			win_length=1024,
+			n_mel_channels=80,
+			sampling_rate=48000,
+			mel_fmin=0,
+			mel_fmax=8000,
+		)
+
+	def setup(self, stage:Optional[str] = None):
+		pipeline = [wds.SimpleShardList(self.train_data_dir),
+					wds.tarfile_to_samples(),
+					wds.detshuffle(),
+					wds.split_by_node,
+					wds.split_by_worker,
+					wds.decode(wds.torch_audio),
+					wds.to_tuple("flac", "json"),
+					wds.batched(self.batch_size),
+					wds.map(self.collate_fn),
+					]
+		if len(self.train_data_dir)>0:
+			self.train = wds.DataPipeline(*pipeline)
+		if len(self.test_data_dir)>0:
+			self.test = wds.DataPipeline(*pipeline)
+		if len(self.valid_data_dir)>0:
+			self.valid = wds.DataPipeline(*pipeline)
+
+	def train_dataloader(self):
+		if self.train:
+			return wds.WebLoader(self.train, batch_size=None, shuffle=False, num_workers=self.num_workers)
+
+	def val_dataloader(self):
+		if self.valid:
+			return wds.WebLoader(self.valid, batch_size=None, shuffle=False, num_workers=self.num_workers)
+
+	def test_dataloader(self):
+		if self.test:
+			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers)
+
+	# 	return text, mel
+	def collate_fn(self, data):
+		raw_audios, raw_texts = data
+		mels = [Audio.tools.get_mel_from_wav(audio[0][0].numpy(), self.stft_fn)[0] for audio in raw_audios]
+		mels = [torch.tensor(mel).T for mel in mels]
+
+		if isinstance(raw_texts[0]['text'], list):
+			texts = [torch.tensor(self.tokenizer.encode(self.cleaner(text['text'][0]))) for text in raw_texts]
+		elif isinstance(raw_texts[0]['text'], str):
+			texts = [torch.tensor(self.tokenizer.encode(self.cleaner(text['text']))) for text in raw_texts]
+		else:
+			raise ValueError('Unsupoted text type, must be list[str] or str')
+
+		texts = pad_sequence(texts).T
+		mels = pad_sequence(mels).permute(1,2,0)
+
+		return texts, mels
+	
 class WebdatasetDataModule(pl.LightningDataModule):
 	def __init__(self, train_data_dir:str, test_data_dir:str, valid_data_dir:str, epochs:int=1, batch_size:int = 32, num_workers:int=0, audio_backend:str=None):
 		super().__init__()
@@ -135,19 +211,20 @@ if __name__ == '__main__':
 		# 'BBCSoundEffects', #FAIL
 	]
 	urls = get_tar_path_s3(
-		's-laion-audio/webdataset_tar/', 
-		['train', 'test', 'valid'],
-		dataset_names,
-		cache_path='/tmp/url_cache.json',
-		recache=True,
+		base_s3_path = 's-laion-audio/webdataset_tar/', 
+		train_valid_test = ['train', 'test', 'valid'],
+		dataset_names = dataset_names,
+		cache_path = '/tmp/url_cache.json',
+		recache = True,
 		)
 	for url in urls.values():
 		print(len(url))
-	dataset = WebdatasetDataModule(	train_data_dir = urls['train'][0], 
+	dataset = WhisperWebdatasetDataModule(	
+									train_data_dir = urls['train'][0], 
 									test_data_dir =urls['test'], 
 									valid_data_dir = urls['valid'], 
 									batch_size = 64,
-									num_workers=18)
+									num_workers=12)
 
 	dataset.setup()
 	print(len(urls['train'][:2]), len([1,2]))

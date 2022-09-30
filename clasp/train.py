@@ -122,7 +122,8 @@ def cli_main():
 		# recache				= True,
 		)
 
-	dataset = WebdatasetDataModule(	train_data_dir = urls['train'],
+	dataset = MultilingualWebdatasetDataModule(	
+									train_data_dir = urls['train'],
 									test_data_dir = urls['test'],
 									valid_data_dir = urls['valid'],
 									epochs = args.max_epochs,
