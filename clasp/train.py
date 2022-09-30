@@ -9,7 +9,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping, Learning
 
 from clasp import CLASP
 from loss import CLAPLoss
-from datamodules import WebdatasetDataModule
+from datamodules import WebdatasetDataModule, MultilingualWebdatasetDataModule
 from utils.get_wds_urls import get_tar_path_s3
 
 class PL_CLASP(pl.LightningModule):
@@ -19,7 +19,9 @@ class PL_CLASP(pl.LightningModule):
 					text_encoder_width=1024,
 					text_encoder_embedding=1024,
 					text_encoder_layers=1,
-					text_encoder_heads=4):
+					text_encoder_heads=4,
+					vocab_size=50257,
+					):
 
 		super().__init__()
 		self.save_hyperparameters()
@@ -66,6 +68,8 @@ class PL_CLASP(pl.LightningModule):
 		parser.add_argument('--text_encoder_embedding', type=int, default=1024)
 		parser.add_argument('--text_encoder_layers', type=int, default=1)
 		parser.add_argument('--text_encoder_heads', type=int, default=4)
+		parser.add_argument('--vocab_size', type=int, default=50257)
+
 
 		return parser
 

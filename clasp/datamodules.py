@@ -8,7 +8,7 @@ import webdataset as wds
 
 from typing import Optional
 
-from clasp.text import text_to_sequence
+from text.simple_cleaner import text_to_sequence
 from text.whisper.tokenizer import get_tokenizer
 from text.whisper.normalizers import EnglishTextNormalizer
 
@@ -220,7 +220,7 @@ if __name__ == '__main__':
 	for url in urls.values():
 		print(len(url))
 	dataset = MultilingualWebdatasetDataModule(	
-									train_data_dir = urls['train'][0], 
+									train_data_dir = urls['train'], 
 									test_data_dir =urls['test'], 
 									valid_data_dir = urls['valid'], 
 									batch_size = 64,
@@ -232,7 +232,7 @@ if __name__ == '__main__':
 	for i in tqdm.tqdm(dataset.train_dataloader()):
 		# print(i)
 		print(i[0].shape, i[1].shape)
-		break
+		# break
 	# for i in tqdm.tqdm(dataset.val_dataloader()):
 	# 	pass
 	# for i in tqdm.tqdm(dataset.test_dataloader()):

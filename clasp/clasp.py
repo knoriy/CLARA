@@ -7,8 +7,7 @@ import numpy as np
 
 from typing import Tuple, Union, Callable, Optional
 from collections import OrderedDict
-from text.symbols import symbols
-from encoders.text_encoders.Simple_transformer import SimpleTransformer 
+from encoders.text_encoders.simple_transformer import SimpleTransformer 
 from encoders.audio_encoders import WhisperAudioEncoder, Cnn10
 from encoders.modules import PositionalEncoding, LayerNorm, MLPLayers
 
@@ -32,7 +31,7 @@ class CLASP(nn.Module):
         if self.audio_encoder == None:
             self.audio_encoder = Cnn10(1024)
 
-        self.text_embedding = nn.Embedding(len(symbols) + 1, self.hparm.text_encoder_embedding)
+        self.text_embedding = nn.Embedding(self.hparm.vocab_size, self.hparm.text_encoder_embedding)
         self.positional_embedding = PositionalEncoding(self.hparm.text_encoder_embedding)
         self.text_projection = nn.Parameter(torch.empty(self.hparm.text_encoder_width, self.hparm.text_encoder_embedding))
         self.ln_final = LayerNorm(self.hparm.text_encoder_width)
