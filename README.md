@@ -19,7 +19,7 @@ Conference
 
 ## Description
 
-What it does
+CLASP is a multilingual neural network designed to identify audio features from natural language. CLASP follows the work CLIP by OpenAI. CLASP can be applied in many text and audio classification tasks, such as language, emotion, instrument and sound.
 
 ## How to run
 
