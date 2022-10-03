@@ -70,6 +70,10 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 		if self.test:
 			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers)
 
+	def predict_dataloader(self):
+		if self.test:
+			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers)
+
 	# 	return text, mel
 	def collate_fn(self, data):
 		raw_audios, raw_texts = data

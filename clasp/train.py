@@ -50,6 +50,11 @@ class PL_CLASP(pl.LightningModule):
 		loss = self.loss_fn(text_features, audio_features, tempeture)
 		self.log('test_loss', loss, sync_dist=True)
 
+	def predict_step(self, batch, batch_idx, dataloader_idx=0):
+		texts, mels = batch
+		texts, mels = texts.squeeze(0), mels.unsqueeze(1)
+		return self.model(texts, mels)
+
 	def configure_optimizers(self):
 		optimizer = torch.optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
 		# lr_scheduler = {
@@ -126,10 +131,13 @@ def cli_main():
 		# recache				= True,
 		)
 
+	for url in urls.values():
+		print(len(url))
+
 	dataset = MultilingualWebdatasetDataModule(	
-									train_data_dir = urls['train'],
-									test_data_dir = urls['test'],
-									valid_data_dir = urls['valid'],
+									train_data_dir = urls['train'][0],
+									test_data_dir = urls['test'][0],
+									valid_data_dir = urls['valid'][0],
 									epochs = args.max_epochs,
 									batch_size = args.batch_size,
 									num_workers = args.num_workers)
@@ -159,6 +167,16 @@ def cli_main():
 	# testing
 	# ------------
 	trainer.test(ckpt_path='best', datamodule=dataset)
+
+	# dataset.setup()
+
+	model = model.load_from_checkpoint("/fsx/knoriy/code/CLASP/lightning_logs/version_18646/checkpoints/epoch=29-step=132.ckpt")
+	texts, mels = next(iter(dataset.test_dataloader()))
+	texts, mels = texts.squeeze(0), mels
+	text_features, audio_features, _ = model((texts, mels))
+	torch.save(text_features, 'a_text_features.pt')
+	torch.save(audio_features, 'a_audio_features.pt')
+	# print(trainer.predict(model, dataloaders=dataset))
 
 
 if __name__ == '__main__':
