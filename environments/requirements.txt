@@ -1,2 +1,4 @@
 pytorch-lightning==1.7.2
 torchaudio
+transformers
+more_itertools
