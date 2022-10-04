@@ -1,8 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
 
 class CLAPLoss(nn.Module):
     '''
@@ -18,11 +16,11 @@ class CLAPLoss(nn.Module):
         self.labels = {}
 
 
-    def forward(self, text_features, audio_features, tempeture:int=1):
+    def forward(self, text_features, audio_features, temperature:int=1):
         device = audio_features.device
         
-        logits_per_audio = (audio_features @ text_features.T) * tempeture
-        logits_per_text = (text_features @ audio_features.T) * tempeture
+        logits_per_audio = (audio_features @ text_features.T) * temperature
+        logits_per_text = (text_features @ audio_features.T) * temperature
 
         # calculated ground-truth and cache if enabled
         num_logits = logits_per_audio.shape[0]
@@ -36,5 +34,7 @@ class CLAPLoss(nn.Module):
         else:
             labels = self.labels[device]
         
-        total_loss = (F.cross_entropy(logits_per_audio, labels) + F.cross_entropy(logits_per_text, labels)) / 2
-        return total_loss
+        total_loss = (
+            F.cross_entropy(logits_per_audio, labels) + 
+            F.cross_entropy(logits_per_text, labels)) / 2
+        return total_loss, labels
