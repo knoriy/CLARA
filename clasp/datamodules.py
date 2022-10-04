@@ -117,42 +117,23 @@ class WebdatasetDataModule(pl.LightningDataModule):
 		)
 
 	def setup(self, stage:Optional[str] = None):
+		pipeline = [wds.SimpleShardList(self.train_data_dir),
+					wds.tarfile_to_samples(),
+					wds.detshuffle(),
+					wds.split_by_node,
+					wds.split_by_worker,
+					wds.decode(wds.torch_audio),
+					wds.to_tuple("flac", "json"),
+					wds.batched(self.batch_size),
+					wds.map(self.collate_fn),
+					]
 		if len(self.train_data_dir)>0:
-			self.train = wds.DataPipeline(
-				wds.SimpleShardList(self.train_data_dir),
-				wds.tarfile_to_samples(),
-				wds.detshuffle(),
-				wds.split_by_node,
-				wds.split_by_worker,
-				wds.decode(wds.torch_audio),
-				wds.to_tuple("flac", "json"),
-				wds.batched(self.batch_size),
-				wds.map(self.collate_fn),
-			)
+			self.train = wds.DataPipeline(*pipeline)
 		if len(self.test_data_dir)>0:
-			self.test =  wds.DataPipeline(
-				wds.SimpleShardList(self.test_data_dir),
-				wds.tarfile_to_samples(),
-				wds.detshuffle(),
-				wds.split_by_node,
-				wds.split_by_worker,
-				wds.decode(wds.torch_audio),
-				wds.to_tuple("flac", "json"),
-				wds.batched(self.batch_size),
-				wds.map(self.collate_fn),
-			)
+			self.test = wds.DataPipeline(*pipeline)
 		if len(self.valid_data_dir)>0:
-			self.valid =  wds.DataPipeline(
-				wds.SimpleShardList(self.valid_data_dir),
-				wds.tarfile_to_samples(),
-				wds.detshuffle(),
-				wds.split_by_node,
-				wds.split_by_worker,
-				wds.decode(wds.torch_audio),
-				wds.to_tuple("flac", "json"),
-				wds.batched(self.batch_size),
-				wds.map(self.collate_fn),
-			)
+			self.valid = wds.DataPipeline(*pipeline)
+
 	def train_dataloader(self):
 		if self.train:
 			return wds.WebLoader(self.train, batch_size=None, shuffle=False, num_workers=self.num_workers)
@@ -162,6 +143,10 @@ class WebdatasetDataModule(pl.LightningDataModule):
 			return wds.WebLoader(self.valid, batch_size=None, shuffle=False, num_workers=self.num_workers)
 
 	def test_dataloader(self):
+		if self.test:
+			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers)
+
+	def predict_dataloader(self):
 		if self.test:
 			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers)
 
