@@ -2,3 +2,8 @@ pytorch-lightning==1.7.2
 torchaudio
 transformers
 more_itertools
+unidecode
+webdataset
+inflect
+scipy
+librosa
