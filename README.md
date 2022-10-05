@@ -42,9 +42,12 @@ pip install -r enrioments/requirements.txt
  ```bash
 
 # run module
-python clasp/train.py --max_epochs 1 --accelerator gpu
+python clasp/train.py --max_epochs 1 --accelerator gpu --devices 1
 # or for distributed
-python clasp/train.py --max_epochs 1 --accelerator gpu --strategy ddp --devices 8
+python clasp/train.py --max_epochs 1 --accelerator gpu --strategy ddp --devices 2
+# over to single batch 
+python clasp/train.py --max_epochs 100 --accelerator gpu --strategy ddp --overfit_batches 1
+
 ```
 
 ## Tensorboard
