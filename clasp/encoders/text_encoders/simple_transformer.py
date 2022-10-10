@@ -1,14 +1,15 @@
 import torch
 import torch.nn as nn
 
-from ..modules import Transformer
 from typing import Tuple, Union, Callable, Optional
 
 
-class SimpleTransformer(nn.Module):
-    def __init__(self, width: int, layers: int, heads: int, act_layer: Callable = nn.GELU):
+class TransformerEncoder(nn.Module):
+    def __init__(self, in_channels: int, out_channels:int, num_layers: int, nhead: int):
         super().__init__()
-        self.transformer = Transformer(width, layers, heads, act_layer)
+        encoder_layer = nn.TransformerEncoderLayer(d_model=in_channels, nhead=nhead)
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
+        self.project = nn.Linear(in_channels, out_channels)
 
-    def forward(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor] = None):
-        return self.transformer(x)
+    def forward(self, x: torch.Tensor):
+        return self.project(self.transformer_encoder(x))

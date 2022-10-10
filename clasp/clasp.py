@@ -7,7 +7,7 @@ import numpy as np
 
 from typing import Tuple, Union, Callable, Optional
 from collections import OrderedDict
-from encoders.text_encoders.simple_transformer import SimpleTransformer 
+from encoders.text_encoders import TransformerEncoder 
 from encoders.audio_encoders import WhisperAudioEncoder, Cnn10
 from encoders.modules import PositionalEncoding, LayerNorm, MLPLayers
 
@@ -23,11 +23,13 @@ class CLASP(nn.Module):
         self.audio_encoder = audio_encoder
         
         if self.text_encoder == None:
-            self.text_encoder = SimpleTransformer(
-                width = self.hparm.text_encoder_width,
-                layers = self.hparm.text_encoder_layers, 
-                heads = self.hparm.text_encoder_heads, 
-            )
+            self.text_encoder = TransformerEncoder(
+                in_channels = self.hparm.text_encoder_width,
+                out_channels = 1024,
+                num_layers = self.hparm.text_encoder_layers,
+                nhead = self.hparm.text_encoder_heads
+                )
+        
         if self.audio_encoder == None:
             self.audio_encoder = Cnn10(1024)
 
