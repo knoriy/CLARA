@@ -37,4 +37,4 @@ class CLAPLoss(nn.Module):
         total_loss = (
             F.cross_entropy(logits_per_audio, labels) + 
             F.cross_entropy(logits_per_text, labels)) / 2
-        return total_loss, labels
+        return total_loss
