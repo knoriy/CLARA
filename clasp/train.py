@@ -90,6 +90,8 @@ def cli_main():
 	parser.add_argument('--batch_size', default=64, type=int)
 	parser.add_argument('--num_workers', default=6, type=int)
 	parser.add_argument('--early_stoping_patience', type=int, default=10)
+	parser.add_argument('--testing_stuff', type=bool, default=False)
+
 
 
 	parser = pl.Trainer.add_argparse_args(parser)
@@ -136,11 +138,11 @@ def cli_main():
 		# recache				= True,
 		)
 
-	# urls = {
-	# 	'train':['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar'], 
-	# 	'test':['/fsx/knoriy/processed_datasets/clasp_local_data/test/0.tar'], 
-	# 	'valid':['/fsx/knoriy/processed_datasets/clasp_local_data/valid/0.tar']
-	# }
+	urls = {
+		'train':['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar'], 
+		'test':['/fsx/knoriy/processed_datasets/clasp_local_data/test/0.tar'], 
+		'valid':['/fsx/knoriy/processed_datasets/clasp_local_data/valid/0.tar']
+	}
 
 	dataset = MultilingualWebdatasetDataModule(	
 					train_data_dir = urls['train'],
@@ -155,100 +157,51 @@ def cli_main():
 	# ------------
 	model = PL_CLASP(args.hidden_dim, args.learning_rate)
 
-	# ------------
-	# Callbacks
-	# ------------
-	checkpoint_callback = ModelCheckpoint(monitor="valid_loss")
-	early_stopping_callback = EarlyStopping(monitor="valid_loss", patience=args.early_stoping_patience)
-	lr_monitor = LearningRateMonitor()
+	if not args.testing_stuff:
+		# ------------
+		# Callbacks
+		# ------------
+		checkpoint_callback = ModelCheckpoint(monitor="valid_loss")
+		early_stopping_callback = EarlyStopping(monitor="valid_loss", patience=args.early_stoping_patience)
+		lr_monitor = LearningRateMonitor()
 
-	# ------------
-	# training
-	# ------------
-	trainer = pl.Trainer.from_argparse_args(args, 
-		callbacks=[
-			# checkpoint_callback,
-			# early_stopping_callback, 
-			# lr_monitor,
-			],
-	)
-	
-	trainer.fit(model, datamodule=dataset)
-
-	# ------------
-	# testing
-	# ------------
-	trainer.test(ckpt_path='best', datamodule=dataset)
-
-def test_inference():
-	pl.seed_everything(1234)
-
-	# ------------
-	# args
-	# ------------
-	parser = ArgumentParser()
-	parser.add_argument('--batch_size', default=64, type=int)
-	parser.add_argument('--num_workers', default=6, type=int)
-
-	parser = pl.Trainer.add_argparse_args(parser)
-	parser = PL_CLASP.add_model_specific_args(parser)
-	args = parser.parse_args()
-
-	# ------------
-	# data
-	# ------------
-	dataset_names = [
-		'EmoV_DB', #PASS
-	]
-	urls = get_tar_path_s3(
-		base_s3_path		= 's-laion-audio/webdataset_tar/', 
-		train_valid_test	= ['train', 'test', 'valid'],
-		dataset_names		= dataset_names, 
+		# ------------
+		# training
+		# ------------
+		trainer = pl.Trainer.from_argparse_args(args, 
+			callbacks=[
+				# checkpoint_callback,
+				# early_stopping_callback, 
+				# lr_monitor,
+				],
 		)
+		
+		trainer.fit(model, datamodule=dataset)
 
-	dataset = WebdatasetDataModule(	
-				train_data_dir = urls['train'][0],
-				test_data_dir = urls['test'][0],
-				valid_data_dir = urls['valid'][0],
-				epochs = args.max_epochs,
-				batch_size = 6,
-				num_workers = args.num_workers)
-	# ------------
-	# model
-	# ------------
-	model = PL_CLASP(args.hidden_dim, args.learning_rate)
+		# ------------
+		# testing
+		# ------------
+		trainer.test(ckpt_path='best', datamodule=dataset)
+	else:
+		test_inference(model, dataset)
 
-	# ------------
-	# training
-	# ------------
-	checkpoint_callback = ModelCheckpoint(monitor="valid_loss")
-	early_stopping_callback = EarlyStopping(monitor="valid_loss")
-	lr_monitor = LearningRateMonitor()
-
-	trainer = pl.Trainer.from_argparse_args(args, 
-		callbacks=[
-			# checkpoint_callback,
-			# early_stopping_callback, 
-			# lr_monitor,
-			],
-	)
-
+def test_inference(model:torch.nn.Module, dataset:MultilingualWebdatasetDataModule):
 	dataset.setup()
 
-	model = model.load_from_checkpoint(
-		"/fsx/knoriy/code/CLASP/lightning_logs/version_1660/checkpoints/epoch=9-step=60.ckpt")
-	texts, mels = next(iter(dataset.test_dataloader()))
-	texts, mels = texts.squeeze(0), mels
-	text_features, audio_features, _ = model((texts, mels))
+	with torch.no_grad():
+		model = model.load_from_checkpoint("/fsx/knoriy/code/CLASP/lightning_logs/version_7968/checkpoints/epoch=43-step=44.ckpt")
+		model.eval()
+		texts, mels = next(iter(dataset.test_dataloader()))
+		texts, mels = texts.squeeze(0), mels
+		text_features, audio_features, _ = model((texts, mels))
 
-	text_features, audio_features = text_features.cpu().detach(), audio_features.cpu().detach()
+		text_features, audio_features = text_features.cpu().detach(), audio_features.cpu().detach()
 
-	audio_features /= audio_features.norm(dim=-1, keepdim=True)
-	text_features /= text_features.norm(dim=-1, keepdim=True)
-	text_probs = (audio_features @ text_features.T).softmax(dim=-1)
-	import matplotlib.pyplot as plt
-	plt.imsave('test.png', text_probs)
+		audio_features /= audio_features.norm(dim=-1, keepdim=True)
+		text_features /= text_features.norm(dim=-1, keepdim=True)
+		text_probs = (audio_features @ text_features.T).softmax(dim=-1)
+		import matplotlib.pyplot as plt
+		plt.imsave('test.png', text_probs)
 
 if __name__ == '__main__':
 	cli_main()
-	# test_inference()
