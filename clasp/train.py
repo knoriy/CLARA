@@ -5,7 +5,7 @@ import torchmetrics
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping, LearningRateMonitor
 
-from clasp import CLASP, SimpleCLASP
+from clasp import CLASP
 from loss import CLAPLoss
 from datamodules import WebdatasetDataModule, MultilingualWebdatasetDataModule
 from utils.get_wds_urls import get_tar_path_s3
@@ -24,12 +24,12 @@ class PL_CLASP(pl.LightningModule):
 		super().__init__()
 		self.save_hyperparameters()
 
-		self.model = SimpleCLASP(self.hparams)
+		self.model = CLASP(self.hparams)
 		self.loss_fn = CLAPLoss(cache_labels=True)
 
 	def forward(self, batch):
 		texts, mels = batch
-		texts, mels = texts.squeeze(0), mels.unsqueeze(1)
+		texts, mels = texts.squeeze(0), mels#.unsqueeze(1) # torch.size([64, 100]), torch.size([64,1,80,100])
 		return self.model(texts, mels)
 
 	def training_step(self, batch, batch_idx):
@@ -52,9 +52,7 @@ class PL_CLASP(pl.LightningModule):
 		self.log('test_loss', loss, sync_dist=True, prog_bar=True)
 
 	def predict_step(self, batch, batch_idx, dataloader_idx=0):
-		texts, mels = batch
-		texts, mels = texts.squeeze(0), mels.unsqueeze(1)
-		return self.model(texts, mels)
+		return self(batch)
 
 	def configure_optimizers(self):
 		optimizer = torch.optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
@@ -76,7 +74,8 @@ class PL_CLASP(pl.LightningModule):
 		parser.add_argument('--text_encoder_embedding', type=int, default=1024)
 		parser.add_argument('--text_encoder_layers', type=int, default=1)
 		parser.add_argument('--text_encoder_heads', type=int, default=4)
-		parser.add_argument('--vocab_size', type=int, default=len(symbols))
+		parser.add_argument('--vocab_size', type=int, default=50257)# len(symbols))
+
 
 
 		return parser
@@ -90,6 +89,8 @@ def cli_main():
 	parser = ArgumentParser()
 	parser.add_argument('--batch_size', default=64, type=int)
 	parser.add_argument('--num_workers', default=6, type=int)
+	parser.add_argument('--early_stoping_patience', type=int, default=10)
+
 
 	parser = pl.Trainer.add_argparse_args(parser)
 	parser = PL_CLASP.add_model_specific_args(parser)
@@ -135,13 +136,13 @@ def cli_main():
 		# recache				= True,
 		)
 
-	urls = {
-		'train':['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar'], 
-		'test':['/fsx/knoriy/processed_datasets/clasp_local_data/test/0.tar'], 
-		'valid':['/fsx/knoriy/processed_datasets/clasp_local_data/valid/0.tar']
-	}
+	# urls = {
+	# 	'train':['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar'], 
+	# 	'test':['/fsx/knoriy/processed_datasets/clasp_local_data/test/0.tar'], 
+	# 	'valid':['/fsx/knoriy/processed_datasets/clasp_local_data/valid/0.tar']
+	# }
 
-	dataset = WebdatasetDataModule(	
+	dataset = MultilingualWebdatasetDataModule(	
 					train_data_dir = urls['train'],
 					test_data_dir = urls['test'],
 					valid_data_dir = urls['valid'],
@@ -155,12 +156,15 @@ def cli_main():
 	model = PL_CLASP(args.hidden_dim, args.learning_rate)
 
 	# ------------
-	# training
+	# Callbacks
 	# ------------
 	checkpoint_callback = ModelCheckpoint(monitor="valid_loss")
-	early_stopping_callback = EarlyStopping(monitor="valid_loss")
+	early_stopping_callback = EarlyStopping(monitor="valid_loss", patience=args.early_stoping_patience)
 	lr_monitor = LearningRateMonitor()
 
+	# ------------
+	# training
+	# ------------
 	trainer = pl.Trainer.from_argparse_args(args, 
 		callbacks=[
 			# checkpoint_callback,
