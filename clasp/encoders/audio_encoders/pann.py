@@ -93,14 +93,14 @@ class Cnn10(nn.Module):
         x = F.dropout(x, p=0.2, training=self.training)
         x = torch.mean(x, dim=3)
         
-        (x1, _) = torch.max(x, dim=2)
-        x2 = torch.mean(x, dim=2)
-        x = x1 + x2
-        x = F.dropout(x, p=0.5, training=self.training)
-        x = F.relu_(self.fc1(x))
-        embedding = F.dropout(x, p=0.5, training=self.training)
-        clipwise_output = torch.sigmoid(self.fc_audioset(x))
+        # (x1, _) = torch.max(x, dim=2)
+        # x2 = torch.mean(x, dim=2)
+        # x = x1 + x2
+        # x = F.dropout(x, p=0.5, training=self.training)
+        # x = F.relu_(self.fc1(x))
+        # embedding = F.dropout(x, p=0.5, training=self.training)
+        # clipwise_output = torch.sigmoid(self.fc_audioset(x))
         
         # output_dict = {'clipwise_output': clipwise_output, 'embedding': embedding}
 
-        return embedding
+        return x
