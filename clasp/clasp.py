@@ -8,7 +8,7 @@ import numpy as np
 from typing import Tuple, Union, Callable, Optional
 from collections import OrderedDict
 from encoders.text_encoders import TransformerEncoder 
-from encoders.audio_encoders import WhisperAudioEncoder, Cnn10
+from encoders.audio_encoders import WhisperAudioEncoder, Cnn10, SimpleCNN
 from encoders.modules import PositionalEncoding, LayerNorm, MLPLayers
 
 class CLASP(nn.Module):
@@ -29,9 +29,9 @@ class CLASP(nn.Module):
                 num_layers = self.hparm.text_encoder_layers,
                 nhead = self.hparm.text_encoder_heads
                 )
-        
+
         if self.audio_encoder == None:
-            self.audio_encoder = Cnn10(1024)
+            self.audio_encoder = SimpleCNN(80, 1024)
 
         self.text_embedding = nn.Embedding(self.hparm.vocab_size, self.hparm.text_encoder_embedding)
         self.positional_embedding = PositionalEncoding(self.hparm.text_encoder_embedding)
@@ -58,7 +58,12 @@ class CLASP(nn.Module):
         return x
 
     def encode_audio(self, audio:torch.Tensor):
-        return self.audio_encoder(audio)
+        x = self.audio_encoder(audio)
+
+        x1 = torch.mean(x, dim=2)
+        x2, _ = torch.max(x, dim=2)
+        x = x1 + x2
+        return x
 
 
     def forward(self, text:torch.Tensor=None, audio:torch.Tensor=None):
@@ -74,7 +79,7 @@ class CLASP(nn.Module):
         audio_features = F.normalize(audio_features, dim=-1)
 
         # Final MLP transform
-        text_features = self.text_transform(text_features)
-        audio_features = self.audio_transform(audio_features)
+        # text_features = self.text_transform(text_features)
+        # audio_features = self.audio_transform(audio_features)
 
         return text_features, audio_features, self.tempeture.exp()
