@@ -30,15 +30,7 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 
 		self.cleaner = EnglishTextNormalizer()
 		self.tokenizer = get_tokenizer(True)
-		self.stft_fn =Audio.stft.TacotronSTFT(
-			filter_length=1024,
-			hop_length=256,
-			win_length=1024,
-			n_mel_channels=80,
-			sampling_rate=48000,
-			mel_fmin=0,
-			mel_fmax=8000,
-		)
+		self.stft_fn =Audio.stft.MelSpecPipeline()
 
 	def setup(self, stage:Optional[str] = None):
 		pipeline = [wds.SimpleShardList(self.train_data_dir),
@@ -77,8 +69,8 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 	# 	return text, mel
 	def collate_fn(self, data):
 		raw_audios, raw_texts = data
-		mels = [Audio.tools.get_mel_from_wav(audio[0][0].numpy(), self.stft_fn)[0] for audio in raw_audios]
-		mels = [torch.tensor(mel).T for mel in mels]
+
+		mels = [self.stft_fn(audio[0][0]).T for audio in raw_audios]
 
 		if isinstance(raw_texts[0]['text'], list):
 			texts = [torch.tensor(self.tokenizer.encode(self.cleaner(text['text'][0]))) for text in raw_texts]
@@ -172,32 +164,7 @@ if __name__ == '__main__':
 	import tqdm
 	from utils.get_wds_urls import get_tar_path_s3
 	dataset_names = [
-		# 'Urbansound8K', #PASS
-		'audioset', #PASS The text is not stored in a list
-		# 'esc50', #PASS
-		# '130000_MIDI_SONGS', #PASS
-		# 'CREMA-D', #PASS
-		# 'Clotho', #PASS
-		# 'CoVoST_2',#PASS
-		# 'EmoV_DB', #PASS
-		# 'FSD50K', #PASS
-		# 'audiocaps', #PASS
-		# 'audiostock', #PASS
-		# 'cambridge_dictionary', #PASS
-		# 'free_to_use_sounds', #PASS
-		# 'freesound', #PASS
-		# 'midi50k', #PASS
-		# 'paramount_motion', #PASS
-		# 'sonniss_game_effects', #PASS
-		# 'wesoundeffects', #PASS
-		# 'FMA_updated', #FAIL
-		# 'LJSpeech', #FAIL
-		# 'VocalSketch', #FAIL
-		# 'YT_dataset', #FAIL
-		# 'clotho_mixed', #FAIL
-		# 'ravdess', #FAIL
-		# # 'tmp_eval',
-		# 'BBCSoundEffects', #FAIL
+		'EmoV_DB', #PASS
 	]
 	urls = get_tar_path_s3(
 		base_s3_path = 's-laion-audio/webdataset_tar/', 
@@ -206,22 +173,18 @@ if __name__ == '__main__':
 		cache_path = '/tmp/url_cache.json',
 		recache = True,
 		)
-	for url in urls.values():
-		print(len(url))
 	dataset = MultilingualWebdatasetDataModule(	
 									train_data_dir = urls['train'], 
 									test_data_dir =urls['test'], 
 									valid_data_dir = urls['valid'], 
 									batch_size = 64,
-									num_workers=12)
+									num_workers=6)
 
 	dataset.setup()
-	print(len(urls['train'][:2]), len([1,2]))
 
 	for i in tqdm.tqdm(dataset.train_dataloader()):
-		# print(i)
 		print(i[0].shape, i[1].shape)
-		# break
+		break
 	# for i in tqdm.tqdm(dataset.val_dataloader()):
 	# 	pass
 	# for i in tqdm.tqdm(dataset.test_dataloader()):
