@@ -38,3 +38,23 @@ class CLAPLoss(nn.Module):
             F.cross_entropy(logits_per_audio, labels) + 
             F.cross_entropy(logits_per_text, labels)) / 2
         return total_loss
+
+class CLIPLoss(nn.Module):
+    '''
+    CLIP Loss
+    '''
+    def __init__(self, cache_labels:bool = False) -> None:
+        super().__init__()
+
+    def forward(self, text_features:torch.Tensor, audio_features:torch.Tensor, temperature:int=1):
+        logits = (text_features @ audio_features.T) / temperature
+        audio_similarity = audio_features @ audio_features.T
+        texts_similarity = text_features @ text_features.T
+        targets = F.softmax(
+            (audio_similarity + texts_similarity) / 2 * temperature, dim=-1
+        )
+
+        texts_loss = F.cross_entropy(logits, targets, reduction='mean')
+        images_loss = F.cross_entropy(logits.T, targets.T, reduction='mean')
+        loss =  (images_loss + texts_loss) / 2.0 # shape: (batch_size)
+        return loss.mean()
