@@ -4,6 +4,7 @@ import numpy as np
 from scipy.signal import get_window
 from librosa.util import pad_center, tiny
 from librosa.filters import mel as librosa_mel_fn
+import torchaudio
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -82,46 +83,46 @@ class STFT(torch.nn.Module):
 
         return magnitude, phase
 
-    # def inverse(self, magnitude, phase):
-    #     recombine_magnitude_phase = torch.cat(
-    #         [magnitude * torch.cos(phase), magnitude * torch.sin(phase)], dim=1
-    #     )
+    def inverse(self, magnitude, phase):
+        recombine_magnitude_phase = torch.cat(
+            [magnitude * torch.cos(phase), magnitude * torch.sin(phase)], dim=1
+        )
 
-    #     inverse_transform = F.conv_transpose1d(
-    #         recombine_magnitude_phase,
-    #         torch.autograd.Variable(self.inverse_basis, requires_grad=False),
-    #         stride=self.hop_length,
-    #         padding=0,
-    #     )
+        inverse_transform = F.conv_transpose1d(
+            recombine_magnitude_phase,
+            torch.autograd.Variable(self.inverse_basis, requires_grad=False),
+            stride=self.hop_length,
+            padding=0,
+        )
 
-    #     if self.window is not None:
-    #         window_sum = window_sumsquare(
-    #             self.window,
-    #             magnitude.size(-1),
-    #             hop_length=self.hop_length,
-    #             win_length=self.win_length,
-    #             n_fft=self.filter_length,
-    #             dtype=np.float32,
-    #         )
-    #         # remove modulation effects
-    #         approx_nonzero_indices = torch.from_numpy(
-    #             np.where(window_sum > tiny(window_sum))[0]
-    #         )
-    #         window_sum = torch.autograd.Variable(
-    #             torch.from_numpy(window_sum), requires_grad=False
-    #         )
-    #         window_sum = window_sum.cuda() if magnitude.is_cuda else window_sum
-    #         inverse_transform[:, :, approx_nonzero_indices] /= window_sum[
-    #             approx_nonzero_indices
-    #         ]
+        if self.window is not None:
+            window_sum = window_sumsquare(
+                self.window,
+                magnitude.size(-1),
+                hop_length=self.hop_length,
+                win_length=self.win_length,
+                n_fft=self.filter_length,
+                dtype=np.float32,
+            )
+            # remove modulation effects
+            approx_nonzero_indices = torch.from_numpy(
+                np.where(window_sum > tiny(window_sum))[0]
+            )
+            window_sum = torch.autograd.Variable(
+                torch.from_numpy(window_sum), requires_grad=False
+            )
+            window_sum = window_sum.cuda() if magnitude.is_cuda else window_sum
+            inverse_transform[:, :, approx_nonzero_indices] /= window_sum[
+                approx_nonzero_indices
+            ]
 
-    #         # scale by hop ratio
-    #         inverse_transform *= float(self.filter_length) / self.hop_length
+            # scale by hop ratio
+            inverse_transform *= float(self.filter_length) / self.hop_length
 
-    #     inverse_transform = inverse_transform[:, :, int(self.filter_length / 2) :]
-    #     inverse_transform = inverse_transform[:, :, : -int(self.filter_length / 2) :]
+        inverse_transform = inverse_transform[:, :, int(self.filter_length / 2) :]
+        inverse_transform = inverse_transform[:, :, : -int(self.filter_length / 2) :]
 
-    #     return inverse_transform
+        return inverse_transform
 
     def forward(self, input_data):
         self.magnitude, self.phase = self.transform(input_data)
@@ -178,3 +179,33 @@ class TacotronSTFT(torch.nn.Module):
         energy = torch.norm(magnitudes, dim=1)
 
         return mel_output, energy
+
+
+class MelSpecPipeline(torch.nn.Module):
+    def __init__(
+        self,
+        input_freq=48000,
+        resample_freq=16000,
+        n_mel=80,
+        f_min=0,
+        f_max=8000,
+        n_fft=1024,
+        win_length = 1024,
+        hop_length = 512,
+    ):
+        super().__init__()
+        self.resample = torchaudio.transforms.Resample(orig_freq=input_freq, new_freq=resample_freq)
+        self.spec_aug = torch.nn.Sequential()
+        self.mel_spec = torchaudio.transforms.MelSpectrogram(sample_rate=resample_freq, f_min=f_min, f_max=f_max, n_mels=n_mel, n_fft=n_fft, win_length=win_length, hop_length=hop_length)
+        self.amp_to_db = torchaudio.transforms.AmplitudeToDB()
+
+    def forward(self, waveform: torch.Tensor) -> torch.Tensor:
+        # Resample the input
+        resampled = self.resample(waveform)
+        # Create mel scales spectrogram
+        mel = self.mel_spec(resampled)
+        # Apply SpecAugment
+        mel = self.spec_aug(mel)
+        # convert amplidute to db
+        mel = self.amp_to_db(mel)
+        return mel
