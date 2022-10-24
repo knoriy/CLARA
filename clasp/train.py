@@ -28,10 +28,10 @@ class PL_CLASP(pl.LightningModule):
 		self.loss_fn = CLAPLoss(cache_labels=True)
 
 	def forward(self, batch):
-		texts, mels = batch
-		texts, mels = texts.squeeze(0), mels#.unsqueeze(1) # torch.size([64, 100]), torch.size([64,1,80,100])
+		texts, mels = batch # torch.size([61, 123]), torch.size([62,80,1234])
+		# texts, mels = texts.squeeze(0), mels.unsqueeze(1) # torch.size([64, 100]), torch.size([64,1,80,100])
 		return self.model(texts, mels)
-
+	
 	def training_step(self, batch, batch_idx):
 		text_features, audio_features, tempeture = self(batch)
 		loss = self.loss_fn(text_features, audio_features, tempeture)
@@ -55,7 +55,7 @@ class PL_CLASP(pl.LightningModule):
 		return self(batch)
 
 	def configure_optimizers(self):
-		optimizer = torch.optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
+		optimizer = torch.optim.AdamW(self.parameters(), lr=self.hparams.learning_rate)
 		# lr_scheduler = {
 		# 	'scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer),
 		# 	'name': 'lr_scheduler',
@@ -189,7 +189,7 @@ def test_inference(model:torch.nn.Module, dataset:MultilingualWebdatasetDataModu
 	dataset.setup()
 
 	with torch.no_grad():
-		model = model.load_from_checkpoint("/fsx/knoriy/code/CLASP/lightning_logs/version_7968/checkpoints/epoch=43-step=44.ckpt")
+		model = model.load_from_checkpoint("/fsx/knoriy/code/CLASP/lightning_logs/version_8344/checkpoints/epoch=99-step=100.ckpt")
 		model.eval()
 		texts, mels = next(iter(dataset.test_dataloader()))
 		texts, mels = texts.squeeze(0), mels
@@ -202,6 +202,17 @@ def test_inference(model:torch.nn.Module, dataset:MultilingualWebdatasetDataModu
 		text_probs = (audio_features @ text_features.T).softmax(dim=-1)
 		import matplotlib.pyplot as plt
 		plt.imsave('test.png', text_probs)
+	# texts, mels = next(iter(dataset.test_dataloader()))
+	# print(dataset.tokenizer.decode(texts[0]))
+	# import librosa
+	# import soundfile as sf
+	# import matplotlib.pyplot as plt
+	# wav = librosa.feature.inverse.mel_to_audio(mels[9].cpu().detach().numpy())
+	# sf.write('file_trim_5s.wav', wav, 48000)
+	# plt.imsave('mels9.jpeg', mels[0].cpu().detach().numpy())
+
+
+
 
 if __name__ == '__main__':
 	cli_main()
