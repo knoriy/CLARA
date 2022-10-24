@@ -46,7 +46,7 @@ python clasp/train.py --max_epochs 1 --accelerator gpu --devices 1
 # or for distributed
 python clasp/train.py --max_epochs 1 --accelerator gpu --strategy ddp --devices 2
 # over to single batch 
-python clasp/train.py --max_epochs 100 --accelerator gpu --strategy ddp --overfit_batches 1
+python clasp/train.py --max_epochs 100 --accelerator gpu --strategy ddp --overfit_batches 1 --log_every_n_steps 1
 
 ```
 
