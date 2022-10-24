@@ -27,7 +27,8 @@ class CLASP(nn.Module):
                 in_channels = self.hparm.text_encoder_width,
                 out_channels = 1024,
                 num_layers = self.hparm.text_encoder_layers,
-                nhead = self.hparm.text_encoder_heads
+                nhead = self.hparm.text_encoder_heads, 
+                batch_first=True,
                 )
 
         if self.audio_encoder == None:
@@ -48,9 +49,9 @@ class CLASP(nn.Module):
     def encode_text(self, text:torch.Tensor):
         x = self.text_embedding(text)
         x = self.positional_embedding(x)
-        x = x.permute(1, 0, 2)  # NLD -> LND
+        # x = x.permute(1, 0, 2)  # NLD -> LND
         x = self.text_encoder(x)
-        x = x.permute(1, 0, 2)  # LND -> NLD
+        # x = x.permute(1, 0, 2)  # LND -> NLD
         x = self.ln_final(x)
 
         x = x[torch.arange(x.shape[0]), text.argmax(dim=-1)] @ self.text_projection
@@ -79,7 +80,7 @@ class CLASP(nn.Module):
         audio_features = F.normalize(audio_features, dim=-1)
 
         # Final MLP transform
-        # text_features = self.text_transform(text_features)
-        # audio_features = self.audio_transform(audio_features)
+        text_features = self.text_transform(text_features)
+        audio_features = self.audio_transform(audio_features)
 
         return text_features, audio_features, self.tempeture.exp()
