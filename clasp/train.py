@@ -28,7 +28,7 @@ class PL_CLASP(pl.LightningModule):
 		self.loss_fn = CLAPLoss(cache_labels=True)
 
 	def forward(self, batch):
-		texts, mels = batch # torch.size([61, 123]), torch.size([62,80,1234])
+		texts, mels, text_lengths, mel_lengths  = batch # torch.size([61, 123]), torch.size([62,80,1234])
 		# texts, mels = texts.squeeze(0), mels.unsqueeze(1) # torch.size([64, 100]), torch.size([64,1,80,100])
 		return self.model(texts, mels)
 	
