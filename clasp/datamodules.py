@@ -71,7 +71,6 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 		raw_audios, raw_texts = data
 
 		mels = [self.stft_fn(audio[0][0]).T for audio in raw_audios]
-
 		if isinstance(raw_texts[0]['text'], list):
 			texts = [torch.tensor(self.tokenizer.encode(self.cleaner(text['text'][0]))) for text in raw_texts]
 		elif isinstance(raw_texts[0]['text'], str):
@@ -79,10 +78,15 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 		else:
 			raise ValueError('Unsupoted text type, must be list[str] or str')
 
+		mel_lengths = [mel.shape[0] for mel in mels]
+		mel_lengths = torch.tensor(mel_lengths)
+		text_lengths = [text.shape[0] for text in texts]
+		text_lengths = torch.tensor(text_lengths)
+
 		texts = pad_sequence(texts).T
 		mels = pad_sequence(mels).permute(1,2,0)
 
-		return texts, mels
+		return texts, mels, text_lengths, mel_lengths
 	
 class WebdatasetDataModule(pl.LightningDataModule):
 	def __init__(self, train_data_dir:str, test_data_dir:str, valid_data_dir:str, epochs:int=1, batch_size:int = 32, num_workers:int=0, audio_backend:str=None):
