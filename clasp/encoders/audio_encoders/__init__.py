@@ -1,3 +1,3 @@
-from .pann import Cnn10
 from .whisper import WhisperAudioEncoder
-from .simple_cnn import SimpleCNN
+from .simple_cnn import SimpleCNN, SimpleCNNLarge
+from .cnn import Cnn12, Cnn10
