@@ -16,7 +16,7 @@ class CLAPLoss(nn.Module):
         self.labels = {}
 
 
-    def forward(self, text_features, audio_features, temperature:int=1):
+    def forward(self, text_features, audio_features, temperature:float=1.0):
         device = audio_features.device
         
         logits_per_audio = (audio_features @ text_features.T) * temperature
