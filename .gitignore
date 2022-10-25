@@ -131,3 +131,5 @@ DATA
 
 *.out
 test.ipynb
+slurm-overfit.sh
+slurm-train.sh
