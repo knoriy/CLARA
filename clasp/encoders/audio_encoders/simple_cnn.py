@@ -26,18 +26,18 @@ class SimpleCNNLarge(nn.Module):
     '''
     def __init__(self, in_channel:int, out_channel:int) -> None:
         super().__init__()
-        self.cnn1 = nn.Conv1d(in_channel,out_channel, 3)
-        self.cnn2 = nn.Conv1d(out_channel,out_channel, 3)
-        self.cnn3 = nn.Conv1d(out_channel,out_channel, 3)
-        self.cnn4 = nn.Conv1d(out_channel,out_channel, 3)
-        self.cnn5 = nn.Conv1d(out_channel,out_channel, 3)
-        self.cnn6 = nn.Conv1d(out_channel,out_channel, 3)
+        self.cnn1 = nn.Conv1d(in_channel,128, 3)
+        self.cnn2 = nn.Conv1d(128,256, 3)
+        self.cnn3 = nn.Conv1d(256,512, 3)
+        self.cnn4 = nn.Conv1d(512,1024, 3)
+        self.cnn5 = nn.Conv1d(1024,2048, 3)
+        self.cnn6 = nn.Conv1d(2048,out_channel, 3)
 
-        self.bn1 = nn.BatchNorm1d(out_channel)
-        self.bn2 = nn.BatchNorm1d(out_channel)
-        self.bn3 = nn.BatchNorm1d(out_channel)
-        self.bn4 = nn.BatchNorm1d(out_channel)
-        self.bn5 = nn.BatchNorm1d(out_channel)
+        self.bn1 = nn.BatchNorm1d(128)
+        self.bn2 = nn.BatchNorm1d(256)
+        self.bn3 = nn.BatchNorm1d(512)
+        self.bn4 = nn.BatchNorm1d(1024)
+        self.bn5 = nn.BatchNorm1d(2048)
         self.bn6 = nn.BatchNorm1d(out_channel)
 
     def forward(self, x):
