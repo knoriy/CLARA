@@ -131,3 +131,4 @@ DATA
 
 *.out
 test.ipynb
+.archive
