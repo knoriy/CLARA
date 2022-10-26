@@ -1,14 +1,12 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 import numpy as np
 
 from typing import Tuple, Union, Callable, Optional
-from collections import OrderedDict
 from encoders.text_encoders import TransformerEncoder 
-from encoders.audio_encoders import WhisperAudioEncoder, Cnn10, SimpleCNN
+from encoders.audio_encoders import WhisperAudioEncoder, SimpleCNN, SimpleCNNLarge, Cnn12, Cnn10
 from encoders.modules import PositionalEncoding, LayerNorm, MLPLayers
 
 class CLASP(nn.Module):
@@ -25,26 +23,34 @@ class CLASP(nn.Module):
         if self.text_encoder == None:
             self.text_encoder = TransformerEncoder(
                 in_channels = self.hparm.text_encoder_width,
-                out_channels = 1024,
+                out_channels = self.hparm.text_encoder_embedding,
                 num_layers = self.hparm.text_encoder_layers,
                 nhead = self.hparm.text_encoder_heads, 
                 batch_first=True,
                 )
 
         if self.audio_encoder == None:
-            self.audio_encoder = SimpleCNN(80, 1024)
+            # self.audio_encoder = SimpleCNN(80, 1024)
+            # self.audio_encoder = SimpleCNNLarge(80, 1024)
+            self.audio_encoder = Cnn10(80, 1024)
+            # self.audio_encoder = Cnn12(80, 1024)
 
+
+        # Text Layers
         self.text_embedding = nn.Embedding(self.hparm.vocab_size, self.hparm.text_encoder_embedding)
         self.positional_embedding = PositionalEncoding(self.hparm.text_encoder_embedding)
         self.text_projection = nn.Parameter(torch.empty(self.hparm.text_encoder_width, self.hparm.text_encoder_embedding))
         self.ln_final = LayerNorm(self.hparm.text_encoder_width)
+        ## text branch parameters
+        self.text_transform = MLPLayers(units=[1024,512,512], dropout=0.1)
 
+        # Audio Layers
+        ## audio branch parameters
+        self.audio_transform = MLPLayers(units=[1024,512,512], dropout=0.1)
+
+        # Other
         self.tempeture = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
 
-        # text branch parameters
-        self.text_transform = MLPLayers(units=[1024,512,512], dropout=0.1)
-        # audio branch parameters
-        self.audio_transform = MLPLayers(units=[1024,512,512], dropout=0.1)
 
     def encode_text(self, text:torch.Tensor):
         x = self.text_embedding(text)
@@ -59,6 +65,7 @@ class CLASP(nn.Module):
         return x
 
     def encode_audio(self, audio:torch.Tensor):
+        # audio = audio.unsqueeze(1).permute(0,1,3,2)
         x = self.audio_encoder(audio)
 
         x1 = torch.mean(x, dim=2)
