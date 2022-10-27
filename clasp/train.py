@@ -57,12 +57,12 @@ class PL_CLASP(pl.LightningModule):
 
 	def configure_optimizers(self):
 		optimizer = torch.optim.AdamW(self.parameters(), lr=self.hparams.learning_rate)
-		# lr_scheduler = {
-		# 	'scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer),
-		# 	'name': 'lr_scheduler',
-		# 	'monitor': 'valid_loss',
-		# }
-		return optimizer
+		lr_scheduler = {
+			'scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer),
+			'name': 'lr_scheduler',
+			'monitor': 'valid_loss',
+		}
+		return [optimizer], [lr_scheduler]
 
 	@staticmethod
 	def add_model_specific_args(parent_parser):
@@ -170,7 +170,7 @@ def cli_main():
 		callbacks=[
 			# checkpoint_callback,
 			# early_stopping_callback, 
-			# lr_monitor,
+			lr_monitor,
 			],
 	)
 	
