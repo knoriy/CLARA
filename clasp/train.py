@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 
 import torch
+import torch.nn.functional as F
 import torchmetrics
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping, LearningRateMonitor
@@ -28,7 +29,7 @@ class PL_CLASP(pl.LightningModule):
 		self.loss_fn = CLAPLoss(cache_labels=True)
 
 	def forward(self, batch):
-		texts, mels, text_lengths, mel_lengths  = batch # torch.size([61, 123]), torch.size([62,80,1234])
+		texts, mels, text_lengths, mel_lengths  = batch # torch.size([*, 123]), torch.size([*,80,1234])
 		# texts, mels = texts.squeeze(0), mels.unsqueeze(1) # torch.size([64, 100]), torch.size([64,1,80,100])
 		return self.model(texts, mels)
 	
@@ -91,8 +92,6 @@ def cli_main():
 	parser.add_argument('--num_workers', default=6, type=int)
 	parser.add_argument('--early_stoping_patience', type=int, default=10)
 	parser.add_argument('--testing_stuff', type=bool, default=False)
-
-
 
 	parser = pl.Trainer.add_argparse_args(parser)
 	parser = PL_CLASP.add_model_specific_args(parser)
@@ -157,25 +156,28 @@ def cli_main():
 	# ------------
 	model = PL_CLASP(args.hidden_dim, args.learning_rate)
 
-	if not args.testing_stuff:
-		# ------------
-		# Callbacks
-		# ------------
-		checkpoint_callback = ModelCheckpoint(monitor="valid_loss")
-		early_stopping_callback = EarlyStopping(monitor="valid_loss", patience=args.early_stoping_patience)
-		lr_monitor = LearningRateMonitor()
+	# ------------
+	# Callbacks
+	# ------------
+	checkpoint_callback = ModelCheckpoint(monitor="valid_loss")
+	early_stopping_callback = EarlyStopping(monitor="valid_loss", patience=args.early_stoping_patience)
+	lr_monitor = LearningRateMonitor()
 
+	# ------------
+	# Get Trainer
+	# ------------
+	trainer = pl.Trainer.from_argparse_args(args, 
+		callbacks=[
+			# checkpoint_callback,
+			# early_stopping_callback, 
+			# lr_monitor,
+			],
+	)
+	
+	if not args.testing_stuff:
 		# ------------
 		# training
 		# ------------
-		trainer = pl.Trainer.from_argparse_args(args, 
-			callbacks=[
-				# checkpoint_callback,
-				# early_stopping_callback, 
-				# lr_monitor,
-				],
-		)
-		
 		trainer.fit(model, datamodule=dataset)
 
 		# ------------
@@ -183,35 +185,31 @@ def cli_main():
 		# ------------
 		trainer.test(ckpt_path='best', datamodule=dataset)
 	else:
-		test_inference(model, dataset)
-
-def test_inference(model:torch.nn.Module, dataset:MultilingualWebdatasetDataModule):
-	dataset.setup()
-
-	with torch.no_grad():
-		model = model.load_from_checkpoint("/fsx/knoriy/code/CLASP/lightning_logs/version_8344/checkpoints/epoch=99-step=100.ckpt")
-		model.eval()
-		texts, mels = next(iter(dataset.test_dataloader()))
-		texts, mels = texts.squeeze(0), mels
-		text_features, audio_features, _ = model((texts, mels))
-
-		text_features, audio_features = text_features.cpu().detach(), audio_features.cpu().detach()
-
-		audio_features /= audio_features.norm(dim=-1, keepdim=True)
-		text_features /= text_features.norm(dim=-1, keepdim=True)
-		text_probs = (audio_features @ text_features.T).softmax(dim=-1)
 		import matplotlib.pyplot as plt
-		plt.imsave('test.png', text_probs)
-	# texts, mels = next(iter(dataset.test_dataloader()))
-	# print(dataset.tokenizer.decode(texts[0]))
-	# import librosa
-	# import soundfile as sf
-	# import matplotlib.pyplot as plt
-	# wav = librosa.feature.inverse.mel_to_audio(mels[9].cpu().detach().numpy())
-	# sf.write('file_trim_5s.wav', wav, 48000)
-	# plt.imsave('mels9.jpeg', mels[0].cpu().detach().numpy())
 
+		model = model.load_from_checkpoint("/fsx/knoriy/code/CLASP/.archive/epoch=99-step=100-simple-cnn.ckpt")
 
+		predictions = trainer.predict(model, dataloaders=dataset)
+		print(len(predictions))
+		for prediction in predictions:
+			text_features, audio_features, temperature = prediction
+			logits = (text_features @ audio_features.T) / temperature
+			audio_similarity = audio_features @ audio_features.T
+			texts_similarity = text_features @ text_features.T
+			targets = F.softmax(
+				(audio_similarity + texts_similarity) / 2 * temperature, dim=-1
+			)
+
+			texts_loss = F.cross_entropy(logits, targets, reduction='mean')
+			images_loss = F.cross_entropy(logits.T, targets.T, reduction='mean')
+
+			plt.imsave('_logits.png', logits)
+			plt.imsave('_audio_similarity.png', audio_similarity)
+			plt.imsave('_texts_similarity.png', texts_similarity)
+			plt.imsave('_sub_aud_sim.png', logits - audio_similarity)
+
+			print(texts_loss, images_loss)
+			break
 
 
 if __name__ == '__main__':
