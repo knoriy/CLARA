@@ -13,7 +13,7 @@ class CLASP(nn.Module):
     '''
     Contrastive Language-Speech Pre-training 
     '''
-    def __init__(self, hparm, text_encoder:Optional=None, audio_encoder:Optional=None) -> None:
+    def __init__(self, hparm, text_encoder:Optional[nn.Module]=None, audio_encoder:Optional[nn.Module]=None) -> None:
         super().__init__()
         self.hparm = hparm
 
