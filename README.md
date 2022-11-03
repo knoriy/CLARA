@@ -31,10 +31,13 @@ First, install dependencies
 # clone clasp   
 git clone https://github.com/knoriy/CLASP.git
 
+# create conda env
+conda env create -f environments/env.yaml
+
 # install clasp   
 cd CLASP
 pip install -e .   
-pip install -r enrioments/requirements.txt
+pip install -r environments/requirements.txt
  ```
 
  Next, navigate to any file and run it.
