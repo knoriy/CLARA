@@ -30,11 +30,11 @@ class CLASP(nn.Module):
                 )
 
         if self.audio_encoder == None:
-            self.audio_encoder = SimpleCNN(80, 1024)
+            # self.audio_encoder = SimpleCNN(80, 1024)
             # self.audio_encoder = SimpleCNNLarge(80, 1024)
             # self.audio_encoder = Cnn10(80, 1024)
             # self.audio_encoder = Cnn12(80, 1024)
-            # self.audio_encoder = ResNet(80, 1024)
+            self.audio_encoder = WhisperAudioEncoder(80, 1024, 1, 1, batch_first=True)
 
         # ------------
         # Text Layers
@@ -95,7 +95,7 @@ class CLASP(nn.Module):
         audio_features = F.normalize(audio_features, dim=-1)
 
         # Final MLP transform
-        # text_features = self.text_transform(text_features)
-        # audio_features = self.audio_transform(audio_features)
+        text_features = self.text_transform(text_features)
+        audio_features = self.audio_transform(audio_features)
 
         return text_features, audio_features, self.tempeture.exp()
