@@ -30,7 +30,7 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 
 		self.cleaner = EnglishTextNormalizer()
 		self.tokenizer = get_tokenizer(True)
-		self.stft_fn =Audio.stft.MelSpecPipeline()
+		self.stft_fn = Audio.stft.MelSpecPipeline()
 
 	def setup(self, stage:Optional[str] = None):
 		pipeline = [wds.SimpleShardList(self.train_data_dir),
@@ -102,15 +102,7 @@ class WebdatasetDataModule(pl.LightningDataModule):
 		self.batch_size = batch_size
 		self.num_workers = num_workers
 
-		self.stft_fn =Audio.stft.TacotronSTFT(
-			filter_length=1024,
-			hop_length=256,
-			win_length=1024,
-			n_mel_channels=80,
-			sampling_rate=48000,
-			mel_fmin=0,
-			mel_fmax=8000,
-		)
+		self.stft_fn = Audio.stft.MelSpecPipeline()
 
 	def setup(self, stage:Optional[str] = None):
 		pipeline = [wds.SimpleShardList(self.train_data_dir),
@@ -149,9 +141,8 @@ class WebdatasetDataModule(pl.LightningDataModule):
 	# 	return text, mel
 	def collate_fn(self, data):
 		raw_audios, raw_texts = data
-		mels = [Audio.tools.get_mel_from_wav(audio[0][0].numpy(), self.stft_fn)[0] for audio in raw_audios]
-		mels = [torch.tensor(mel).T for mel in mels]
 
+		mels = [self.stft_fn(audio[0][0]).T for audio in raw_audios]
 		if isinstance(raw_texts[0]['text'], list):
 			texts = [torch.tensor(text_to_sequence(text['text'][0], ["english_cleaners"])) for text in raw_texts]
 		elif isinstance(raw_texts[0]['text'], str):
