@@ -7,7 +7,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping, LearningRateMonitor
 
 from clasp import CLASP
-from loss import CLAPLoss
+from loss import CLAPLoss, CLIPLoss
 from datamodules import WebdatasetDataModule, MultilingualWebdatasetDataModule
 from utils.get_wds_urls import get_tar_path_s3
 
@@ -32,25 +32,25 @@ class PL_CLASP(pl.LightningModule):
 		texts, mels, text_lengths, mel_lengths  = batch # torch.size([*, 123]), torch.size([*,80,1234])
 		# texts, mels = texts.squeeze(0), mels.unsqueeze(1) # torch.size([64, 100]), torch.size([64,1,80,100])
 		return self.model(texts, mels)
-	
+
 	def training_step(self, batch, batch_idx):
 		text_features, audio_features, tempeture = self(batch)
 		loss = self.loss_fn(text_features, audio_features, tempeture)
 
-		self.log('train_loss', loss, sync_dist=True)
-		return {"loss": loss}
+		self.log('train_loss', loss, prog_bar=True)
+		return loss
 
 	def validation_step(self, batch, batch_idx):
 		text_features, audio_features, tempeture = self(batch)
 		loss = self.loss_fn(text_features, audio_features, tempeture)
 
-		self.log('valid_loss', loss, sync_dist=True, prog_bar=True)
+		self.log('valid_loss', loss, prog_bar=True)
 
 	def test_step(self, batch, batch_idx):
 		text_features, audio_features, tempeture = self(batch)
 		loss = self.loss_fn(text_features, audio_features, tempeture)
 
-		self.log('test_loss', loss, sync_dist=True, prog_bar=True)
+		self.log('test_loss', loss)
 
 	def predict_step(self, batch, batch_idx, dataloader_idx=0):
 		return self(batch)
@@ -137,11 +137,11 @@ def cli_main():
 		# recache				= True,
 		)
 
-	# urls = {
-	# 	'train':['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar'], 
-	# 	'test':['/fsx/knoriy/processed_datasets/clasp_local_data/test/0.tar'], 
-	# 	'valid':['/fsx/knoriy/processed_datasets/clasp_local_data/valid/0.tar']
-	# }
+	urls = {
+		'train':['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar'], 
+		'test':['/fsx/knoriy/processed_datasets/clasp_local_data/test/0.tar'], 
+		'valid':['/fsx/knoriy/processed_datasets/clasp_local_data/valid/0.tar']
+	}
 
 	dataset = MultilingualWebdatasetDataModule(	
 					train_data_dir = urls['train'],
@@ -170,7 +170,7 @@ def cli_main():
 		callbacks=[
 			# checkpoint_callback,
 			# early_stopping_callback, 
-			lr_monitor,
+			# lr_monitor,
 			],
 	)
 	
