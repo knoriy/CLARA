@@ -30,13 +30,14 @@ class CLASP(nn.Module):
                 )
 
         if self.audio_encoder == None:
-            # self.audio_encoder = SimpleCNN(80, 1024)
+            self.audio_encoder = SimpleCNN(80, 1024)
             # self.audio_encoder = SimpleCNNLarge(80, 1024)
-            self.audio_encoder = Cnn10(80, 1024)
+            # self.audio_encoder = Cnn10(80, 1024)
             # self.audio_encoder = Cnn12(80, 1024)
 
-
+        # ------------
         # Text Layers
+        # ------------
         self.text_embedding = nn.Embedding(self.hparm.vocab_size, self.hparm.text_encoder_embedding)
         self.positional_embedding = PositionalEncoding(self.hparm.text_encoder_embedding)
         self.text_projection = nn.Parameter(torch.empty(self.hparm.text_encoder_width, self.hparm.text_encoder_embedding))
@@ -44,13 +45,16 @@ class CLASP(nn.Module):
         ## text branch parameters
         self.text_transform = MLPLayers(units=[1024,512,512], dropout=0.1)
 
+        # ------------
         # Audio Layers
+        # ------------
         ## audio branch parameters
         self.audio_transform = MLPLayers(units=[1024,512,512], dropout=0.1)
 
+        # ------------
         # Other
+        # ------------
         self.tempeture = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
-
 
     def encode_text(self, text:torch.Tensor):
         x = self.text_embedding(text)
@@ -72,7 +76,6 @@ class CLASP(nn.Module):
         x2, _ = torch.max(x, dim=2)
         x = x1 + x2
         return x
-
 
     def forward(self, text:torch.Tensor=None, audio:torch.Tensor=None):
         if audio is None:
