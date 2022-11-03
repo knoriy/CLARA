@@ -34,6 +34,7 @@ class CLASP(nn.Module):
             # self.audio_encoder = SimpleCNNLarge(80, 1024)
             # self.audio_encoder = Cnn10(80, 1024)
             # self.audio_encoder = Cnn12(80, 1024)
+            # self.audio_encoder = ResNet(80, 1024)
 
         # ------------
         # Text Layers
@@ -50,6 +51,7 @@ class CLASP(nn.Module):
         # ------------
         ## audio branch parameters
         self.audio_transform = MLPLayers(units=[1024,512,512], dropout=0.1)
+        self.audio_fc1 = nn.Linear(1024, 1024)
 
         # ------------
         # Other
@@ -75,6 +77,9 @@ class CLASP(nn.Module):
         x1 = torch.mean(x, dim=2)
         x2, _ = torch.max(x, dim=2)
         x = x1 + x2
+
+        x = F.relu(self.audio_fc1(x))
+
         return x
 
     def forward(self, text:torch.Tensor=None, audio:torch.Tensor=None):
@@ -90,7 +95,7 @@ class CLASP(nn.Module):
         audio_features = F.normalize(audio_features, dim=-1)
 
         # Final MLP transform
-        text_features = self.text_transform(text_features)
-        audio_features = self.audio_transform(audio_features)
+        # text_features = self.text_transform(text_features)
+        # audio_features = self.audio_transform(audio_features)
 
         return text_features, audio_features, self.tempeture.exp()

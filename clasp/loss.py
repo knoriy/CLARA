@@ -19,8 +19,8 @@ class CLAPLoss(nn.Module):
     def forward(self, text_features, audio_features, temperature:float=1.0):
         device = audio_features.device
         
-        logits_per_audio = (audio_features @ text_features.T) * temperature
-        logits_per_text = (text_features @ audio_features.T) * temperature
+        logits_per_audio = temperature * audio_features @ text_features.T
+        logits_per_text = temperature * text_features @ audio_features.T
 
         # calculated ground-truth and cache if enabled
         num_logits = logits_per_audio.shape[0]
@@ -54,7 +54,7 @@ class CLIPLoss(nn.Module):
             (audio_similarity + texts_similarity) / 2 * temperature, dim=-1
         )
 
-        texts_loss = F.cross_entropy(logits, targets, reduction='mean')
-        images_loss = F.cross_entropy(logits.T, targets.T, reduction='mean')
-        loss =  (images_loss + texts_loss) / 2.0 # shape: (batch_size)
+        texts_loss = F.cross_entropy(logits, targets)
+        images_loss = F.cross_entropy(logits.T, targets.T)
+        loss =  (images_loss + texts_loss) / 2 # shape: (batch_size)
         return loss.mean()
