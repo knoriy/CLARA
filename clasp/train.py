@@ -137,11 +137,11 @@ def cli_main():
 		# recache				= True,
 		)
 
-	urls = {
-		'train':['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar'], 
-		'test':['/fsx/knoriy/processed_datasets/clasp_local_data/test/0.tar'], 
-		'valid':['/fsx/knoriy/processed_datasets/clasp_local_data/valid/0.tar']
-	}
+	# urls = {
+	# 	'train':['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar'], 
+	# 	'test':['/fsx/knoriy/processed_datasets/clasp_local_data/test/0.tar'], 
+	# 	'valid':['/fsx/knoriy/processed_datasets/clasp_local_data/valid/0.tar']
+	# }
 
 	dataset = MultilingualWebdatasetDataModule(	
 					train_data_dir = urls['train'],
