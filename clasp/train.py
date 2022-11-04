@@ -20,6 +20,8 @@ class PL_CLASP(pl.LightningModule):
 					text_encoder_layers=1,
 					text_encoder_heads=4,
 					vocab_size=50257,
+					n_mels=80,
+					audio_encoder_embedding=1024,
 					):
 
 		super().__init__()
@@ -137,11 +139,11 @@ def cli_main():
 		# recache				= True,
 		)
 
-	urls = {
-		'train':['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar'], 
-		'test':['/fsx/knoriy/processed_datasets/clasp_local_data/test/0.tar'], 
-		'valid':['/fsx/knoriy/processed_datasets/clasp_local_data/valid/0.tar']
-	}
+	# urls = {
+	# 	'train':['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar'], 
+	# 	'test':['/fsx/knoriy/processed_datasets/clasp_local_data/test/0.tar'], 
+	# 	'valid':['/fsx/knoriy/processed_datasets/clasp_local_data/valid/0.tar']
+	# }
 
 	dataset = MultilingualWebdatasetDataModule(	
 					train_data_dir = urls['train'],
