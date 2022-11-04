@@ -11,8 +11,8 @@ class ConvBlock1D3x3(nn.Module):
         self.bn = nn.BatchNorm1d(out_channel)
 
     def forward(self, x):
-        x = F.relu(self.conv1(x))
-        return F.relu(self.bn(self.conv2(x)))
+        x = F.gelu(self.conv1(x))
+        return F.gelu(self.bn(self.conv2(x)))
 
 class Cnn1D10(nn.Module):
     def __init__(self, n_mels:int, out_channels:int):
@@ -26,6 +26,7 @@ class Cnn1D10(nn.Module):
     def forward(self, x):
         for layer in self.layers:
             x = layer(x)
+            x = F.dropout(x, p=0.2)
         return x
 
 class Cnn1D12(nn.Module):
@@ -40,6 +41,7 @@ class Cnn1D12(nn.Module):
     def forward(self, x):
         for linear in self.layers:
             x = linear(x)
+            x = F.dropout(x, p=0.2)
         return x
 
 class ConvBlock2D3x3(nn.Module):
@@ -50,8 +52,8 @@ class ConvBlock2D3x3(nn.Module):
         self.bn = nn.BatchNorm2d(out_channel)
 
     def forward(self, x):
-        x = F.relu(self.conv1(x))
-        return F.relu(self.bn(self.conv2(x)))
+        x = F.gelu(self.conv1(x))
+        return F.gelu(self.bn(self.conv2(x)))
 
 class Cnn2D10(nn.Module):
     def __init__(self, in_channels:int, out_channels:int):
