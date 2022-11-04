@@ -171,7 +171,7 @@ def cli_main():
 	# ------------
 	# Loggers
 	# ------------
-	# logger = WandbLogger()
+	logger = WandbLogger(save_dir="/fsx/knoriy/code/CLASP/logs")
 
 	# ------------
 	# Get Trainer
@@ -182,7 +182,7 @@ def cli_main():
 			# early_stopping_callback, 
 			# lr_monitor,
 			],
-		# logger=logger
+		logger=logger
 	)
 	
 	if not args.testing_stuff:
