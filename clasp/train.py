@@ -17,6 +17,7 @@ class PL_CLASP(pl.LightningModule):
 	def __init__(	self, 
 					hidden_dim=128, 
 					learning_rate=1e-3, 
+					learning_rate_patience=10, 
 					text_encoder_width=1024,
 					text_encoder_embedding=1024,
 					text_encoder_layers=1,
