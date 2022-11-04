@@ -135,20 +135,22 @@ def cli_main():
 		# # 'tmp_eval',
 		# 'BBCSoundEffects', #FAIL
 	]
-	
-	urls = get_tar_path_s3(
-		base_s3_path		= 's-laion-audio/webdataset_tar/', 
-		train_valid_test	= ['train', 'test', 'valid'],
-		dataset_names		= dataset_names, 
-		# cache_path			= '/tmp/url_cache.json',
-		# recache				= True,
-		)
+		
+	if args.overfit_batches:
+		urls = {
+			'train':['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar'], 
+			'test':['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar'], 
+			'valid':['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar']
+		}
+	else:
+		urls = get_tar_path_s3(
+			base_s3_path		= 's-laion-audio/webdataset_tar/', 
+			train_valid_test	= ['train', 'test', 'valid'],
+			dataset_names		= dataset_names, 
+			# cache_path			= '/tmp/url_cache.json',
+			# recache				= True,
+			)
 
-	# urls = {
-	# 	'train':['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar'], 
-	# 	'test':['/fsx/knoriy/processed_datasets/clasp_local_data/test/0.tar'], 
-	# 	'valid':['/fsx/knoriy/processed_datasets/clasp_local_data/valid/0.tar']
-	# }
 
 	dataset = MultilingualWebdatasetDataModule(	
 					train_data_dir = urls['train'],
@@ -174,7 +176,7 @@ def cli_main():
 	# ------------
 	# Loggers
 	# ------------
-	logger = WandbLogger(name=args.name, save_dir="logs/")
+	logger = WandbLogger(name=args.name, save_dir="logs/", project="CLASP")
 
 	# ------------
 	# Get Trainer
