@@ -1,13 +1,13 @@
 #!/bin/bash
 #SBATCH --partition=gpu
-#SBATCH --job-name=SD-SCNN-1000
+#SBATCH --job-name=SD-SCNN12-1000
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=8
-#SBATCH --gpus=4
+#SBATCH --gpus=2
 #SBATCH --cpus-per-gpu=6 
 #SBATCH --comment clap
 #SBATCH --output=%x_%j.out
-#SBATCH --exclude=gpu-st-p4d-24xlarge-[281]
+#SBATCH --exclude=gpu-st-p4d-24xlarge-[1,281]
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/nccl/build/lib:/opt/aws-ofi-nccl-install/lib
 export NCCL_PROTO=simple
