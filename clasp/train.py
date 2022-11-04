@@ -5,6 +5,8 @@ import torch.nn.functional as F
 import torchmetrics
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping, LearningRateMonitor
+from pytorch_lightning.loggers import WandbLogger
+
 
 from clasp import CLASP
 from loss import CLAPLoss, CLIPLoss
@@ -165,6 +167,12 @@ def cli_main():
 	early_stopping_callback = EarlyStopping(monitor="valid_loss", patience=args.early_stoping_patience)
 	lr_monitor = LearningRateMonitor()
 
+
+	# ------------
+	# Loggers
+	# ------------
+	# logger = WandbLogger()
+
 	# ------------
 	# Get Trainer
 	# ------------
@@ -174,6 +182,7 @@ def cli_main():
 			# early_stopping_callback, 
 			# lr_monitor,
 			],
+		# logger=logger
 	)
 	
 	if not args.testing_stuff:
