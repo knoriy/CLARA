@@ -124,7 +124,7 @@ venv.bak/
 .vscode
 
 # seed project
-lightning_logs/
+logs
 MNIST
 .DS_Store
 DATA
@@ -132,4 +132,3 @@ DATA
 *.out
 test.ipynb
 .archive
-wandb
