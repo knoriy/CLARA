@@ -62,7 +62,7 @@ class PL_CLASP(pl.LightningModule):
 	def configure_optimizers(self):
 		optimizer = torch.optim.AdamW(self.parameters(), lr=self.hparams.learning_rate)
 		lr_scheduler = {
-			'scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer),
+			'scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, patience=self.hparams.learning_rate_patience),
 			'name': 'lr_scheduler',
 			'monitor': 'valid_loss',
 		}
@@ -75,6 +75,7 @@ class PL_CLASP(pl.LightningModule):
 		parser = ArgumentParser(parents=[parent_parser], add_help=False)
 		parser.add_argument('--hidden_dim', type=int, default=128)
 		parser.add_argument('--learning_rate', type=float, default=1e-3)
+		parser.add_argument('--learning_rate_patience', type=int, default=20)
 		parser.add_argument('--text_encoder_width', type=int, default=1024)
 		parser.add_argument('--text_encoder_embedding', type=int, default=1024)
 		parser.add_argument('--text_encoder_layers', type=int, default=1)
@@ -96,6 +97,7 @@ def cli_main():
 	parser.add_argument('--num_workers', default=6, type=int)
 	parser.add_argument('--early_stoping_patience', type=int, default=10)
 	parser.add_argument('--testing_stuff', type=bool, default=False)
+	parser.add_argument('--name', type=str, default=None)
 
 	parser = pl.Trainer.add_argparse_args(parser)
 	parser = PL_CLASP.add_model_specific_args(parser)
@@ -171,7 +173,7 @@ def cli_main():
 	# ------------
 	# Loggers
 	# ------------
-	logger = WandbLogger(save_dir="/fsx/knoriy/code/CLASP/logs")
+	logger = WandbLogger(name=args.name, save_dir="logs/")
 
 	# ------------
 	# Get Trainer
@@ -180,7 +182,7 @@ def cli_main():
 		callbacks=[
 			# checkpoint_callback,
 			# early_stopping_callback, 
-			# lr_monitor,
+			lr_monitor,
 			],
 		logger=logger
 	)
