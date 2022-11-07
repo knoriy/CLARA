@@ -48,13 +48,13 @@ class ResNeXtBottleneck(nn.Module):
             self.shortcut.add_module('shortcut_bn', nn.BatchNorm2d(out_channels))
 
     def forward(self, x):
-        bottleneck = self.conv_reduce.forward(x)
-        bottleneck = F.relu(self.bn_reduce.forward(bottleneck), inplace=True)
-        bottleneck = self.conv_conv.forward(bottleneck)
-        bottleneck = F.relu(self.bn.forward(bottleneck), inplace=True)
-        bottleneck = self.conv_expand.forward(bottleneck)
-        bottleneck = self.bn_expand.forward(bottleneck)
-        residual = self.shortcut.forward(x)
+        bottleneck = self.conv_reduce(x)
+        bottleneck = F.relu(self.bn_reduce(bottleneck), inplace=True)
+        bottleneck = self.conv_conv(bottleneck)
+        bottleneck = F.relu(self.bn(bottleneck), inplace=True)
+        bottleneck = self.conv_expand(bottleneck)
+        bottleneck = self.bn_expand(bottleneck)
+        residual = self.shortcut(x)
         return F.relu(residual + bottleneck, inplace=True)
 
 
@@ -64,7 +64,7 @@ class CifarResNeXt(nn.Module):
     https://arxiv.org/pdf/1611.05431.pdf
     """
 
-    def __init__(self, cardinality, depth, nlabels, base_width, widen_factor=4):
+    def __init__(self, cardinality, depth, out_channels, base_width, widen_factor=4):
         """ Constructor
         Args:
             cardinality: number of convolution groups.
@@ -79,22 +79,21 @@ class CifarResNeXt(nn.Module):
         self.block_depth = (self.depth - 2) // 9
         self.base_width = base_width
         self.widen_factor = widen_factor
-        self.nlabels = nlabels
-        self.output_size = 64
+        self.nlabels = out_channels
         self.stages = [64, 64 * self.widen_factor, 128 * self.widen_factor, 256 * self.widen_factor]
 
         self.conv_1_3x3 = nn.Conv2d(1, 64, 3, 1, 1, bias=False) # Modified from 3 channels to 1
         self.bn_1 = nn.BatchNorm2d(64)
         self.stage_1 = self.block('stage_1', self.stages[0], self.stages[1], 1)
         self.stage_2 = self.block('stage_2', self.stages[1], self.stages[2], 2)
-        self.stage_3 = self.block('stage_3', self.stages[2], self.stages[3], 2)
-        self.classifier = nn.Linear(self.stages[3], nlabels)
-        init.kaiming_normal(self.classifier.weight)
+        self.stage_3 = self.block('stage_3', self.stages[2], out_channels, 2)
+        # self.classifier = nn.Linear(self.stages[3], out_channels)
+        # init.kaiming_normal_(self.classifier.weight)
 
         for key in self.state_dict():
             if key.split('.')[-1] == 'weight':
                 if 'conv' in key:
-                    init.kaiming_normal(self.state_dict()[key], mode='fan_out')
+                    init.kaiming_normal_(self.state_dict()[key], mode='fan_out')
                 if 'bn' in key:
                     self.state_dict()[key][...] = 1
             elif key.split('.')[-1] == 'bias':
@@ -123,11 +122,13 @@ class CifarResNeXt(nn.Module):
 
     def forward(self, x):
         x = x.unsqueeze(1)
-        x = self.conv_1_3x3.forward(x)
-        x = F.relu(self.bn_1.forward(x), inplace=True)
-        x = self.stage_1.forward(x)
-        x = self.stage_2.forward(x)
-        x = self.stage_3.forward(x)
-        x = F.avg_pool2d(x, 8, 1)
-        x = x.view(-1, self.stages[3])
-        return self.classifier(x)
+        x = self.conv_1_3x3(x)
+        x = F.relu(self.bn_1(x), inplace=True)
+        x = self.stage_1(x)
+        x = self.stage_2(x)
+        x = self.stage_3(x)
+        x = x.mean(-1)
+        # x = F.avg_pool2d(x, 8, 1)
+        # x = x.view(-1, self.stages[3])
+        # return self.classifier(x)
+        return x
