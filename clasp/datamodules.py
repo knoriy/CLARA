@@ -52,19 +52,19 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 
 	def train_dataloader(self):
 		if self.train:
-			return wds.WebLoader(self.train, batch_size=None, shuffle=False, num_workers=self.num_workers)
+			return wds.WebLoader(self.train, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True)
 
 	def val_dataloader(self):
 		if self.valid:
-			return wds.WebLoader(self.valid, batch_size=None, shuffle=False, num_workers=self.num_workers)
+			return wds.WebLoader(self.valid, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True)
 
 	def test_dataloader(self):
 		if self.test:
-			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers)
+			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True)
 
 	def predict_dataloader(self):
 		if self.test:
-			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers)
+			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True)
 
 	# 	return text, mel
 	def collate_fn(self, data):
