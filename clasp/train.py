@@ -39,21 +39,21 @@ class PL_CLASP(pl.LightningModule):
 		return self.model(texts, mels)
 
 	def training_step(self, batch, batch_idx):
-		text_features, audio_features, tempeture = self(batch)
-		loss = self.loss_fn(text_features, audio_features, tempeture)
+		model_out = self(batch)
+		loss = self.loss_fn(*model_out)
 
 		self.log('train_loss', loss, prog_bar=True)
 		return loss
 
 	def validation_step(self, batch, batch_idx):
-		text_features, audio_features, tempeture = self(batch)
-		loss = self.loss_fn(text_features, audio_features, tempeture)
+		model_out = self(batch)
+		loss = self.loss_fn(*model_out)
 
 		self.log('valid_loss', loss, prog_bar=True)
 
 	def test_step(self, batch, batch_idx):
-		text_features, audio_features, tempeture = self(batch)
-		loss = self.loss_fn(text_features, audio_features, tempeture)
+		model_out = self(batch)
+		loss = self.loss_fn(*model_out)
 
 		self.log('test_loss', loss)
 
