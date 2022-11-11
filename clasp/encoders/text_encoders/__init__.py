@@ -1,1 +1,1 @@
-from .simple_transformer import TransformerEncoder
+from .simple_transformer import SimpleTransformer
