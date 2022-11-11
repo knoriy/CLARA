@@ -6,6 +6,7 @@ import torchmetrics
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping, LearningRateMonitor
 from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.strategies import DDPStrategy
 
 
 from clasp import CLASP
@@ -41,15 +42,20 @@ class PL_CLASP(pl.LightningModule):
 	def training_step(self, batch, batch_idx):
 		model_out = self(batch)
 		loss = self.loss_fn(*model_out)
+		self.log('text_temp', model_out[2])
+		self.log('audio_temp', model_out[3])
+		self.log('train_loss', loss, prog_bar=True, sync_dist=True)
 
-		self.log('train_loss', loss, prog_bar=True)
+		if self.current_epoch%30 == 0:
+			breakpoint()
+
 		return loss
 
 	def validation_step(self, batch, batch_idx):
 		model_out = self(batch)
 		loss = self.loss_fn(*model_out)
-
-		self.log('valid_loss', loss, prog_bar=True)
+		
+		self.log('valid_loss', loss, prog_bar=True, sync_dist=True)
 
 	def test_step(self, batch, batch_idx):
 		model_out = self(batch)
@@ -187,7 +193,8 @@ def cli_main():
 			# early_stopping_callback, 
 			lr_monitor,
 			],
-		logger=logger
+		logger=logger,
+		strategy=DDPStrategy(find_unused_parameters=True),
 	)
 	
 	if not args.testing_stuff:
