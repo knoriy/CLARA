@@ -5,8 +5,8 @@ import torch.nn.functional as F
 import numpy as np
 
 from typing import Tuple, Union, Callable, Optional
-from encoders.text_encoders import TransformerEncoder 
-from encoders.audio_encoders import WhisperAudioEncoder, SimpleCNN, SimpleCNNLarge, Cnn1D10, Cnn1D12
+from encoders.text_encoders import SimpleTransformer 
+from encoders.audio_encoders import WhisperAudioEncoder, SimpleCNN, SimpleCNNLarge, Cnn1D10, Cnn1D12, resnet18
 from encoders.modules import PositionalEncoding, LayerNorm, MLPLayers
 
 class CLASP(nn.Module):
@@ -21,7 +21,7 @@ class CLASP(nn.Module):
         self.audio_encoder = audio_encoder
         
         if self.text_encoder == None:
-            self.text_encoder = TransformerEncoder(
+            self.text_encoder = SimpleTransformer(
                 in_channels = self.hparm.text_encoder_width,
                 out_channels = self.hparm.text_encoder_embedding,
                 num_layers = self.hparm.text_encoder_layers,
@@ -32,9 +32,10 @@ class CLASP(nn.Module):
         if self.audio_encoder == None:
             # self.audio_encoder = SimpleCNN(80, 1024)
             # self.audio_encoder = SimpleCNNLarge(80, 1024)
-            self.audio_encoder = Cnn1D10(80, 1024)
+            # self.audio_encoder = Cnn1D10(80, 1024)
             # self.audio_encoder = Cnn1D12(80, 1024)
-            # self.audio_encoder = WhisperAudioEncoder(80, 1024, 1, 1, batch_first=True)
+            # self.audio_encoder = resnet18(1024)
+            self.audio_encoder = WhisperAudioEncoder(80, 1024, 1, 1, batch_first=True)
 
         # ------------
         # Text Layers
@@ -68,6 +69,7 @@ class CLASP(nn.Module):
         x = self.ln_final(x)
 
         x = x[torch.arange(x.shape[0]), text.argmax(dim=-1)] @ self.text_projection
+        # breakpoint()
 
         return x
 
