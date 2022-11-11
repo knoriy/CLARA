@@ -46,9 +46,6 @@ class PL_CLASP(pl.LightningModule):
 		self.log('audio_temp', model_out[3])
 		self.log('train_loss', loss, prog_bar=True, sync_dist=True)
 
-		if self.current_epoch%30 == 0:
-			breakpoint()
-
 		return loss
 
 	def validation_step(self, batch, batch_idx):
