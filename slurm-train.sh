@@ -26,9 +26,10 @@ export NCCL_TREE_THRESHOLD=0
 echo Running job on $SLURM_JOB_NUM_NODES nodes
 
 srun --comment clap /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/code/CLASP/clasp/train.py 
-    --max_epochs 1000 \
+    --max_epochs 100 \
     --batch_size 32 \
     --accelerator gpu \
     --strategy ddp \
     --num_nodes $SLURM_JOB_NUM_NODES \
-    --devices 4
+    --devices 2 \
+    --name $SLURM_JOB_NAME
