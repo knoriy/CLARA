@@ -42,7 +42,6 @@ class CLASP(nn.Module):
         # ------------
         self.text_embedding = nn.Embedding(self.hparm.vocab_size, self.hparm.text_encoder_embedding)
         self.positional_embedding = PositionalEncoding(self.hparm.text_encoder_embedding)
-        self.text_projection = nn.Parameter(torch.empty(self.hparm.text_encoder_width, self.hparm.text_encoder_embedding))
         self.ln_final = LayerNorm(self.hparm.text_encoder_width)
         ## text branch parameters
         self.text_transform = MLPLayers(units=[1024,1024], dropout=0.1)
