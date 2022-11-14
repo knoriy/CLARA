@@ -43,15 +43,13 @@ class CLASP(nn.Module):
         self.text_embedding = nn.Embedding(self.hparm.vocab_size, self.hparm.text_encoder_embedding)
         self.positional_embedding = PositionalEncoding(self.hparm.text_encoder_embedding)
         self.ln_final = LayerNorm(self.hparm.text_encoder_width)
-        ## text branch parameters
         self.text_transform = MLPLayers(units=[1024,1024], dropout=0.1)
 
         # ------------
         # Audio Layers
         # ------------
-        ## audio branch parameters
-        self.audio_transform = MLPLayers(units=[1024,1024], dropout=0.1)
         self.audio_fc1 = nn.Linear(1024, 1024)
+        self.audio_transform = MLPLayers(units=[1024,1024], dropout=0.1)
 
         # ------------
         # Other
