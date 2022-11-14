@@ -68,8 +68,7 @@ class CLASP(nn.Module):
         # x = x.permute(1, 0, 2)  # LND -> NLD
         x = self.ln_final(x)
 
-        x = x[torch.arange(x.shape[0]), text.argmax(dim=-1)] @ self.text_projection
-        # breakpoint()
+        x = torch.mean(x, 1)
 
         return x
 
