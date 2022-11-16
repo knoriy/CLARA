@@ -3,7 +3,7 @@
 #SBATCH --job-name=SD-SCNN12-1000
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=8
-#SBATCH --gpus=2
+#SBATCH --gpus=8
 #SBATCH --cpus-per-gpu=6 
 #SBATCH --comment clap
 #SBATCH --output=%x_%j.out
@@ -31,5 +31,4 @@ srun --comment clap /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knori
     --accelerator gpu \
     --strategy ddp \
     --num_nodes $SLURM_JOB_NUM_NODES \
-    --devices 2 \
     --name $SLURM_JOB_NAME
