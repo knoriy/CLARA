@@ -179,7 +179,9 @@ def cli_main():
 	# ------------
 	# Loggers
 	# ------------
-	logger = WandbLogger(name=args.name, save_dir="logs/", project="CLASP")
+	logger = None
+	if args.logger == True:
+		logger = WandbLogger(name=args.name, save_dir="logs/", project="CLASP")
 
 	# ------------
 	# Get Trainer
@@ -207,29 +209,34 @@ def cli_main():
 	else:
 		import matplotlib.pyplot as plt
 
-		model = model.load_from_checkpoint("/fsx/knoriy/code/CLASP/.archive/epoch=99-step=100-simple-cnn.ckpt")
+		model = model.load_from_checkpoint("/fsx/knoriy/code/CLASP/.archive/epoch=27-step=2184.ckpt")
 
 		predictions = trainer.predict(model, dataloaders=dataset)
-		print(len(predictions))
-		for prediction in predictions:
-			text_features, audio_features, temperature = prediction
-			logits = (text_features @ audio_features.T) / temperature
-			audio_similarity = audio_features @ audio_features.T
-			texts_similarity = text_features @ text_features.T
-			targets = F.softmax(
-				(audio_similarity + texts_similarity) / 2 * temperature, dim=-1
-			)
+		loss_fn = CLAPLoss(cache_labels=True)
 
-			texts_loss = F.cross_entropy(logits, targets, reduction='mean')
-			images_loss = F.cross_entropy(logits.T, targets.T, reduction='mean')
+		loss_fn(*predictions[0])
+		
+		# print(len(predictions))
+		# for prediction in predictions:
+		# 	text_features, audio_features, text_tempeture, audio_tempeture, mlp_text_features, mlp_audio_features = prediction
 
-			plt.imsave('_logits.png', logits)
-			plt.imsave('_audio_similarity.png', audio_similarity)
-			plt.imsave('_texts_similarity.png', texts_similarity)
-			plt.imsave('_sub_aud_sim.png', logits - audio_similarity)
+		# 	logits = text_tempeture * text_features @ mlp_audio_features.T
+		# 	audio_similarity = mlp_audio_features @ mlp_audio_features.T
+		# 	texts_similarity = mlp_text_features @ mlp_text_features.T
+		# 	targets = F.softmax(
+		# 		((audio_similarity + texts_similarity) / 2) * text_tempeture, dim=-1
+		# 	)
 
-			print(texts_loss, images_loss)
-			break
+		# 	texts_loss = F.cross_entropy(logits, targets, reduction='mean')
+		# 	images_loss = F.cross_entropy(logits.T, targets.T, reduction='mean')
+
+		# 	plt.imsave('_logits.png', logits)
+		# 	plt.imsave('_audio_similarity.png', audio_similarity)
+		# 	plt.imsave('_texts_similarity.png', texts_similarity)
+		# 	plt.imsave('_sub_aud_sim.png', logits - audio_similarity)
+
+		# 	print(texts_loss, images_loss)
+		# 	break
 
 
 if __name__ == '__main__':
