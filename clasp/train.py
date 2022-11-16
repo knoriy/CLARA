@@ -12,7 +12,7 @@ from pytorch_lightning.strategies import DDPStrategy
 from clasp import CLASP
 from loss import CLAPLoss, CLIPLoss
 from datamodules import WebdatasetDataModule, MultilingualWebdatasetDataModule
-from utils.get_wds_urls import get_tar_path_s3
+from utils import get_tar_path_s3, Accuracy
 
 class PL_CLASP(pl.LightningModule):
 	def __init__(	self, 
@@ -33,6 +33,7 @@ class PL_CLASP(pl.LightningModule):
 
 		self.model = CLASP(self.hparams)
 		self.loss_fn = CLAPLoss(cache_labels=True)
+		self.acc_fn = Accuracy(cache_labels=True)
 
 	def forward(self, batch):
 		texts, mels, text_lengths, mel_lengths  = batch # torch.size([*, 123]), torch.size([*,80,1234])
@@ -42,6 +43,7 @@ class PL_CLASP(pl.LightningModule):
 	def training_step(self, batch, batch_idx):
 		model_out = self(batch)
 		loss = self.loss_fn(*model_out)
+		
 		self.log('text_temp', model_out[2])
 		self.log('audio_temp', model_out[3])
 		self.log('train_loss', loss, prog_bar=True, sync_dist=True)
@@ -49,16 +51,25 @@ class PL_CLASP(pl.LightningModule):
 		return loss
 
 	def validation_step(self, batch, batch_idx):
-		model_out = self(batch)
-		loss = self.loss_fn(*model_out)
-		
-		self.log('valid_loss', loss, prog_bar=True, sync_dist=True)
+		loss, acc = self._shared_eval_step(batch, batch_idx)
+
+		metrics = {"val_acc": acc, "val_loss": loss}
+		self.log_dict(metrics, prog_bar=True, sync_dist=True)
 
 	def test_step(self, batch, batch_idx):
-		model_out = self(batch)
-		loss = self.loss_fn(*model_out)
+		loss, acc = self._shared_eval_step(batch, batch_idx)
 
-		self.log('test_loss', loss)
+		metrics = {"test_acc": acc, "test_loss": loss}
+		self.log_dict(metrics)
+
+	def _shared_eval_step(self, batch, batch_idx):
+		model_out = self(batch)
+
+		loss = self.loss_fn(*model_out)
+		acc = self.acc_fn(*model_out)
+
+		return loss, acc
+
 
 	def predict_step(self, batch, batch_idx, dataloader_idx=0):
 		return self(batch)
