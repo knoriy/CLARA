@@ -15,7 +15,7 @@ from text.whisper.normalizers import EnglishTextNormalizer
 import audio as Audio
 
 class MultilingualWebdatasetDataModule(pl.LightningDataModule):
-	def __init__(self, train_data_dir:str, test_data_dir:str, valid_data_dir:str, epochs:int=1, batch_size:int = 32, num_workers:int=0, audio_backend:str=None):
+	def __init__(self, train_data_dir:str, test_data_dir:str, valid_data_dir:str, epochs:int=1, batch_size:int = 32, num_workers:int=0, shuffle:bool=True, audio_backend:str=None):
 		super().__init__()
 		# if not audio_backend:
 		# torchaudio.set_audio_backend('soundfile') # Forching backend to soundfile, due to known bug in torch audio (https://github.com/pytorch/audio/issues/2356)
@@ -25,30 +25,40 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 		self.valid_data_dir = valid_data_dir
 
 		self.epochs = epochs
+		self.shuffle = shuffle
 		self.batch_size = batch_size
 		self.num_workers = num_workers
+
+		self.pipeline = []
+		self._create_pipeline()
 
 		self.cleaner = EnglishTextNormalizer()
 		self.tokenizer = get_tokenizer(True)
 		self.stft_fn = Audio.stft.MelSpecPipeline()
 
+	def _create_pipeline(self):
+		self.pipeline.extend([
+			wds.SimpleShardList(self.train_data_dir),
+			wds.detshuffle(),
+			wds.split_by_node,
+			wds.split_by_worker,
+			wds.tarfile_to_samples()])
+		if self.shuffle:
+			self.pipeline.extend([wds.shuffle()])
+		self.pipeline.extend([
+			wds.decode(wds.torch_audio),
+			wds.to_tuple("flac", "json"),
+			wds.batched(self.batch_size),
+			wds.map(self.collate_fn)])
+
+
 	def setup(self, stage:Optional[str] = None):
-		pipeline = [wds.SimpleShardList(self.train_data_dir),
-					wds.tarfile_to_samples(),
-					wds.detshuffle(),
-					wds.split_by_node,
-					wds.split_by_worker,
-					wds.decode(wds.torch_audio),
-					wds.to_tuple("flac", "json"),
-					wds.batched(self.batch_size),
-					wds.map(self.collate_fn),
-					]
 		if len(self.train_data_dir)>0:
-			self.train = wds.DataPipeline(*pipeline)
+			self.train = wds.DataPipeline(*self.pipeline)
 		if len(self.test_data_dir)>0:
-			self.test = wds.DataPipeline(*pipeline)
+			self.test = wds.DataPipeline(*self.pipeline)
 		if len(self.valid_data_dir)>0:
-			self.valid = wds.DataPipeline(*pipeline)
+			self.valid = wds.DataPipeline(*self.pipeline)
 
 	def train_dataloader(self):
 		if self.train:
