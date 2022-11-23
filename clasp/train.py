@@ -26,6 +26,7 @@ class PL_CLASP(pl.LightningModule):
 					vocab_size=50257,
 					n_mels=80,
 					audio_encoder_embedding=1024,
+					debug=False,
 					):
 
 		super().__init__()
@@ -47,6 +48,9 @@ class PL_CLASP(pl.LightningModule):
 		self.log('text_temp', model_out[2])
 		self.log('audio_temp', model_out[3])
 		self.log('train_loss', loss, prog_bar=True, sync_dist=True)
+
+		if self.hparams.debug or self.current_epoch!= 0 and self.current_epoch%20 == 0:
+			breakpoint()
 
 		return loss
 
@@ -96,8 +100,7 @@ class PL_CLASP(pl.LightningModule):
 		parser.add_argument('--text_encoder_layers', type=int, default=1)
 		parser.add_argument('--text_encoder_heads', type=int, default=4)
 		parser.add_argument('--vocab_size', type=int, default=50257)# len(symbols))
-
-
+		parser.add_argument('--debug', type=bool, default=False)
 
 		return parser
 
@@ -195,6 +198,13 @@ def cli_main():
 		logger = WandbLogger(name=args.name, save_dir="logs/", project="CLASP")
 
 	# ------------
+	# Other
+	# ------------
+	strategy = None
+	if args.strategy:
+		strategy = DDPStrategy(find_unused_parameters=True)
+
+	# ------------
 	# Get Trainer
 	# ------------
 	trainer = pl.Trainer.from_argparse_args(args, 
@@ -204,7 +214,8 @@ def cli_main():
 			lr_monitor,
 			],
 		logger=logger,
-		strategy=DDPStrategy(find_unused_parameters=True),
+		strategy=strategy,
+		
 	)
 	
 	if not args.testing_stuff:
