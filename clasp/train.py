@@ -49,7 +49,7 @@ class PL_CLASP(pl.LightningModule):
 		self.log('audio_temp', model_out[3])
 		self.log('train_loss', loss, prog_bar=True, sync_dist=True)
 
-		if self.hparams.debug or self.current_epoch!= 0 and self.current_epoch%20 == 0:
+		if self.hparams.debug and self.current_epoch!= 0 and self.current_epoch%20 == 0:
 			breakpoint()
 
 		return loss
@@ -175,7 +175,9 @@ def cli_main():
 					valid_data_dir = urls['valid'],
 					epochs = args.max_epochs,
 					batch_size = args.batch_size,
-					num_workers = args.num_workers)
+					num_workers = args.num_workers,
+					shuffle = False if args.overfit_batches else True,
+					)
 
 	# ------------
 	# model
