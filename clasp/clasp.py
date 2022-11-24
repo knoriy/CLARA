@@ -35,8 +35,8 @@ class CLASP(nn.Module):
             # self.audio_encoder = Cnn1D10(80, 1024)
             # self.audio_encoder = Cnn1D12(80, 1024)
             # self.audio_encoder = resnet18(1024)
-            # self.audio_encoder = ResNeXt(5,12,1024, 1, 4)
-            self.audio_encoder = WhisperAudioEncoder(80, 1024, 1, 1, batch_first=True)
+            self.audio_encoder = ResNeXt(5,12,1024, 2, 4)
+            # self.audio_encoder = WhisperAudioEncoder(80, 1024, 1, 1, batch_first=True)
 
         # ------------
         # Text Layers
