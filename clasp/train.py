@@ -6,7 +6,10 @@ import torchmetrics
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping, LearningRateMonitor
 from pytorch_lightning.loggers import WandbLogger
-from pytorch_lightning.strategies import DDPStrategy
+from pytorch_lightning.strategies import DDPStrategy, DDPFullyShardedNativeStrategy
+
+import logging
+pl_logger = logging.getLogger('pytorch_lightning')
 
 
 from clasp import CLASP
@@ -38,7 +41,6 @@ class PL_CLASP(pl.LightningModule):
 
 	def forward(self, batch):
 		texts, mels, text_lengths, mel_lengths  = batch # torch.size([*, 123]), torch.size([*,80,1234])
-		# texts, mels = texts.squeeze(0), mels.unsqueeze(1) # torch.size([64, 100]), torch.size([64,1,80,100])
 		return self.model(texts, mels)
 
 	def training_step(self, batch, batch_idx):
@@ -168,6 +170,7 @@ def cli_main():
 			# recache				= True,
 			)
 
+	pl_logger.info(f"{len(urls['train'])} train, {len(urls['valid'])} valid and {len(urls['test'])} test URLS found.")	
 
 	dataset = MultilingualWebdatasetDataModule(	
 					train_data_dir = urls['train'],
@@ -178,7 +181,6 @@ def cli_main():
 					num_workers = args.num_workers,
 					shuffle = False if args.overfit_batches else True,
 					)
-
 	# ------------
 	# model
 	# ------------
@@ -204,8 +206,7 @@ def cli_main():
 	# ------------
 	strategy = None
 	if args.strategy:
-		strategy = DDPStrategy(find_unused_parameters=True)
-
+		strategy = DDPStrategy(find_unused_parameters=False)
 	# ------------
 	# Get Trainer
 	# ------------
