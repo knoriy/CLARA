@@ -66,7 +66,7 @@ class PL_CLASP(pl.LightningModule):
 		loss, acc = self._shared_eval_step(batch, batch_idx)
 
 		metrics = {"test_acc": acc, "test_loss": loss}
-		self.log_dict(metrics)
+		self.log_dict(metrics, sync_dist=True)
 
 	def _shared_eval_step(self, batch, batch_idx):
 		model_out = self(batch)
