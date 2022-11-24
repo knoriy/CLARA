@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --partition=gpu
-#SBATCH --job-name=SD-SCNN12-1000
+#SBATCH --job-name=CLASP
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=8
 #SBATCH --gpus=8
@@ -23,12 +23,14 @@ export FI_PROVIDER=efa
 export FI_EFA_TX_MIN_CREDITS=64
 export NCCL_TREE_THRESHOLD=0
 
-echo Running job on $SLURM_JOB_NUM_NODES nodes
+echo Running job on $SLURM_JOB_NUM_NODES, 
 
-srun --comment clap /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/code/CLASP/clasp/train.py 
+srun --comment clap /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/code/CLASP/clasp/train.py \
     --max_epochs 100 \
-    --batch_size 32 \
-    --accelerator gpu \
-    --strategy ddp \
+    --batch_size 64 \
+    --accelerator 'gpu' \
+    --strategy 'ddp' \
+    --num_workers 48 \
+    --devices 8 \
     --num_nodes $SLURM_JOB_NUM_NODES \
     --name $SLURM_JOB_NAME
