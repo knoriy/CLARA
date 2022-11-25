@@ -183,12 +183,13 @@ def cli_main():
 					shuffle = False if args.overfit_batches else True,
 					resample = True,
 					)
+
 	# ------------
 	# model
 	# ------------
 	model = PL_CLASP(args.hidden_dim, args.learning_rate)
-	if os.path.isfile(args.checkpoint):
-		model = model.load_from_checkpoint(args.checkpoint)
+	if os.path.isfile(str(args.checkpoint)):
+		model = model.load_from_checkpoint(str(args.checkpoint))
 		pl_logger.info(f"Model state loaded from checkpoint: {args.checkpoint}")
 
 	# ------------
