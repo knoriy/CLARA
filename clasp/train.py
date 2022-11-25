@@ -116,8 +116,10 @@ def cli_main():
 	parser.add_argument('--batch_size', default=64, type=int)
 	parser.add_argument('--num_workers', default=6, type=int)
 	parser.add_argument('--early_stoping_patience', type=int, default=10)
-	parser.add_argument('--testing_stuff', type=bool, default=False)
+	parser.add_argument('--monitor_lr', type=bool, default=True)
 	parser.add_argument('--name', type=str, default=None)
+
+	parser.add_argument('--testing_stuff', type=bool, default=False)
 
 	parser = pl.Trainer.add_argparse_args(parser)
 	parser = PL_CLASP.add_model_specific_args(parser)
@@ -173,9 +175,9 @@ def cli_main():
 	pl_logger.info(f"{len(urls['train'])} train, {len(urls['valid'])} valid and {len(urls['test'])} test URLS found.")	
 
 	dataset = MultilingualWebdatasetDataModule(	
-					train_data_dir = urls['train'],
-					test_data_dir = urls['test'],
-					valid_data_dir = urls['valid'],
+					train_data_dir = urls['train'][:2],
+					test_data_dir = urls['test'][:2],
+					valid_data_dir = urls['valid'][:2],
 					epochs = args.max_epochs,
 					batch_size = args.batch_size,
 					num_workers = args.num_workers,
@@ -189,10 +191,10 @@ def cli_main():
 	# ------------
 	# Callbacks
 	# ------------
-	checkpoint_callback = ModelCheckpoint(monitor="valid_loss")
-	early_stopping_callback = EarlyStopping(monitor="valid_loss", patience=args.early_stoping_patience)
-	lr_monitor = LearningRateMonitor()
-
+	callbacks = [
+		# ModelCheckpoint(monitor="val_loss"),
+		# EarlyStopping(monitor="val_loss", patience=args.early_stoping_patience)
+	]
 
 	# ------------
 	# Loggers
@@ -200,6 +202,8 @@ def cli_main():
 	logger = None
 	if args.logger == True:
 		logger = WandbLogger(name=args.name, save_dir="logs/", project="CLASP")
+		if args.monitor_lr:
+			callbacks.append(LearningRateMonitor())
 
 	# ------------
 	# Other
@@ -211,14 +215,9 @@ def cli_main():
 	# Get Trainer
 	# ------------
 	trainer = pl.Trainer.from_argparse_args(args, 
-		callbacks=[
-			# checkpoint_callback,
-			# early_stopping_callback, 
-			lr_monitor,
-			],
+		callbacks=callbacks,
 		logger=logger,
 		strategy=strategy,
-		
 	)
 	
 	if not args.testing_stuff:
