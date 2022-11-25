@@ -53,7 +53,6 @@ class PL_CLASP(pl.LightningModule):
 
 		if self.hparams.debug and self.current_epoch!= 0 and self.current_epoch%20 == 0:
 			breakpoint()
-
 		return loss
 
 	def validation_step(self, batch, batch_idx):
@@ -175,13 +174,14 @@ def cli_main():
 	pl_logger.info(f"{len(urls['train'])} train, {len(urls['valid'])} valid and {len(urls['test'])} test URLS found.")	
 
 	dataset = MultilingualWebdatasetDataModule(	
-					train_data_dir = urls['train'][:2],
-					test_data_dir = urls['test'][:2],
-					valid_data_dir = urls['valid'][:2],
+					train_data_dir = urls['train'][:4],
+					test_data_dir = urls['test'][:1],
+					valid_data_dir = urls['valid'][:1],
 					epochs = args.max_epochs,
 					batch_size = args.batch_size,
 					num_workers = args.num_workers,
 					shuffle = False if args.overfit_batches else True,
+					resample = True,
 					)
 	# ------------
 	# model

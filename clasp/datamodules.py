@@ -15,10 +15,19 @@ from text.whisper.normalizers import EnglishTextNormalizer
 import audio as Audio
 
 class MultilingualWebdatasetDataModule(pl.LightningDataModule):
-	def __init__(self, train_data_dir:str, test_data_dir:str, valid_data_dir:str, epochs:int=1, batch_size:int = 32, num_workers:int=0, shuffle:bool=True, audio_backend:str=None):
+	def __init__(
+			self, train_data_dir:str, 
+			test_data_dir:str, 
+			valid_data_dir:str,
+			epochs:Optional[int]=1,
+			batch_size:Optional[int]=None,
+			num_workers:Optional[int]=0,
+			shuffle:Optional[bool]=True,
+			resample:Optional[bool]=False,
+			audio_backend:Optional[str]=None):
 		super().__init__()
-		# if not audio_backend:
-		# torchaudio.set_audio_backend('soundfile') # Forching backend to soundfile, due to known bug in torch audio (https://github.com/pytorch/audio/issues/2356)
+		if audio_backend:
+			torchaudio.set_audio_backend(audio_backend) # Forching backend to soundfile, due to known bug in torch audio (https://github.com/pytorch/audio/issues/2356)
 
 		self.train_data_dir = train_data_dir
 		self.test_data_dir = test_data_dir
@@ -26,55 +35,74 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 
 		self.epochs = epochs
 		self.shuffle = shuffle
+		self.resample = resample
 		self.batch_size = batch_size
 		self.num_workers = num_workers
 
-		self.pipeline = []
-		self._create_pipeline()
+		self.pipelines = {
+			'train' : self._create_pipeline(self.train_data_dir),
+			'test' : self._create_pipeline(self.test_data_dir),
+			'valid' : self._create_pipeline(self.valid_data_dir),
+		}
 
 		self.cleaner = EnglishTextNormalizer()
 		self.tokenizer = get_tokenizer(True)
 		self.stft_fn = Audio.stft.MelSpecPipeline()
 
-	def _create_pipeline(self):
-		self.pipeline.extend([
-			wds.SimpleShardList(self.train_data_dir),
-			wds.detshuffle(),
-			wds.split_by_node,
-			wds.split_by_worker,
-			wds.tarfile_to_samples()])
+	def _create_pipeline(self, data_dir):
+		pipeline = []
+		if self.resample:
+			pipeline.extend([wds.ResampledShards(data_dir)])
+		else:
+			pipeline.extend([
+				wds.SimpleShardList(data_dir),
+				wds.detshuffle(),
+				wds.split_by_node,
+				wds.split_by_worker
+				])
+
+		pipeline.extend([wds.tarfile_to_samples()])
+
 		if self.shuffle:
-			self.pipeline.extend([wds.shuffle()])
-		self.pipeline.extend([
+			pipeline.extend([wds.shuffle()])
+
+		pipeline.extend([
 			wds.decode(wds.torch_audio),
 			wds.to_tuple("flac", "json"),
 			wds.batched(self.batch_size),
-			wds.map(self.collate_fn)])
-
+			wds.map(self.collate_fn)
+			])
+		return pipeline
 
 	def setup(self, stage:Optional[str] = None):
 		if len(self.train_data_dir)>0:
-			self.train = wds.DataPipeline(*self.pipeline)
+			self.train = wds.DataPipeline(*self.pipelines['train'])
+			if self.resample:
+				self.train = self.train.with_epoch(self.epochs)
 		if len(self.test_data_dir)>0:
-			self.test = wds.DataPipeline(*self.pipeline)
+			self.test = wds.DataPipeline(*self.pipelines['test'])
+			if self.resample:
+				self.test = self.test.with_epoch(self.epochs)
 		if len(self.valid_data_dir)>0:
-			self.valid = wds.DataPipeline(*self.pipeline)
+			self.valid = wds.DataPipeline(*self.pipelines['valid'])
+			if self.resample:
+				self.valid = self.valid.with_epoch(self.epochs)
 
 	def train_dataloader(self):
 		if self.train:
-			return wds.WebLoader(self.train, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True)
+			return wds.WebLoader(self.train, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True, persistent_workers=True)
 
 	def val_dataloader(self):
 		if self.valid:
-			return wds.WebLoader(self.valid, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True)
+			return wds.WebLoader(self.valid, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True, persistent_workers=True)
 
 	def test_dataloader(self):
 		if self.test:
-			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True)
+			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True, persistent_workers=True)
 
 	def predict_dataloader(self):
 		if self.test:
-			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True)
+			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True, persistent_workers=True)
 
 	# 	return text, mel
 	def collate_fn(self, data):
@@ -86,7 +114,7 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 		elif isinstance(raw_texts[0]['text'], str):
 			texts = [torch.tensor(self.tokenizer.encode(self.cleaner(text['text']))) for text in raw_texts]
 		else:
-			raise ValueError('Unsupoted text type, must be list[str] or str')
+			raise ValueError('Unsupported text type, must be list[str] or str')
 
 		mel_lengths = [mel.shape[0] for mel in mels]
 		mel_lengths = torch.tensor(mel_lengths)
@@ -175,21 +203,25 @@ if __name__ == '__main__':
 		base_s3_path = 's-laion-audio/webdataset_tar/', 
 		train_valid_test = ['train', 'test', 'valid'],
 		dataset_names = dataset_names,
-		cache_path = '/tmp/url_cache.json',
-		recache = True,
+		# cache_path = '/tmp/url_cache.json',
+		# recache = True,
 		)
 	dataset = MultilingualWebdatasetDataModule(	
-									train_data_dir = urls['train'], 
-									test_data_dir =urls['test'], 
-									valid_data_dir = urls['valid'], 
+									train_data_dir = urls['train'][:1], 
+									test_data_dir =urls['test'][:1], 
+									valid_data_dir = urls['valid'][:1], 
 									batch_size = 64,
-									num_workers=6)
+									num_workers=6,
+									resample=False)
 
 	dataset.setup()
 
-	for i in tqdm.tqdm(dataset.train_dataloader()):
-		print(i[0].shape, i[1].shape)
-		break
+	# print(len(dataset.train))
+	# for i, val in enumerate(iter(dataset.train)):
+		# print(i)
+	# for i in tqdm.tqdm(dataset.train_dataloader()):
+	# 	print(i[0].shape, i[1].shape)
+	# 	break
 	# for i in tqdm.tqdm(dataset.val_dataloader()):
 	# 	pass
 	# for i in tqdm.tqdm(dataset.test_dataloader()):
