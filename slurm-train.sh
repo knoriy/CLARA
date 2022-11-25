@@ -30,7 +30,7 @@ srun --comment clap /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knori
     --batch_size 64 \
     --accelerator 'gpu' \
     --strategy 'ddp' \
-    --num_workers 48 \
+    --num_workers 6 \
     --devices 8 \
     --num_nodes $SLURM_JOB_NUM_NODES \
     --name $SLURM_JOB_NAME
