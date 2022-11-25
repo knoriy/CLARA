@@ -2,7 +2,6 @@ from argparse import ArgumentParser
 
 import torch
 import torch.nn.functional as F
-import torchmetrics
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping, LearningRateMonitor
 from pytorch_lightning.loggers import WandbLogger
@@ -10,7 +9,6 @@ from pytorch_lightning.strategies import DDPStrategy, DDPFullyShardedNativeStrat
 
 import logging
 pl_logger = logging.getLogger('pytorch_lightning')
-
 
 from clasp import CLASP
 from loss import CLAPLoss, CLIPLoss
@@ -209,8 +207,10 @@ def cli_main():
 	# Other
 	# ------------
 	strategy = None
-	if args.strategy:
+	if args.strategy == 'ddp':
 		strategy = DDPStrategy(find_unused_parameters=False)
+	else:
+		strategy = args.strategy
 	# ------------
 	# Get Trainer
 	# ------------
