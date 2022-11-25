@@ -174,9 +174,9 @@ def cli_main():
 	pl_logger.info(f"{len(urls['train'])} train, {len(urls['valid'])} valid and {len(urls['test'])} test URLS found.")	
 
 	dataset = MultilingualWebdatasetDataModule(	
-					train_data_dir = urls['train'][:4],
-					test_data_dir = urls['test'][:1],
-					valid_data_dir = urls['valid'][:1],
+					train_data_dir = urls['train'],
+					test_data_dir = urls['test'],
+					valid_data_dir = urls['valid'],
 					epochs = args.max_epochs,
 					batch_size = args.batch_size,
 					num_workers = args.num_workers,
