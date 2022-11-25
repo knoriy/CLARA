@@ -211,6 +211,7 @@ def cli_main():
 		strategy = DDPStrategy(find_unused_parameters=False)
 	else:
 		strategy = args.strategy
+		
 	# ------------
 	# Get Trainer
 	# ------------
