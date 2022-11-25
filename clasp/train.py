@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 
+import os
 import torch
 import torch.nn.functional as F
 import pytorch_lightning as pl
@@ -114,6 +115,7 @@ def cli_main():
 	parser.add_argument('--num_workers', default=6, type=int)
 	parser.add_argument('--early_stoping_patience', type=int, default=10)
 	parser.add_argument('--monitor_lr', type=bool, default=True)
+	parser.add_argument('--checkpoint', type=str, default=None)
 	parser.add_argument('--name', type=str, default=None)
 
 	parser.add_argument('--testing_stuff', type=bool, default=False)
@@ -185,6 +187,9 @@ def cli_main():
 	# model
 	# ------------
 	model = PL_CLASP(args.hidden_dim, args.learning_rate)
+	if os.path.isfile(args.checkpoint):
+		model = model.load_from_checkpoint(args.checkpoint)
+		pl_logger.info(f"Model state loaded from checkpoint: {args.checkpoint}")
 
 	# ------------
 	# Callbacks
