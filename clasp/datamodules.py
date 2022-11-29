@@ -110,9 +110,17 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 
 		mels = [self.stft_fn(audio[0][0]).T for audio in raw_audios]
 		if isinstance(raw_texts[0]['text'], list):
-			texts = [torch.tensor(self.tokenizer.encode(self.cleaner(text['text'][0]))) for text in raw_texts]
+			texts = [torch.tensor(
+				self.tokenizer.encode(
+					self.cleaner(text['text'][0]), 
+					language = text["original_data"]["language"] if "language" in text["original_data"].keys() else 'en'
+					)) for text in raw_texts]
 		elif isinstance(raw_texts[0]['text'], str):
-			texts = [torch.tensor(self.tokenizer.encode(self.cleaner(text['text']))) for text in raw_texts]
+			texts = [torch.tensor(
+				self.tokenizer.encode(
+					self.cleaner(text['text']),
+					language = text["original_data"]["language"] if "language" in text["original_data"].keys() else 'en'
+					)) for text in raw_texts]
 		else:
 			raise ValueError('Unsupported text type, must be list[str] or str')
 
@@ -207,9 +215,9 @@ if __name__ == '__main__':
 		# recache = True,
 		)
 	dataset = MultilingualWebdatasetDataModule(	
-									train_data_dir = urls['train'][:1], 
-									test_data_dir =urls['test'][:1], 
-									valid_data_dir = urls['valid'][:1], 
+									train_data_dir = urls['train'][:1],
+									test_data_dir =urls['test'][:1],
+									valid_data_dir = urls['valid'][:1],
 									batch_size = 64,
 									num_workers=6,
 									resample=False)
@@ -219,9 +227,9 @@ if __name__ == '__main__':
 	# print(len(dataset.train))
 	# for i, val in enumerate(iter(dataset.train)):
 		# print(i)
-	# for i in tqdm.tqdm(dataset.train_dataloader()):
-	# 	print(i[0].shape, i[1].shape)
-	# 	break
+	for i in tqdm.tqdm(dataset.train_dataloader()):
+		print(i[0].shape, i[1].shape)
+		break
 	# for i in tqdm.tqdm(dataset.val_dataloader()):
 	# 	pass
 	# for i in tqdm.tqdm(dataset.test_dataloader()):
