@@ -9,8 +9,8 @@ import webdataset as wds
 from typing import Optional
 
 from text.simple_cleaner import text_to_sequence
-from text.whisper.tokenizer import get_tokenizer
 from text.whisper.normalizers import EnglishTextNormalizer
+from text.tokeniser import Tokeniser # from text.whisper.tokenizer import get_tokenizer
 
 import audio as Audio
 
@@ -46,7 +46,7 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 		}
 
 		self.cleaner = EnglishTextNormalizer()
-		self.tokenizer = get_tokenizer(True)
+		self.tokenizer = Tokeniser() # self.tokenizer = get_tokenizer(True)
 		self.stft_fn = Audio.stft.MelSpecPipeline()
 
 	def _create_pipeline(self, data_dir):

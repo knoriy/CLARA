@@ -25,7 +25,7 @@ class PL_CLASP(pl.LightningModule):
 					text_encoder_embedding=1024,
 					text_encoder_layers=1,
 					text_encoder_heads=4,
-					vocab_size=50257,
+					vocab_size=50362,
 					n_mels=80,
 					audio_encoder_embedding=1024,
 					debug=False,
