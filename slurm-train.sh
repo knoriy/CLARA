@@ -33,4 +33,6 @@ srun --comment clap /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knori
     --num_workers 6 \
     --devices 8 \
     --num_nodes $SLURM_JOB_NUM_NODES \
-    --name $SLURM_JOB_NAME
+    --name $SLURM_JOB_NAME \
+    --checkpoint '/fsx/knoriy/code/CLASP/logs/CLASP/2r14v5fq/checkpoints/epoch=34-step=21000.ckpt' 
+    # --checkpoint path/to/checkpoint.pt \
