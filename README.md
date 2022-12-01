@@ -39,13 +39,19 @@ conda env create -f environments/env.yaml
 
 # docker container: Nvidia Docker is required to use with GPU
 docker build --no-cache ./environments/ -t knoriy/clasp
-docker run -it --rm --gpus=all -v $(shell pwd):/workspace --name clasp knoriy/CLASP
+docker run -it --rm --gpus=all -v $(pwd):/workspace --name clasp knoriy/clasp
 
- ```
+```
+
+By default the container start a juypter note book, to start container in interactive shell mode use:
+
+```bash
+docker run -it --rm --gpus=all -v $(pwd):/workspace --name clasp knoriy/clasp bash
+```
 
 ## train model
 
- ```bash
+```bash
 
 # run module
 python clasp/train.py --max_epochs 1 --accelerator gpu --devices 1
@@ -91,7 +97,7 @@ trainer.test(ckpt_path='best', datamodule=dataset)
 
 ### Citation
 
-```
+```bibtex
 @article{YourName,
   title={Your Title},
   author={Your team},
