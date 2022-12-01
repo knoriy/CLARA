@@ -21,7 +21,7 @@ Conference
 
 Note: This project is under active development; therefore, we can not guarantee the code base to be perfect or bug-free. Any contribution is welcomed and greatly appreciated.
 
-CLASP is a multilingual neural network designed to identify audio features from natural language. CLASP follows the work CLIP by OpenAI. CLASP can be applied in many text and audio classification tasks, such as language, emotion, instrument and sound.
+CLASP is a multilingual neural network designed to identify audio features from natural language. CLASP follows the work CLIP and SimCLR. CLASP can be applied in many text and audio classification tasks, such as language, emotion, instrument and sound.
 
 ## How to run
 
@@ -30,17 +30,20 @@ First, install dependencies
 ```bash
 # clone clasp   
 git clone https://github.com/knoriy/CLASP.git
+cd CLASP
 
 # create conda env
 conda env create -f environments/env.yaml
 
-# install clasp   
-cd CLASP
-pip install -e .   
-pip install -r environments/requirements.txt
+# or
+
+# docker container: Nvidia Docker is required to use with GPU
+docker build --no-cache ./environments/ -t knoriy/clasp
+docker run -it --rm --gpus=all -v $(shell pwd):/workspace --name clasp knoriy/CLASP
+
  ```
 
- Next, navigate to any file and run it.
+## train model
 
  ```bash
 
@@ -48,7 +51,7 @@ pip install -r environments/requirements.txt
 python clasp/train.py --max_epochs 1 --accelerator gpu --devices 1
 # or for distributed
 python clasp/train.py --max_epochs 1 --accelerator gpu --strategy ddp --devices 2
-# over to single batch 
+# overfit to single batch 
 python clasp/train.py --max_epochs 100 --accelerator gpu --overfit_batches 1 --log_every_n_steps 1 --name CLASP
 # predict
 python clasp/train.py --max_epochs 100 --accelerator gpu --overfit_batches 1 --testing_stuff True  --limit_predict_batches 1 --logger False
@@ -61,9 +64,11 @@ python clasp/train.py --max_epochs 100 --accelerator gpu --overfit_batches 1 --t
 tensorboard dev upload --logdir lightning_logs --verbose 0
 ```
 
-## Imports
+## Install CLASP via pip
 
-This clasp is setup as a package which means you can now easily import any file into any other file like so:
+Note: This has not been fully tested. If you find any issue please open an issue, with code to replicate the problem.
+
+This CLASP is setup as a package which means you can now easily import any file into any other file, like so:
 
 ```python
 from clasp.datamodules import WebdatasetDataModule
