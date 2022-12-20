@@ -133,6 +133,7 @@ def cli_main():
 		# 'Clotho', #PASS
 		# 'CoVoST_2',#PASS
 		'EmoV_DB', #PASS
+		# 'common_voice_11_0', #PASS
 		# 'FSD50K', #PASS
 		# 'Urbansound8K', #PASS
 		# 'audiocaps', #PASS
@@ -171,13 +172,16 @@ def cli_main():
 			# recache				= True,
 			)
 
-	pl_logger.info(f"{len(urls['train'])} train, {len(urls['valid'])} valid and {len(urls['test'])} test URLS found.")	
+	pl_logger.info(f"Urls found: \
+		\n\t{len(urls['train'])} train \
+		\n\t{len(urls['valid'])} valid \
+		\n\t{len(urls['test'])} test"
+	)
 
 	dataset = MultilingualWebdatasetDataModule(	
 					train_data_dir = urls['train'],
 					test_data_dir = urls['test'],
 					valid_data_dir = urls['valid'],
-					epochs = args.max_epochs,
 					batch_size = args.batch_size,
 					num_workers = args.num_workers,
 					shuffle = False if args.overfit_batches else True,
