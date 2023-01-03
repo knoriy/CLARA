@@ -40,6 +40,7 @@ def get_tar_path_from_dataset_name(
 def get_tar_path_s3(base_s3_path:str, 
 		train_valid_test:list[str], 
 		dataset_names:list[str]=[''], 
+		exclude:list[str]=[], 
 		cache_path:str='', 
 		recache:bool=False,
 	):
@@ -57,7 +58,8 @@ def get_tar_path_s3(base_s3_path:str,
 	final_urls = [i.split(' ')[-1] for url in urls for i in url.split('\n')]
 	final_urls = [f'pipe:aws s3 --cli-connect-timeout 0 cp s3://{os.path.join(base_s3_path, *i.split("/")[1:])} -' for i in final_urls]
 	# Spliting url by state e.g. train, test and valud
-	final_urls = {state:[url for url in final_urls if state in url] for state in train_valid_test}
+	final_urls = {state:[url for url in final_urls if state in url 
+		and all(exclude_name not in url for exclude_name in exclude)] for state in train_valid_test}
 
 	if cache_path:
 		with open(cache_path, 'w') as f:
