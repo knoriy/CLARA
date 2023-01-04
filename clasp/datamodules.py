@@ -113,13 +113,13 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 			texts = [torch.tensor(
 				self.tokenizer.encode(
 					self.cleaner(text['text'][0]), 
-					language = text["original_data"]["language"] if "language" in text["original_data"].keys() else 'en'
+					language = 'en' if 'original_data' not in text.keys() else text["original_data"]["language"] if "language" in text["original_data"].keys() else 'en'
 					)) for text in raw_texts]
 		elif isinstance(raw_texts[0]['text'], str):
 			texts = [torch.tensor(
 				self.tokenizer.encode(
 					self.cleaner(text['text']),
-					language = text["original_data"]["language"] if "language" in text["original_data"].keys() else 'en'
+					language = 'en' if 'original_data' not in text.keys() else text["original_data"]["language"] if "language" in text["original_data"].keys() else 'en'
 					)) for text in raw_texts]
 		else:
 			raise ValueError('Unsupported text type, must be list[str] or str')
