@@ -132,3 +132,4 @@ DATA
 *.out
 test.ipynb
 .archive
+checkpoints/
