@@ -1,13 +1,11 @@
 #!/bin/bash
-#SBATCH --partition=gpu
+#SBATCH --partition=g80n140
 #SBATCH --job-name=CLASP
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=8
-#SBATCH --gpus=8
-#SBATCH --cpus-per-gpu=6 
+#SBATCH --cpus-per-gpu=12
 #SBATCH --comment clap
 #SBATCH --output=%x_%j.out
-#SBATCH --exclude=gpu-st-p4d-24xlarge-[1,281]
+#SBATCH --exclusive
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/nccl/build/lib:/opt/aws-ofi-nccl-install/lib
 export NCCL_PROTO=simple
@@ -26,7 +24,7 @@ export NCCL_TREE_THRESHOLD=0
 echo Running job on $SLURM_JOB_NUM_NODES, 
 
 srun --comment clap /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/code/CLASP/clasp/train.py \
-    --max_epochs 100 \
+    --max_epochs 10 \
     --batch_size 64 \
     --accelerator 'gpu' \
     --strategy 'ddp' \
@@ -34,5 +32,5 @@ srun --comment clap /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knori
     --devices 8 \
     --num_nodes $SLURM_JOB_NUM_NODES \
     --name $SLURM_JOB_NAME \
-    --checkpoint '/fsx/knoriy/code/CLASP/logs/CLASP/2r14v5fq/checkpoints/epoch=34-step=21000.ckpt' 
+    # --checkpoint '/fsx/knoriy/code/CLASP/logs/CLASP/2r14v5fq/checkpoints/epoch=34-step=21000.ckpt' 
     # --checkpoint path/to/checkpoint.pt \
