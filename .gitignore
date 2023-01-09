@@ -131,5 +131,6 @@ DATA
 
 *.out
 test.ipynb
+test.py
 .archive
 checkpoints/
