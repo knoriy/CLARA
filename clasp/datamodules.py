@@ -1,3 +1,5 @@
+import math
+
 import torch
 from torch.utils.data import Dataset, DataLoader, random_split
 from torch.nn.utils.rnn import pad_sequence
@@ -52,12 +54,12 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 	def _create_pipeline(self, data_dir):
 		pipeline = []
 		if self.resample:
-			pipeline.extend([wds.ResampledShards(data_dir)])
+			pipeline.extend([wds.ResampledShards(data_dir, deterministic=True)])
 		else:
 			pipeline.extend([
 				wds.SimpleShardList(data_dir),
 				wds.detshuffle(),
-				wds.split_by_node,
+				# wds.split_by_node,
 				wds.split_by_worker
 				])
 
@@ -78,15 +80,15 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 		if len(self.train_data_dir)>0:
 			self.train = wds.DataPipeline(*self.pipelines['train'])
 			if self.resample:
-				self.train = self.train.with_epoch(self.epochs)
+				self.train.with_epoch(self.epochs)
 		if len(self.test_data_dir)>0:
 			self.test = wds.DataPipeline(*self.pipelines['test'])
 			if self.resample:
-				self.test = self.test.with_epoch(self.epochs)
+				self.test.with_epoch(self.epochs)
 		if len(self.valid_data_dir)>0:
 			self.valid = wds.DataPipeline(*self.pipelines['valid'])
 			if self.resample:
-				self.valid = self.valid.with_epoch(self.epochs)
+				self.valid.with_epoch(self.epochs)
 
 	def train_dataloader(self):
 		if self.train:
