@@ -134,3 +134,4 @@ test.ipynb
 test.py
 .archive
 checkpoints/
+tmp/
