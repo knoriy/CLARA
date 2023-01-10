@@ -111,20 +111,11 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 		raw_audios, raw_texts = data
 
 		mels = [self.stft_fn(audio[0][0]).T for audio in raw_audios]
-		if isinstance(raw_texts[0]['text'], list):
-			texts = [torch.tensor(
-				self.tokenizer.encode(
-					self.cleaner(text['text'][0]), 
-					language = 'en' if 'original_data' not in text.keys() else text["original_data"]["language"] if "language" in text["original_data"].keys() else 'en'
-					)) for text in raw_texts]
-		elif isinstance(raw_texts[0]['text'], str):
-			texts = [torch.tensor(
-				self.tokenizer.encode(
-					self.cleaner(text['text']),
-					language = 'en' if 'original_data' not in text.keys() else text["original_data"]["language"] if "language" in text["original_data"].keys() else 'en'
-					)) for text in raw_texts]
-		else:
-			raise ValueError('Unsupported text type, must be list[str] or str')
+		texts = [torch.tensor(
+			self.tokenizer.encode(
+				self.cleaner(', '.join(text['text']) if isinstance(text['text'], list) else text['text']), 
+				language = 'en' if 'original_data' not in text.keys() else text["original_data"]["language"] if "language" in text["original_data"].keys() else 'en'
+				)) for text in raw_texts]
 
 		mel_lengths = [mel.shape[0] for mel in mels]
 		mel_lengths = torch.tensor(mel_lengths)
