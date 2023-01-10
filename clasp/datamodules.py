@@ -58,7 +58,7 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 		else:
 			pipeline.extend([
 				wds.SimpleShardList(data_dir),
-				wds.detshuffle(),
+				# wds.detshuffle(),
 				# wds.split_by_node,
 				wds.split_by_worker
 				])
@@ -122,8 +122,8 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 		text_lengths = [text.shape[0] for text in texts]
 		text_lengths = torch.tensor(text_lengths)
 
-		texts = pad_sequence(texts).T
-		mels = pad_sequence(mels).permute(1,2,0)
+		texts = pad_sequence(texts).T.contiguous()
+		mels = pad_sequence(mels).permute(1,2,0).contiguous()
 
 		return texts, mels, text_lengths, mel_lengths
 	
@@ -181,7 +181,7 @@ class WebdatasetDataModule(pl.LightningDataModule):
 	def collate_fn(self, data):
 		raw_audios, raw_texts = data
 
-		mels = [self.stft_fn(audio[0][0]).T for audio in raw_audios]
+		mels = [self.stft_fn(audio[0][0]).T.contiguous() for audio in raw_audios]
 		if isinstance(raw_texts[0]['text'], list):
 			texts = [torch.tensor(text_to_sequence(text['text'][0], ["english_cleaners"])) for text in raw_texts]
 		elif isinstance(raw_texts[0]['text'], str):
