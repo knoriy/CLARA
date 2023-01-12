@@ -116,6 +116,7 @@ def cli_main():
 	parser.add_argument('--monitor_lr', type=bool, default=True)
 	parser.add_argument('--checkpoint', type=str, default=None)
 	parser.add_argument('--name', type=str, default=None)
+	parser.add_argument('--predict', type=bool, default=False)
 
 	parser.add_argument('--testing_stuff', type=bool, default=False)
 
@@ -309,7 +310,7 @@ def cli_main():
 		strategy=strategy,
 	)
 	
-	if not args.testing_stuff:
+	if not args.predict:
 		# ------------
 		# training
 		# ------------
@@ -323,7 +324,7 @@ def cli_main():
 			pass
 	else:
 		# import matplotlib.pyplot as plt
-		# model = model.load_from_checkpoint("/fsx/knoriy/code/CLASP/.archive/epoch=33-step=2652.ckpt")
+		model = model.load_from_checkpoint("/fsx/knoriy/code/CLASP/.archive/epoch=33-step=2652.ckpt")
 		predictions = trainer.predict(model, dataloaders=dataset)
 
 		# print(len(predictions))
