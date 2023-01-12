@@ -49,15 +49,8 @@ def get_tar_path_s3(base_s3_path:str,
 	):
 	if os.path.isfile(cache_path) and not recache and use_cache:
 		with open(cache_path) as f:
-			pl_logger.info(f"Attempting to load cached urls: {cache_path}")
-
-			cahed_urls = json.load(f)
-			if len(cahed_urls['train'])>0 and len(cahed_urls['test'])>0 and len(cahed_urls['valid'])>0:
-				pl_logger.info(f"URL cache loaded: {cache_path}")
-				return cahed_urls
-			else:
-				pl_logger.warning(f"Cache was loaded but found 0 in one of train/valid/test.")
-				pl_logger.warning(f"Recaching")
+			pl_logger.info(f"Loading cached urls: {cache_path}")
+			return json.load(f)
 
 	pl_logger.info(f"Creating Url list")
 
