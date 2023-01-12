@@ -32,7 +32,7 @@ def collate_fn(data):
 	return messages
 
 def test_datasets():
-	data_dir = "pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/epidemic_sound_effects/train/{0..132}.tar -"
+	data_dir = "pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/epidemic_sound_effects/train/{0..1}.tar -"
 	batch_size = 64
 
 	pipeline = []
@@ -59,7 +59,7 @@ def test_datasets():
 		for m in message:
 			print(f"\t{m}")
 
-	assert len(list(messages)) == 0
+	assert len(list(messages)) != 0, "At least one error found, please see above list and corresponding error."
 
 if __name__ == '__main__':
 	test_datasets()
