@@ -2,6 +2,8 @@ import os
 import json
 import random
 
+import logging
+pl_logger = logging.getLogger('pytorch_lightning')
 
 def get_tar_path_from_dataset_name(
 	dataset_names:list[str],
@@ -42,12 +44,22 @@ def get_tar_path_s3(base_s3_path:str,
 		dataset_names:list[str]=[''], 
 		exclude:list[str]=[], 
 		cache_path:str='', 
+		use_cache:bool=False, 
 		recache:bool=False,
 	):
-	if os.path.isfile(cache_path) and not recache:
+	if os.path.isfile(cache_path) and not recache and use_cache:
 		with open(cache_path) as f:
-			print("Loading Cache")
-			return json.load(f)
+			pl_logger.info(f"Attempting to load cached urls: {cache_path}")
+
+			cahed_urls = json.load(f)
+			if len(cahed_urls['train'])>0 and len(cahed_urls['test'])>0 and len(cahed_urls['valid'])>0:
+				pl_logger.info(f"URL cache loaded: {cache_path}")
+				return cahed_urls
+			else:
+				pl_logger.warning(f"Cache was loaded but found 0 in one of train/valid/test.")
+				pl_logger.warning(f"Recaching")
+
+	pl_logger.info(f"Creating Url list")
 
 	# create cmd for collecting url spesific dataset, 
 	# if `dataset_names` is not given it will search the full base_s3_path
@@ -62,6 +74,7 @@ def get_tar_path_s3(base_s3_path:str,
 		and all(exclude_name not in url for exclude_name in exclude)] for state in train_valid_test}
 
 	if cache_path:
+		pl_logger.info(f"Creating URL cache: {cache_path}")
 		with open(cache_path, 'w') as f:
 			json.dump(final_urls, f)
 
