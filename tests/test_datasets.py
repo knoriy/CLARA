@@ -3,7 +3,6 @@ sys.path.append('/fsx/knoriy/code/CLASP/clasp')
 
 import webdataset as wds
 from torch.utils.data import DataLoader
-import webdataset as wds
 
 from utils.get_wds_urls import get_tar_path_s3
 
@@ -38,8 +37,7 @@ def collate_fn(data):
 
 def test_datasets():
 
-	TRAIN_TEST_OR_VALID = 'test'
-	dataset_names = ['midi50k']
+	dataset_names = ['common_voice']
 	exclude = []
 	urls = get_tar_path_s3(
 			base_s3_path		= 's-laion-audio/webdataset_tar/', 
@@ -49,31 +47,32 @@ def test_datasets():
 			)
 	batch_size = 64
 
-	pipeline = []
-	pipeline.extend([
-		wds.SimpleShardList(urls[TRAIN_TEST_OR_VALID]),
-		wds.split_by_worker
-		])
+	for key in urls:
+		pipeline = []
+		pipeline.extend([
+			wds.SimpleShardList(urls[key]),
+			wds.split_by_worker
+			])
 
-	pipeline.extend([wds.tarfile_to_samples()])
+		pipeline.extend([wds.tarfile_to_samples()])
 
-	pipeline.extend([
-		wds.decode(wds.torch_audio),
-		wds.to_tuple('__key__', '__url__', 'flac', 'json'),
-		wds.batched(batch_size),
-		wds.map(collate_fn)
-		])
+		pipeline.extend([
+			wds.decode(wds.torch_audio),
+			wds.to_tuple('__key__', '__url__', 'flac', 'json'),
+			wds.batched(batch_size),
+			wds.map(collate_fn)
+			])
 
-	dataset = wds.DataPipeline(*pipeline)
-	dataloader = DataLoader(dataset, batch_size=None, num_workers=6, persistent_workers=True)
+		dataset = wds.DataPipeline(*pipeline)
+		dataloader = DataLoader(dataset, batch_size=None, num_workers=6, persistent_workers=True)
 
-	messages = filter(lambda x: len(x) > 0, dataloader)
+		messages = filter(lambda x: len(x) > 0, dataloader)
 
-	for message in messages:
-		for m in message:
-			print(f"\t{m}")
+		for message in messages:
+			for m in message:
+				print(f"\t{m}")
 
-	assert len(list(messages)) != 0, "At least one error found, please see above list and corresponding error."
+		assert len(list(messages)) != 0, "At least one error found, please see above list and corresponding error."
 
 if __name__ == '__main__':
 	test_datasets()
