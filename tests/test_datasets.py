@@ -32,32 +32,36 @@ def collate_fn(data):
 	return messages
 
 def test_datasets():
-	data_dir = "pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/epidemic_sound_effects/train/{0..1}.tar -"
+	data_dirs = [
+				"pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/FSD50K/train/{0..71}.tar -",
+				"pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/FSD50K/test/{0..19}.tar -",
+				"pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/FSD50K/valid/{0..8}.tar -"]
 	batch_size = 64
 
-	pipeline = []
-	pipeline.extend([
-		wds.SimpleShardList(data_dir),
-		wds.split_by_worker
-		])
+	for data_dir in data_dirs:
+		pipeline = []
+		pipeline.extend([
+			wds.SimpleShardList(data_dir),
+			wds.split_by_worker
+			])
 
-	pipeline.extend([wds.tarfile_to_samples()])
+		pipeline.extend([wds.tarfile_to_samples()])
 
-	pipeline.extend([
-		wds.decode(wds.torch_audio),
-		wds.to_tuple('__key__', '__url__', 'flac', 'json'),
-		wds.batched(batch_size),
-		wds.map(collate_fn)
-		])
+		pipeline.extend([
+			wds.decode(wds.torch_audio),
+			wds.to_tuple('__key__', '__url__', 'flac', 'json'),
+			wds.batched(batch_size),
+			wds.map(collate_fn)
+			])
 
-	dataset = wds.DataPipeline(*pipeline)
-	dataloader = DataLoader(dataset, batch_size=None, num_workers=6, persistent_workers=True)
+		dataset = wds.DataPipeline(*pipeline)
+		dataloader = DataLoader(dataset, batch_size=None, num_workers=6, persistent_workers=True)
 
-	messages = filter(lambda x: len(x) > 0, dataloader)
+		messages = filter(lambda x: len(x) > 0, dataloader)
 
-	for message in messages:
-		for m in message:
-			print(f"\t{m}")
+		for message in messages:
+			for m in message:
+				print(f"\t{m}")
 
 	assert len(list(messages)) != 0, "At least one error found, please see above list and corresponding error."
 
