@@ -36,18 +36,23 @@ def collate_fn(data):
 	return messages
 
 def test_datasets():
-
+	
 	dataset_names = ['common_voice']
 	exclude = []
 	urls = get_tar_path_s3(
 			base_s3_path		= 's-laion-audio/webdataset_tar/', 
-			train_valid_test	= ['train', 'test', 'valid'],
+			train_valid_test	= [ 'train', 'test', 'valid'],
 			dataset_names		= dataset_names, 
 			exclude				= exclude,
 			)
 	batch_size = 64
 
+	total_fails = 0
+
 	for key in urls:
+		print(f'#'*50)
+		print(f'# Running: {key} urls')
+		print(f'#'*50)
 		pipeline = []
 		pipeline.extend([
 			wds.SimpleShardList(urls[key]),
@@ -72,7 +77,9 @@ def test_datasets():
 			for m in message:
 				print(f"\t{m}")
 
-		assert len(list(messages)) != 0, "At least one error found, please see above list and corresponding error."
+		total_fails += len(list(messages))
+
+	assert total_fails == 0, f"{total_fails} error found, please see above log."
 
 if __name__ == '__main__':
 	test_datasets()
