@@ -41,7 +41,7 @@ def get_tar_path_from_dataset_name(
 
 def get_tar_path_s3(base_s3_path:str, 
 		train_valid_test:list[str], 
-		dataset_names:list[str]=[''], 
+		dataset_names:list[str] or str=[''], 
 		exclude:list[str]=[], 
 		cache_path:str='', 
 		use_cache:bool=False, 
@@ -56,6 +56,7 @@ def get_tar_path_s3(base_s3_path:str,
 
 	# create cmd for collecting url spesific dataset, 
 	# if `dataset_names` is not given it will search the full base_s3_path
+	dataset_names = [dataset_names] if isinstance(dataset_names, str) else dataset_names
 	cmds = [f'aws s3 ls s3://{os.path.join(base_s3_path, name, "")} --recursive | grep /.*.tar' for name in dataset_names]
 	# urls are collected
 	urls = [os.popen(cmd).read() for cmd in cmds]
