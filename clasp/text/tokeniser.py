@@ -4,6 +4,7 @@ import os
 LANGUAGES = {
     "en": "english",
     "zh": "chinese",
+    "zh-CN":"chinese",
     "de": "german",
     "es": "spanish",
     "ru": "russian",
@@ -101,6 +102,16 @@ LANGUAGES = {
     "ba": "bashkir",
     "jw": "javanese",
     "su": "sundanese",
+    "gn": "Guarani",
+    "fy": "western frisian",
+    "fy-NL":"western frisian (netherlands)",
+    "eo": "Esperanto",
+    "cnh": "Hakha Chin",
+    "cv": "Chuvash",
+    "dv": "Divehi",
+    "ky": "Kirghiz",
+    "or": "Oriya",
+    "rw": "Kinyarwanda",
 }
 
 # language code lookup by name, with a few language aliases
@@ -119,6 +130,14 @@ TO_LANGUAGE_CODE = {
     "castilian": "es",
     "british": "en",
     "american": "en",
+    "Dhivehi": "dv",
+    "Maldivian": "dv",
+    "farsi": "fa",
+    "Kyrgyz": "ky",
+    "Odia": "or",
+    "Slovene": "sl",
+
+
 }
 
 
