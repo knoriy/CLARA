@@ -37,7 +37,7 @@ def collate_fn(data):
 
 def test_datasets():
 	
-	dataset_names = ['common_voice']
+	dataset_names = ['mswc/as/']
 	exclude = []
 	urls = get_tar_path_s3(
 			base_s3_path		= 's-laion-audio/webdataset_tar/', 
@@ -51,7 +51,7 @@ def test_datasets():
 
 	for key in urls:
 		print(f'#'*50)
-		print(f'# Running: {key} urls')
+		print(f'# Checking: {key} urls')
 		print(f'#'*50)
 		pipeline = []
 		pipeline.extend([
