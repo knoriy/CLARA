@@ -23,7 +23,7 @@ class PL_CLASP(pl.LightningModule):
 					text_encoder_embedding=1024,
 					text_encoder_layers=1,
 					text_encoder_heads=4,
-					vocab_size=50362,
+					vocab_size=50373,
 					n_mels=80,
 					audio_encoder_embedding=1024,
 					debug=False,
@@ -97,7 +97,7 @@ class PL_CLASP(pl.LightningModule):
 		parser.add_argument('--text_encoder_embedding', type=int, default=1024)
 		parser.add_argument('--text_encoder_layers', type=int, default=1)
 		parser.add_argument('--text_encoder_heads', type=int, default=4)
-		parser.add_argument('--vocab_size', type=int, default=50257)# len(symbols))
+		parser.add_argument('--vocab_size', type=int, default=50373)
 		parser.add_argument('--debug', type=bool, default=False)
 
 		return parser
@@ -242,7 +242,7 @@ def cli_main():
 	# ------------
 	# model
 	# ------------
-	model = PL_CLASP(args.hidden_dim, args.learning_rate)
+	model = PL_CLASP(args.hidden_dim, args.learning_rate, vocab_size=args.vocab_size)
 	if os.path.isfile(str(args.checkpoint)):
 		model = model.load_from_checkpoint(str(args.checkpoint))
 		pl_logger.info(f"Model state loaded from checkpoint: {args.checkpoint}")

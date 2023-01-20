@@ -170,6 +170,9 @@ class Tokeniser(GPT2TokenizerFast):
         ]
         text = "".join([*specials, " ", text])
         return text
+    
+    def get_vocab_size(self) -> int:
+        return len(self.tokeniser.get_vocab())
 
     def get_tokeniser(name:str = "multilingual"):
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
