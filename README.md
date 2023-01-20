@@ -63,7 +63,10 @@ python clasp/train.py --max_epochs 100 --accelerator gpu --overfit_batches 1 --l
 python clasp/train.py --max_epochs 1 --accelerator gpu --devices 1 --name CLASP --fast_dev_run True # or --fast_dev_run n where n is the number of step
 # predict
 python clasp/train.py --max_epochs 100 --accelerator gpu --overfit_batches 1 --testing_stuff True  --limit_predict_batches 1 --logger False
-
+# Test dataset for error or bugs
+python tests/test_datasets.py
+## Or
+srun --comment clap --output=%x_%j.out /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/code/CLASP/tests/test_datasets.py
 ```
 
 ## Tensorboard
