@@ -62,7 +62,7 @@ python clasp/train.py --max_epochs 100 --accelerator gpu --overfit_batches 1 --l
 # Debug
 python clasp/train.py --max_epochs 1 --accelerator gpu --devices 1 --name CLASP --fast_dev_run True # or --fast_dev_run n where n is the number of step
 # predict
-python clasp/train.py --max_epochs 100 --accelerator gpu --overfit_batches 1 --testing_stuff True  --limit_predict_batches 1 --logger False
+python clasp/train.py --accelerator gpu --predict True --limit_predict_batches 1 --logger False --checkpoint path/to/my/model.pt
 # Test dataset for error or bugs
 python tests/test_datasets.py
 ## Or

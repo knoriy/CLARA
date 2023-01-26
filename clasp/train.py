@@ -53,13 +53,13 @@ class PL_CLASP(pl.LightningModule):
 		return loss
 
 	def validation_step(self, batch, batch_idx):
-		loss, acc = self._shared_eval_step(batch, batch_idx)
+		_, loss, acc = self._shared_eval_step(batch, batch_idx)
 
 		metrics = {"val_acc": acc, "val_loss": loss}
 		self.log_dict(metrics, prog_bar=True, sync_dist=True)
 
 	def test_step(self, batch, batch_idx):
-		loss, acc = self._shared_eval_step(batch, batch_idx)
+		_, loss, acc = self._shared_eval_step(batch, batch_idx)
 
 		metrics = {"test_acc": acc, "test_loss": loss}
 		self.log_dict(metrics, sync_dist=True)
@@ -70,11 +70,11 @@ class PL_CLASP(pl.LightningModule):
 		loss = self.loss_fn(*model_out)
 		acc = self.acc_fn(*model_out)
 
-		return loss, acc
-
+		return model_out, loss, acc
 
 	def predict_step(self, batch, batch_idx, dataloader_idx=0):
-		return self(batch)
+		model_out, loss, acc = self._shared_eval_step(batch, batch_idx)
+		return model_out, loss, acc
 
 	def configure_optimizers(self):
 		optimizer = torch.optim.AdamW(self.parameters(), lr=self.hparams.learning_rate)
@@ -167,7 +167,6 @@ def cli_main():
 		'midi50k/train/36.tar',
 		'midi50k/test/0.tar',
 
-
 		# Other
 
 		#unsuported languages
@@ -179,18 +178,18 @@ def cli_main():
 		"mswc/rm-vallader/",
 		"mswc/sv-SE/",
 		"mswc/cnh/",
+		"mswc/zh-CN/",
 	]
 	dataset_names = [
 		'CMU_Arctic', 'Clotho', 'audiocaps', 'EmoV_DB', 'Knocking_sounds', 'LibriSpeech', 
 		'esc50_no_overlap', 'cambridge_dictionary', 'fine_grained_vocal_imitation_set', 
 		'VocalSketch', 'ESC50_1','ESC50_2','ESC50_3','ESC50_4','ESC50_5','Urbansound8K', 
-		'Tunebot', 'MACS', 'LibriSpeech', 'VGGSound', 'audioset_unbalanced_train_t5', 
-		'audioset_eval_t5', 'CREMA-D', 'midi50k', 'common_voice']
-	dataset_names = [
-		# 'FSD50K', 
-		# 'audioset', #
-		'mswc',
-	]
+		'Tunebot', 'MACS', 'LibriSpeech', 'VGGSound', 'CREMA-D', 'midi50k', 'common_voice', 
+		'mswc', 
+		]
+	# dataset_names = [
+	# 	'audioset_unbalanced_train_t5', 'audioset_eval_t5'
+	# ]
 	
 	dataset_names_intersection = set(dataset_names).intersection(exclude)
 	if dataset_names_intersection:
@@ -235,7 +234,7 @@ def cli_main():
 					valid_data_dir = urls['valid'],
 					batch_size = args.batch_size,
 					num_workers = args.num_workers,
-					shuffle = False if args.overfit_batches else False,
+					shuffle = False if args.overfit_batches else True,
 					resample = False,
 					)
 
@@ -251,7 +250,7 @@ def cli_main():
 	# Callbacks
 	# ------------
 	callbacks = [
-		# ModelCheckpoint(verbose=True, every_n_train_steps=1000)
+		ModelCheckpoint(verbose=True, every_n_train_steps=1000)
 		# EarlyStopping(monitor="val_loss", patience=args.early_stoping_patience)
 	]
 
@@ -287,7 +286,7 @@ def cli_main():
 		# ------------
 		# training
 		# ------------
-		trainer.fit(model, datamodule=dataset)
+		trainer.fit(model, datamodule=dataset, ckpt_path=args.checkpoint)
 
 		# ------------
 		# testing
@@ -297,12 +296,14 @@ def cli_main():
 			trainer.test(ckpt_path='best', datamodule=dataset)
 	else:
 		# import matplotlib.pyplot as plt
-		model = model.load_from_checkpoint("/fsx/knoriy/code/CLASP/.archive/epoch=33-step=2652.ckpt")
+		# model = model.load_from_checkpoint(args.checkpoint)
 		predictions = trainer.predict(model, dataloaders=dataset)
 
-		# print(len(predictions))
-		# for prediction in predictions:
-		# 	text_features, audio_features, text_tempeture, audio_tempeture, mlp_text_features, mlp_audio_features = prediction
+		pl_logger.info(f"")
+		
+		for prediction in predictions:
+			model_out, loss, acc = prediction
+			print(loss, acc)
 
 		# 	logits = text_tempeture * text_features @ mlp_audio_features.T
 		# 	audio_similarity = mlp_audio_features @ mlp_audio_features.T
