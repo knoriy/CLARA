@@ -1,5 +1,6 @@
 import sys
 sys.path.append('/fsx/knoriy/code/CLASP/clasp')
+import argparse
 
 import webdataset as wds
 from torch.utils.data import DataLoader
@@ -7,8 +8,8 @@ from torch.utils.data import DataLoader
 from utils.get_wds_urls import get_tar_path_s3
 
 __LONG_AUDIO:int = 30
-__SHORT_AUDIO:int = 0.4
-__LONG_TEXT:int = 1024
+__SHORT_AUDIO:int = 0.2
+__LONG_TEXT:int = 3000
 
 def collate_fn(data):
 	keys, urls, raw_audios, raw_texts = data
@@ -35,13 +36,15 @@ def collate_fn(data):
 
 	return messages
 
-def test_datasets():
-	
-	dataset_names = ['mswc/as/']
+def test_datasets(
+		base_s3_path:str,
+		dataset_names:list[str]=[], 
+		splits:list[str]=['train', 'test', 'valid'], 
+		):
 	exclude = []
 	urls = get_tar_path_s3(
-			base_s3_path		= 's-laion-audio/webdataset_tar/', 
-			train_valid_test	= [ 'train', 'test', 'valid'],
+			base_s3_path		= base_s3_path, 
+			train_valid_test	= splits,
 			dataset_names		= dataset_names, 
 			exclude				= exclude,
 			)
@@ -82,5 +85,11 @@ def test_datasets():
 	assert total_fails == 0, f"{total_fails} error found, please see above log."
 
 if __name__ == '__main__':
-	test_datasets()
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--dataset_names', nargs='+', type=str, required=True)
+	parser.add_argument('--base_s3_path', type=str, default='s-laion-audio/webdataset_tar/')
+
+	args = parser.parse_args()
+
+	test_datasets(base_s3_path=args.base_s3_path, dataset_names=args.dataset_names)
 
