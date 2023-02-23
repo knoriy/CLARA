@@ -58,7 +58,7 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 		else:
 			pipeline.extend([
 				wds.SimpleShardList(data_dir),
-				# wds.detshuffle(),
+				wds.shuffle(),
 				# wds.split_by_node,
 				wds.split_by_worker
 				])
@@ -92,19 +92,19 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 
 	def train_dataloader(self):
 		if self.train:
-			return wds.WebLoader(self.train, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True, persistent_workers=True)
+			return wds.WebLoader(self.train, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True, persistent_workers=False)
 
 	def val_dataloader(self):
 		if self.valid:
-			return wds.WebLoader(self.valid, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True, persistent_workers=True)
+			return wds.WebLoader(self.valid, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True, persistent_workers=False)
 
 	def test_dataloader(self):
 		if self.test:
-			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True, persistent_workers=True)
+			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True, persistent_workers=False)
 
 	def predict_dataloader(self):
 		if self.test:
-			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True, persistent_workers=True)
+			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True, persistent_workers=False)
 
 	# 	return text, mel
 	def collate_fn(self, data):
