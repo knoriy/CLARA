@@ -1,9 +1,10 @@
 #!/bin/bash
 #SBATCH --partition=g80n140
-#SBATCH --job-name=CLASP_ResNeXt
+#SBATCH --job-name=CLASP_ResNeXt_small
+#SBATCH --ntasks-per-node=8
 #SBATCH --nodes=1
 #SBATCH --cpus-per-gpu=12
-#SBATCH --comment clap
+#SBATCH --account clap
 #SBATCH --output=%x_%j.out
 #SBATCH --exclusive
 
@@ -23,8 +24,8 @@ export NCCL_TREE_THRESHOLD=0
 
 echo Running job on $SLURM_JOB_NUM_NODES, 
 
-srun --comment clap /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/code/CLASP/clasp/train.py \
-    --max_epochs 10 \
+srun --account clap /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/code/CLASP/clasp/train.py \
+    --max_epochs 200 \
     --batch_size 64 \
     --accelerator 'gpu' \
     --strategy 'ddp' \
@@ -32,8 +33,8 @@ srun --comment clap /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knori
     --devices 8 \
     --num_nodes $SLURM_JOB_NUM_NODES \
     --name $SLURM_JOB_NAME \
-    --log_every_n_steps 1000
+    --log_every_n_steps 10000
     --accumulate_grad_batches 8
     --profiler None # simple, advanced, pytorch, xla (TPU Only)
-    # --checkpoint '/fsx/knoriy/code/CLASP/logs/CLASP/2r14v5fq/checkpoints/epoch=34-step=21000.ckpt' 
+    # --checkpoint '/fsx/knoriy/code/CLASP/logs/CLASP/2dkgtlef/checkpoints/epoch=0-step=275000.ckpt' 
     # --checkpoint path/to/checkpoint.pt \
