@@ -12,7 +12,7 @@ pl_logger = logging.getLogger('pytorch_lightning')
 from clasp import CLASP
 from loss import CLAPLoss
 from datamodules import MultilingualWebdatasetDataModule
-from utils import get_tar_path_s3, Accuracy
+from utils import get_tar_path_s3, get_lists, Accuracy
 
 class PL_CLASP(pl.LightningModule):
 	def __init__(	self, 
@@ -116,6 +116,8 @@ def cli_main():
 	parser.add_argument('--checkpoint', type=str, default=None)
 	parser.add_argument('--name', type=str, default=None)
 	parser.add_argument('--predict', type=bool, default=False)
+	parser.add_argument('--dataset_list', type=str, default='/fsx/knoriy/code/CLASP/config/dataset_list.txt')
+	parser.add_argument('--exclude_list', type=str, default='/fsx/knoriy/code/CLASP/config/exclude_list.txt')
 
 	parser.add_argument('--testing_stuff', type=bool, default=False)
 
@@ -126,70 +128,8 @@ def cli_main():
 	# ------------
 	# data
 	# ------------
-	exclude = [
-		'epidemic_sound_effects/train/1.tar',
-		'Tunebot/train/15.tar',
-		'Tunebot/train/8.tar',
-		# long text
-		'common_voice/train/60.tar',
-		'common_voice/train/227.tar',
-		'common_voice/train/469.tar',
-		'common_voice/train/595.tar',
-		'common_voice/train/677.tar',
-		'common_voice/train/1292.tar',
-		'common_voice/train/1001.tar',
-		'common_voice/train/1183.tar',
-		'common_voice/test/4.tar',
-		'common_voice/test/36.tar',
-		'common_voice/test/80.tar',
-		'FSD50K/train/0.tar',
-		'FSD50K/train/2.tar',
-		'FSD50K/train/7.tar',
-		'FSD50K/train/24.tar',
-		'FSD50K/train/28.tar',
-		'FSD50K/train/33.tar',
-		'FSD50K/train/36.tar',
-		'FSD50K/train/42.tar',
-		'FSD50K/train/45.tar',
-		'FSD50K/train/52.tar',
-		'FSD50K/train/60.tar',
-		'FSD50K/valid/0.tar',
-		# Long audio files
-		'common_voice/train/702.tar',
-		'common_voice/train/723.tar',
-		'common_voice/train/788.tar',
-		'common_voice/train/1079.tar', # long file 33.876s
-		'common_voice/train/1301.tar',
-		'common_voice/train/1655.tar',
-		'common_voice/train/1683.tar',
-
-		# zero length
-		'midi50k/train/36.tar',
-		'midi50k/test/0.tar',
-
-		# Other
-
-		#unsuported languages
-		"mswc/ga-IE/",
-		"mswc/fy-NL/",
-		"mswc/ia/",
-		"mswc/sah/",
-		"mswc/rm-sursilv/",
-		"mswc/rm-vallader/",
-		"mswc/sv-SE/",
-		"mswc/cnh/",
-		"mswc/zh-CN/",
-	]
-	dataset_names = [
-		'CMU_Arctic', 'Clotho', 'audiocaps', 'EmoV_DB', 'Knocking_sounds', 'LibriSpeech', 
-		'esc50_no_overlap', 'cambridge_dictionary', 'fine_grained_vocal_imitation_set', 
-		'VocalSketch', 'ESC50_1','ESC50_2','ESC50_3','ESC50_4','ESC50_5','Urbansound8K', 
-		'Tunebot', 'MACS', 'LibriSpeech', 'VGGSound', 'CREMA-D', 'midi50k', 'common_voice', 
-		'mswc', 
-		]
-	# dataset_names = [
-	# 	'audioset_unbalanced_train_t5', 'audioset_eval_t5'
-	# ]
+	exclude = get_lists(args.exclude_list)
+	dataset_names = get_lists(args.dataset_list)
 	
 	dataset_names_intersection = set(dataset_names).intersection(exclude)
 	if dataset_names_intersection:
