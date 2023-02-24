@@ -1,6 +1,7 @@
 import os
 import json
 import random
+import pathlib
 
 import logging
 pl_logger = logging.getLogger('pytorch_lightning')
@@ -62,7 +63,7 @@ def get_tar_path_s3(base_s3_path:str,
 	urls = [os.popen(cmd).read() for cmd in cmds]
 	# cleaning the urls to conform with webdataset
 	final_urls = [i.split(' ')[-1] for url in urls for i in url.split('\n')]
-	final_urls = [f'pipe:aws s3 --cli-connect-timeout 0 cp s3://{os.path.join(base_s3_path, *i.split("/")[1:])} -' for i in final_urls]
+	final_urls = [f'pipe:aws s3 --cli-read-timeout 0 --cli-connect-timeout 0 cp s3://{os.path.join(base_s3_path, *i.split("/")[1:])} -' for i in final_urls]
 	# Spliting url by state e.g. train, test and valud
 	final_urls = {state:[url for url in final_urls if state in url 
 		and all(exclude_name not in url for exclude_name in exclude)] for state in train_valid_test}
@@ -73,6 +74,14 @@ def get_tar_path_s3(base_s3_path:str,
 			json.dump(final_urls, f)
 
 	return final_urls
+
+def get_lists(path:str):
+    path = pathlib.Path(path)
+    if not path.exists():
+        raise FileNotFoundError(path)
+
+    with open(path) as f:
+        return [line.rstrip('\n') for line in f if line.rstrip('\n') and not line.startswith('#')]
 
 if __name__ == '__main__':
 	urls = get_tar_path_s3(
