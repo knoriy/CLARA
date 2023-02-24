@@ -1,0 +1,54 @@
+epidemic_sound_effects/train/1.tar
+Tunebot/train/15.tar
+Tunebot/train/8.tar
+
+# long text
+common_voice/train/60.tar
+common_voice/train/227.tar
+common_voice/train/469.tar
+common_voice/train/595.tar
+common_voice/train/677.tar
+common_voice/train/1292.tar
+common_voice/train/1001.tar
+common_voice/train/1183.tar
+common_voice/test/4.tar
+common_voice/test/36.tar
+common_voice/test/80.tar
+FSD50K/train/0.tar
+FSD50K/train/2.tar
+FSD50K/train/7.tar
+FSD50K/train/24.tar
+FSD50K/train/28.tar
+FSD50K/train/33.tar
+FSD50K/train/36.tar
+FSD50K/train/42.tar
+FSD50K/train/45.tar
+FSD50K/train/52.tar
+FSD50K/train/60.tar
+FSD50K/valid/0.tar
+
+# Long audio files
+common_voice/train/702.tar
+common_voice/train/723.tar
+common_voice/train/788.tar
+common_voice/train/1079.tar
+common_voice/train/1301.tar
+common_voice/train/1655.tar
+common_voice/train/1683.tar
+
+# zero length
+midi50k/train/36.tar
+midi50k/test/0.tar
+
+# Other
+
+# unsuported languages
+mswc/ga-IE/
+mswc/fy-NL/
+mswc/ia/
+mswc/sah/
+mswc/rm-sursilv/
+mswc/rm-vallader/
+mswc/sv-SE/
+mswc/cnh/
+mswc/zh-CN/
