@@ -58,7 +58,7 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 		else:
 			pipeline.extend([
 				wds.SimpleShardList(data_dir),
-				wds.shuffle(),
+				# wds.shuffle(),
 				# wds.split_by_node,
 				wds.split_by_worker
 				])
@@ -92,19 +92,19 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 
 	def train_dataloader(self):
 		if self.train:
-			return wds.WebLoader(self.train, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True, persistent_workers=True)
+			return wds.WebLoader(self.train, batch_size=None, shuffle=False, num_workers=self.num_workers, )#pin_memory=True, persistent_workers=True)
 
 	def val_dataloader(self):
 		if self.valid:
-			return wds.WebLoader(self.valid, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True, persistent_workers=True)
+			return wds.WebLoader(self.valid, batch_size=None, shuffle=False, num_workers=self.num_workers, )#pin_memory=True, persistent_workers=True)
 
 	def test_dataloader(self):
 		if self.test:
-			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True, persistent_workers=True)
+			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers, )#pin_memory=True, persistent_workers=True)
 
 	def predict_dataloader(self):
 		if self.test:
-			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers, pin_memory=True, persistent_workers=True)
+			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers, )#pin_memory=True, persistent_workers=True)
 
 	# 	return text, mel
 	def collate_fn(self, data):
@@ -126,59 +126,8 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 		mels = pad_sequence(mels).permute(1,2,0).contiguous()
 
 		return texts, mels, text_lengths, mel_lengths
-	
-class WebdatasetDataModule(pl.LightningDataModule):
-	def __init__(self, train_data_dir:str, test_data_dir:str, valid_data_dir:str, epochs:int=1, batch_size:int = 32, num_workers:int=0, audio_backend:str=None):
-		super().__init__()
-		# if not audio_backend:
-		# torchaudio.set_audio_backend('soundfile') # Forching backend to soundfile, due to known bug in torch audio (https://github.com/pytorch/audio/issues/2356)
 
-		self.train_data_dir = train_data_dir
-		self.test_data_dir = test_data_dir
-		self.valid_data_dir = valid_data_dir
-
-		self.epochs = epochs
-		self.batch_size = batch_size
-		self.num_workers = num_workers
-
-		self.stft_fn = Audio.stft.MelSpecPipeline()
-
-	def setup(self, stage:Optional[str] = None):
-		pipeline = [wds.SimpleShardList(self.train_data_dir),
-					wds.tarfile_to_samples(),
-					wds.detshuffle(),
-					wds.split_by_node,
-					wds.split_by_worker,
-					wds.decode(wds.torch_audio),
-					wds.to_tuple("flac", "json"),
-					wds.batched(self.batch_size),
-					wds.map(self.collate_fn),
-					]
-		if len(self.train_data_dir)>0:
-			self.train = wds.DataPipeline(*pipeline)
-		if len(self.test_data_dir)>0:
-			self.test = wds.DataPipeline(*pipeline)
-		if len(self.valid_data_dir)>0:
-			self.valid = wds.DataPipeline(*pipeline)
-
-	def train_dataloader(self):
-		if self.train:
-			return wds.WebLoader(self.train, batch_size=None, shuffle=False, num_workers=self.num_workers)
-
-	def val_dataloader(self):
-		if self.valid:
-			return wds.WebLoader(self.valid, batch_size=None, shuffle=False, num_workers=self.num_workers)
-
-	def test_dataloader(self):
-		if self.test:
-			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers)
-
-	def predict_dataloader(self):
-		if self.test:
-			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers)
-
-	# 	return text, mel
-	def collate_fn(self, data):
+	def english_collate_fn(self, data):
 		raw_audios, raw_texts = data
 
 		mels = [self.stft_fn(audio[0][0]).T.contiguous() for audio in raw_audios]
@@ -193,24 +142,31 @@ class WebdatasetDataModule(pl.LightningDataModule):
 		mels = pad_sequence(mels).permute(1,2,0)
 
 		return texts, mels
-	
+
+
 if __name__ == '__main__':
 	import tqdm
-	from utils.get_wds_urls import get_tar_path_s3
-	dataset_names = [
-		'EmoV_DB', #PASS
-	]
+	from utils import get_tar_path_s3, get_lists 
+
+	dataset_names = get_lists('/fsx/knoriy/code/CLASP/config/dataset_list.txt')
+	exclude = get_lists('/fsx/knoriy/code/CLASP/config/exclude_list.txt')
+
 	urls = get_tar_path_s3(
 		base_s3_path = 's-laion-audio/webdataset_tar/', 
 		train_valid_test = ['train', 'test', 'valid'],
 		dataset_names = dataset_names,
-		# cache_path = '/tmp/url_cache.json',
-		# recache = True,
+		exclude=exclude,
 		)
+
+	if not urls['valid']:
+		urls['valid'] = ['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar']
+	if not urls['test']:
+		urls['test'] = ['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar']
+
 	dataset = MultilingualWebdatasetDataModule(	
-									train_data_dir = urls['train'][:1],
-									test_data_dir =urls['test'][:1],
-									valid_data_dir = urls['valid'][:1],
+									train_data_dir = urls['train'],
+									test_data_dir =urls['test'],
+									valid_data_dir = urls['valid'],
 									batch_size = 64,
 									num_workers=6,
 									resample=False)
@@ -220,10 +176,15 @@ if __name__ == '__main__':
 	# print(len(dataset.train))
 	# for i, val in enumerate(iter(dataset.train)):
 		# print(i)
-	for i in tqdm.tqdm(dataset.train_dataloader()):
-		print(i[0].shape, i[1].shape)
-		break
-	# for i in tqdm.tqdm(dataset.val_dataloader()):
-	# 	pass
+	print('train')
+	for epoch in range(2):
+		print(epoch)
+		for i in tqdm.tqdm(dataset.train_dataloader()):
+			pass
+	print('valid')
+	for epoch in range(2):
+		print(epoch)
+		for i in tqdm.tqdm(dataset.val_dataloader()):
+			pass
 	# for i in tqdm.tqdm(dataset.test_dataloader()):
 	# 	pass
