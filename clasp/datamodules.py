@@ -58,7 +58,7 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 		else:
 			pipeline.extend([
 				wds.SimpleShardList(data_dir),
-				# wds.shuffle(),
+				wds.shuffle(),
 				# wds.split_by_node,
 				wds.split_by_worker
 				])
