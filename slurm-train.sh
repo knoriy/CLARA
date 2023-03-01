@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --partition=g80n140
+#SBATCH --partition=g40423
 #SBATCH --job-name=CLASP_ResNeXt_small
 #SBATCH --ntasks-per-node=8
 #SBATCH --nodes=1
@@ -26,16 +26,16 @@ echo Running job on $SLURM_JOB_NUM_NODES,
 
 srun --account clap /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/code/CLASP/clasp/train.py \
     --max_epochs 200 \
-    --batch_size 64 \
+    --batch_size 32 \
     --accelerator 'gpu' \
     --strategy 'ddp' \
     --num_workers 6 \
     --devices 8 \
     --num_nodes $SLURM_JOB_NUM_NODES \
     --name $SLURM_JOB_NAME \
-    --log_every_n_steps 10000 \
+    --log_every_n_steps 100000 \
     --accumulate_grad_batches 8 \
-    --precision 16 \
-    --profiler None \ # simple, advanced, pytorch, xla (TPU Only)
+    # --precision 16 \
+    # --profiler None \ # simple, advanced, pytorch, xla (TPU Only)
     # --checkpoint '/fsx/knoriy/code/CLASP/logs/CLASP/2dkgtlef/checkpoints/epoch=0-step=275000.ckpt' 
     # --checkpoint path/to/checkpoint.pt \
