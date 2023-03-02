@@ -82,12 +82,7 @@ class CLASP(nn.Module):
 
         return x
 
-    def forward(self, text:torch.Tensor=None, audio:torch.Tensor=None):
-        if audio is None:
-            return self.encode_text(text)
-        elif text is None:
-            return self.encode_audio(audio)
-
+    def forward(self, text:torch.Tensor, audio:torch.Tensor):
         text_features = self.encode_text(text)
         text_features = F.normalize(text_features, dim=-1)
 
