@@ -55,18 +55,16 @@ docker run -it --rm --gpus=all -v $(pwd):/workspace --name clasp knoriy/clasp ba
 
 # run module
 python clasp/train.py --max_epochs 1 --accelerator gpu --devices 1
-# or for distributed
-python clasp/train.py --max_epochs 1 --accelerator gpu --strategy ddp --devices 2
-# overfit to single batch 
-python clasp/train.py --max_epochs 100 --accelerator gpu --overfit_batches 1 --log_every_n_steps 1 --name CLASP
-# Debug
-python clasp/train.py --max_epochs 1 --accelerator gpu --devices 1 --name CLASP --fast_dev_run True # or --fast_dev_run n where n is the number of step
-# predict
-python clasp/train.py --accelerator gpu --predict True --limit_predict_batches 1 --logger False --checkpoint path/to/my/model.pt
+# for distributed add or see here https://pytorch-lightning.readthedocs.io/en/stable/extensions/strategy.html#selecting-a-built-in-strategy 
+--strategy ddp
+# predict set mode to predict and provide checkpoint
+--mode predict --checkpoint path/to/my/model.pt
 # Test dataset for error or bugs
 python tests/test_datasets.py
 ## Or
 srun --comment clap --output=%x_%j.out /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/code/CLASP/tests/test_datasets.py
+# overfit to single batch 
+--overfit_batches 1
 ```
 
 ## Tensorboard
