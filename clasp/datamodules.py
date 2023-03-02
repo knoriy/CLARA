@@ -106,16 +106,19 @@ class MultilingualWebdatasetDataModule(pl.LightningDataModule):
 		if self.test:
 			return wds.WebLoader(self.test, batch_size=None, shuffle=False, num_workers=self.num_workers, )#pin_memory=True, persistent_workers=True)
 
+	def tokeniser_encode(self, text:str, lanuage:str='en'):
+		return self.tokenizer.encode(self.cleaner(text), language=lanuage)
+	def tokeniser_decode(self, tensor:torch.Tensor):
+		return self.tokenizer.decode(tensor)
+	
 	# 	return text, mel
 	def collate_fn(self, data):
 		raw_audios, raw_texts = data
 
 		mels = [self.stft_fn(audio[0][0]).T for audio in raw_audios]
-		texts = [torch.tensor(
-			self.tokenizer.encode(
-				self.cleaner(', '.join(text['text']) if isinstance(text['text'], list) else text['text']), 
-				language = 'en' if 'original_data' not in text.keys() else text["original_data"]["language"] if "language" in text["original_data"].keys() else 'en'
-				)) for text in raw_texts]
+		texts = [torch.tensor(self.tokeniser_encode(', '.join(text['text']) if isinstance(text['text'], list) else text['text'], 
+				       								 'en' if 'original_data' not in text.keys() else text["original_data"]["language"] if "language" in text["original_data"].keys() else 'en')) 
+													 for text in raw_texts]
 
 		mel_lengths = [mel.shape[0] for mel in mels]
 		mel_lengths = torch.tensor(mel_lengths)
