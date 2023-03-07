@@ -158,8 +158,8 @@ def cli_main():
 			train_valid_test	= ['train', 'test', 'valid'],
 			dataset_names		= dataset_names, 
 			exclude				= exclude,
-			# cache_path			= "./tmp/url_list.json",
-			# use_cache			= True
+			cache_path			= "./tmp/url_list.json",
+			use_cache			= True
 			)
 
 	pl_logger.info(f"Urls found: \
