@@ -59,12 +59,9 @@ class PL_CLASP(pl.LightningModule):
 		self.log('audio_temp', model_out[3])
 		self.log('train_loss', loss, prog_bar=True, sync_dist=True)
 
-		if self.hparams.debug and self.current_epoch!= 0 and self.current_epoch%20 == 0:
-			breakpoint()
 		return loss
 
 	def validation_step(self, batch, batch_idx):
-		return
 		_, loss, acc = self._shared_eval_step(batch, batch_idx)
 
 		metrics = {"val_acc": acc, "val_loss": loss}
@@ -142,7 +139,6 @@ def cli_main():
 	# ------------
 	exclude = get_lists(args.exclude_list)
 	dataset_names = get_lists(args.dataset_list)
-	dataset_names = ['EmoV_DB', 'CREMA-D']
 	
 	dataset_names_intersection = set(dataset_names).intersection(exclude)
 	if dataset_names_intersection:
@@ -240,6 +236,7 @@ def cli_main():
 	pl_logger.info(f"mode: {args.mode}")
 	if args.mode == 'train':
 		trainer.fit(model, datamodule=dataset, ckpt_path=args.checkpoint)
+		pl_logger.info("The END")
 
 	if args.mode == 'test' and not args.fast_dev_run:
 		trainer.test(ckpt_path='best', datamodule=dataset)
