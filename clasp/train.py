@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from typing import Optional
 
 import os
 import torch
@@ -36,12 +37,22 @@ class PL_CLASP(pl.LightningModule):
 		self.loss_fn = CLAPLoss(cache_labels=True)
 		self.acc_fn = Accuracy(cache_labels=True)
 
-	def forward(self, batch):
-		texts, mels, text_lengths, mel_lengths  = batch # torch.size([*, 123]), torch.size([*,80,1234])
+	def forward(self, texts:Optional[torch.Tensor], mels:Optional[torch.Tensor]):
 		return self.model(texts, mels)
+	
+	def encode_audio(self, mels:Optional[torch.Tensor]):
+		return self.model.encode_audio(mels)
+
+	def encode_text(self, text:Optional[torch.Tensor]):
+		return self.model.encode_text(text)
+	
+	def get_temps(self):
+		return self.model.text_tempeture.exp(), self.model.audio_tempeture.exp()
 
 	def training_step(self, batch, batch_idx):
-		model_out = self(batch)
+		texts, mels, _, _  = batch # torch.size([*, 123]), torch.size([*,80,1234])
+
+		model_out = self(texts, mels)
 		loss = self.loss_fn(*model_out)
 		
 		self.log('text_temp', model_out[2])
@@ -53,6 +64,7 @@ class PL_CLASP(pl.LightningModule):
 		return loss
 
 	def validation_step(self, batch, batch_idx):
+		return
 		_, loss, acc = self._shared_eval_step(batch, batch_idx)
 
 		metrics = {"val_acc": acc, "val_loss": loss}
@@ -65,7 +77,8 @@ class PL_CLASP(pl.LightningModule):
 		self.log_dict(metrics, sync_dist=True)
 
 	def _shared_eval_step(self, batch, batch_idx):
-		model_out = self(batch)
+		texts, mels, _, _  = batch # torch.size([*, 123]), torch.size([*,80,1234])
+		model_out = self(texts, mels)
 
 		loss = self.loss_fn(*model_out)
 		acc = self.acc_fn(*model_out)
@@ -104,6 +117,7 @@ class PL_CLASP(pl.LightningModule):
 
 def cli_main():
 	pl.seed_everything(9876)
+	torch.set_float32_matmul_precision('medium')
 
 	# ------------
 	# args
@@ -115,11 +129,9 @@ def cli_main():
 	parser.add_argument('--monitor_lr', type=bool, default=True)
 	parser.add_argument('--checkpoint', type=str, default=None)
 	parser.add_argument('--name', type=str, default=None)
-	parser.add_argument('--predict', type=bool, default=False)
+	parser.add_argument('--mode', type=str, default='train', choices=['train', 'predict', 'eval-zeroshot'], help='The mode in which to run the script: train a new model, predict using an existing model, or evaluate the performance of an existing model.')
 	parser.add_argument('--dataset_list', type=str, default='/fsx/knoriy/code/CLASP/config/dataset_list.txt')
 	parser.add_argument('--exclude_list', type=str, default='/fsx/knoriy/code/CLASP/config/exclude_list.txt')
-
-	parser.add_argument('--testing_stuff', type=bool, default=False)
 
 	parser = pl.Trainer.add_argparse_args(parser)
 	parser = PL_CLASP.add_model_specific_args(parser)
@@ -130,6 +142,7 @@ def cli_main():
 	# ------------
 	exclude = get_lists(args.exclude_list)
 	dataset_names = get_lists(args.dataset_list)
+	dataset_names = ['EmoV_DB', 'CREMA-D']
 	
 	dataset_names_intersection = set(dataset_names).intersection(exclude)
 	if dataset_names_intersection:
@@ -149,14 +162,13 @@ def cli_main():
 			train_valid_test	= ['train', 'test', 'valid'],
 			dataset_names		= dataset_names, 
 			exclude				= exclude,
-			# cache_path			= './tmp/url_cache.json',
-			# use_cache			= True,
-			# recache				= True,
+			# cache_path			= "./tmp/url_list.json",
+			# use_cache			= True
 			)
-		if not urls['valid']:
-			urls['valid'] = ['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar']
-		if not urls['test']:
-			urls['test'] = ['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar']
+		# if not urls['valid']:
+		# 	urls['valid'] = ['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar']
+		# if not urls['test']:
+		# 	urls['test'] = ['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar']
 
 	pl_logger.info(f"Urls found: \
 		\n\t{len(urls['train'])} train \
@@ -175,7 +187,7 @@ def cli_main():
 					batch_size = args.batch_size,
 					num_workers = args.num_workers,
 					shuffle = False if args.overfit_batches else True,
-					resample = False,
+					resample = True if args.num_nodes > 1 else True,
 					)
 
 	# ------------
@@ -198,7 +210,7 @@ def cli_main():
 	# Loggers
 	# ------------
 	logger = None
-	if args.logger and not args.fast_dev_run:
+	if args.logger and not args.fast_dev_run and args.mode == 'train':
 		from pytorch_lightning.loggers import WandbLogger
 		logger = WandbLogger(name=args.name, save_dir="logs/", project="CLASP")
 		if args.monitor_lr:
@@ -212,7 +224,13 @@ def cli_main():
 		strategy = DDPStrategy(find_unused_parameters=False)
 	else:
 		strategy = args.strategy
-		
+	
+	# from pytorch_lightning.plugins.environments import SLURMEnvironment
+	# import signal
+	# plugins = [
+		# SLURMEnvironment()
+	# ]
+
 	# ------------
 	# Get Trainer
 	# ------------
@@ -220,9 +238,11 @@ def cli_main():
 		callbacks=callbacks,
 		logger=logger,
 		strategy=strategy,
+		# plugins=plugins,
 	)
 	
-	if not args.predict:
+	pl_logger.info(f"mode: {args.mode}")
+	if args.mode == 'train':
 		# ------------
 		# training
 		# ------------
@@ -231,37 +251,66 @@ def cli_main():
 		# ------------
 		# testing
 		# ------------
-		if not args.fast_dev_run:
-			print('Running test')
-			trainer.test(ckpt_path='best', datamodule=dataset)
-	else:
-		# import matplotlib.pyplot as plt
-		# model = model.load_from_checkpoint(args.checkpoint)
+		# if not args.fast_dev_run:
+		# 	print('Running test')
+		# 	trainer.test(ckpt_path='best', datamodule=dataset)
+
+	if args.mode == 'predict':
 		predictions = trainer.predict(model, dataloaders=dataset)
 
-		pl_logger.info(f"")
-		
 		for prediction in predictions:
 			model_out, loss, acc = prediction
+			print("\n")
+			print(f"audio features: {model_out[0].shape}")
+			print(f"text features: {model_out[1].shape}")
 			print(loss, acc)
+			break
+	
+	if args.mode == 'eval-zeroshot':
+		import torch.nn.functional as F
+		from torch.nn.utils.rnn import pad_sequence
+		from utils import mapk
 
-		# 	logits = text_tempeture * text_features @ mlp_audio_features.T
-		# 	audio_similarity = mlp_audio_features @ mlp_audio_features.T
-		# 	texts_similarity = mlp_text_features @ mlp_text_features.T
-		# 	targets = F.softmax(
-		# 		((audio_similarity + texts_similarity) / 2) * text_tempeture, dim=-1
-		# 	)
+		dataset.setup()
+		dataloader = dataset.test_dataloader()
 
-		# 	texts_loss = F.cross_entropy(logits, targets, reduction='mean')
-		# 	images_loss = F.cross_entropy(logits.T, targets.T, reduction='mean')
+		model.eval()
+		with torch.no_grad():
+			for batch in dataloader:
+				text, mels, _, _ = batch
+				audio_features = model.encode_audio(mels)
+				audio_features = F.normalize(audio_features, dim=-1)
 
-		# 	plt.imsave('_logits.png', logits)
-		# 	plt.imsave('_audio_similarity.png', audio_similarity)
-		# 	plt.imsave('_texts_similarity.png', texts_similarity)
-		# 	plt.imsave('_sub_aud_sim.png', logits - audio_similarity)
+				breakpoint()
 
-		# 	print(texts_loss, images_loss)
-		# 	break
+				actual = text
+
+				# text_features = model.encode_text(text)
+				# text_features = F.normalize(text_features, dim=-1)
+
+				break
+
+			texts = [torch.tensor(dataset.tokeniser_encode(f'A person saying "{t}"')) for t in ["hello world", "how are you?", "some random thing"]]
+			texts = pad_sequence(texts).T.contiguous()
+			text_features = model.encode_text(texts)
+
+			text_features = F.normalize(text_features, dim=-1)
+
+			# get temps
+			text_tmp, audio_temp = model.get_temps()
+
+			logits_per_audio = (text_tmp * audio_features @ text_features.T).detach().cpu()
+			logits_per_text  = logits_per_audio.T
+
+			breakpoint()
+
+			prediction = torch.argsort(logits_per_audio)
+			actual = [[1, 2, 3], [0, 3], [2], [1, 2, 3], [1]]
+			breakpoint()
+
+			for k in [1,2,3]:
+				print(mapk(actual, prediction, k=k))
+			breakpoint()
 
 
 if __name__ == '__main__':
