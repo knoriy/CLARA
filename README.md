@@ -54,7 +54,7 @@ docker run -it --rm --gpus=all -v $(pwd):/workspace --name clasp knoriy/clasp ba
 ```bash
 
 # run module
-python clasp/train.py --max_epochs 1 --accelerator gpu --devices 1
+python clasp/train.py --max_epochs 2 --accelerator gpu --devices 1
 # for distributed add or see here https://pytorch-lightning.readthedocs.io/en/stable/extensions/strategy.html#selecting-a-built-in-strategy 
 --strategy ddp
 # predict set mode to predict and provide checkpoint
