@@ -129,7 +129,7 @@ def cli_main():
 	parser.add_argument('--monitor_lr', type=bool, default=True)
 	parser.add_argument('--checkpoint', type=str, default=None)
 	parser.add_argument('--name', type=str, default=None)
-	parser.add_argument('--mode', type=str, default='train', choices=['train', 'predict', 'eval-zeroshot'], help='The mode in which to run the script: train a new model, predict using an existing model, or evaluate the performance of an existing model.')
+	parser.add_argument('--mode', type=str, default='train', choices=['train', 'test', 'predict', 'eval-zeroshot'], help='The mode in which to run the script: train a new model, predict using an existing model, or evaluate the performance of an existing model.')
 	parser.add_argument('--dataset_list', type=str, default='/fsx/knoriy/code/CLASP/config/dataset_list.txt')
 	parser.add_argument('--exclude_list', type=str, default='/fsx/knoriy/code/CLASP/config/exclude_list.txt')
 
@@ -165,10 +165,6 @@ def cli_main():
 			# cache_path			= "./tmp/url_list.json",
 			# use_cache			= True
 			)
-		# if not urls['valid']:
-		# 	urls['valid'] = ['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar']
-		# if not urls['test']:
-		# 	urls['test'] = ['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar']
 
 	pl_logger.info(f"Urls found: \
 		\n\t{len(urls['train'])} train \
@@ -187,7 +183,7 @@ def cli_main():
 					batch_size = args.batch_size,
 					num_workers = args.num_workers,
 					shuffle = False if args.overfit_batches else True,
-					resample = True if args.num_nodes > 1 else True,
+					resample = True if args.num_nodes > 1 else False,
 					)
 
 	# ------------
@@ -243,17 +239,10 @@ def cli_main():
 	
 	pl_logger.info(f"mode: {args.mode}")
 	if args.mode == 'train':
-		# ------------
-		# training
-		# ------------
 		trainer.fit(model, datamodule=dataset, ckpt_path=args.checkpoint)
 
-		# ------------
-		# testing
-		# ------------
-		# if not args.fast_dev_run:
-		# 	print('Running test')
-		# 	trainer.test(ckpt_path='best', datamodule=dataset)
+	if args.mode == 'test' and not args.fast_dev_run:
+		trainer.test(ckpt_path='best', datamodule=dataset)
 
 	if args.mode == 'predict':
 		predictions = trainer.predict(model, dataloaders=dataset)
