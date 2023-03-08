@@ -135,3 +135,4 @@ test.py
 .archive
 checkpoints/
 tmp/
+config/test.txt
