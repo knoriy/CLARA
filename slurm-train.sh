@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --partition=g40
-#SBATCH --job-name=Test
+#SBATCH --job-name=z_out
 #SBATCH --ntasks-per-node=8
 #SBATCH --gpus-per-node=8
 #SBATCH --cpus-per-gpu=12
@@ -8,35 +8,32 @@
 #SBATCH --output=%x_%j.out
 #SBATCH --signal=SIGUSR1@90
 
-# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/nccl/build/lib:/opt/aws-ofi-nccl-install/lib
-# export NCCL_PROTO=simple
-# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/aws-ofi-nccl/lib
-# export PATH=$PATH:/opt/amazon/efa/bin:/opt/amazon/openmpi/bin
-# export FI_EFA_FORK_SAFE=1
-# export FI_LOG_LEVEL=1
-# export FI_EFA_USE_DEVICE_RDMA=1 # use for p4dn
-# export NCCL_DEBUG=info
-# export OMPI_MCA_mtl_base_verbose=1
-# export FI_EFA_ENABLE_SHM_TRANSFER=0
-# export FI_PROVIDER=efa
-# export FI_EFA_TX_MIN_CREDITS=64
-# export NCCL_TREE_THRESHOLD=0
-# export NCCL_SOCKET_IFNAME=^docker0,lo
+module load openmpi
+module load cuda/11.7
+
+# sent to sub script
+export HOSTNAMES=`scontrol show hostnames "$SLURM_JOB_NODELIST"`
+export MASTER_ADDR=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)
+export MASTER_PORT=12910
+export COUNT_NODE=`scontrol show hostnames "$SLURM_JOB_NODELIST" | wc -l`
+
+source activate clasp
 
 echo "Number of Nodes: $(echo $SLURM_JOB_NUM_NODES)"
 echo "Number of GPUs available: $(echo $CUDA_VISIBLE_DEVICES | tr ',' '\n' | wc -l)"
 
-srun /fsx/home-knoriy/miniconda3/envs/pl/bin/python /fsx/knoriy/code/CLASP/clasp/train.py \
+
+srun python /fsx/knoriy/code/CLASP/clasp/train.py \
     --max_epochs 200 \
-    --batch_size 32 \
+    --batch_size 16 \
     --accelerator 'gpu' \
     --strategy 'ddp' \
     --num_workers 6 \
     --devices 8 \
-    --log_every_n_steps 10000 \
+    --log_every_n_steps 1000 \
     --accumulate_grad_batches 8 \
     --gradient_clip_val 1.0 \
-    --logger True \
+    --logger False \
     --name CLASP_ResNeXt_small_200 \
     --dataset_list /fsx/knoriy/code/CLASP/config/dataset_list.txt
     # --num_nodes $SLURM_JOB_NUM_NODES \

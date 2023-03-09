@@ -120,7 +120,7 @@ def cli_main():
 	# args
 	# ------------
 	parser = ArgumentParser()
-	parser.add_argument('--batch_size', default=64, type=int)
+	parser.add_argument('--batch_size', default=16, type=int)
 	parser.add_argument('--num_workers', default=6, type=int)
 	parser.add_argument('--early_stoping_patience', type=int, default=10)
 	parser.add_argument('--monitor_lr', type=bool, default=True)
@@ -210,17 +210,14 @@ def cli_main():
 	# ------------
 	# Other
 	# ------------
-	# strategy = None
-	# if args.strategy == 'ddp':
-	# 	strategy = DDPStrategy(find_unused_parameters=False)
-	# else:
-	# 	strategy = args.strategy
+	strategy = None
+	if args.strategy == 'ddp':
+		strategy = DDPStrategy(find_unused_parameters=False)
+	else:
+		strategy = args.strategy
 	
-	# from pytorch_lightning.plugins.environments import SLURMEnvironment
-	# import signal
-	# plugins = [
-		# SLURMEnvironment()
-	# ]
+	from pytorch_lightning.plugins.environments import SLURMEnvironment
+	plugins = [SLURMEnvironment(False)]
 
 	# ------------
 	# Get Trainer
@@ -229,13 +226,12 @@ def cli_main():
 		callbacks=callbacks,
 		logger=logger,
 		strategy=strategy,
-		# plugins=plugins,
+		plugins=plugins,
 	)
 	
 	pl_logger.info(f"mode: {args.mode}")
 	if args.mode == 'train':
 		trainer.fit(model, datamodule=dataset, ckpt_path=args.checkpoint)
-		pl_logger.info("The END")
 
 	if args.mode == 'test' and not args.fast_dev_run:
 		trainer.test(ckpt_path='best', datamodule=dataset)
@@ -297,6 +293,7 @@ def cli_main():
 				print(mapk(actual, prediction, k=k))
 			breakpoint()
 
+	pl_logger.info("The END")
 
 if __name__ == '__main__':
 	cli_main()
