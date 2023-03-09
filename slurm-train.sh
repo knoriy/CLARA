@@ -31,7 +31,7 @@ srun /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/code/CLASP/cl
     --batch_size 32 \
     --accelerator 'gpu' \
     --strategy 'ddp' \
-    --num_workers 1 \
+    --num_workers 6 \
     --devices 2 \
     --log_every_n_steps 10000 \
     --accumulate_grad_batches 8 \
