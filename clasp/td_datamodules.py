@@ -46,12 +46,11 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 		return soundfile.read(io.BytesIO(a[1].read())), json.loads(t[1].read().decode('utf-8'))
 	
 	def _create_pipeline(self, data_dir):
-		dp_s3_urls = torchdata.datapipes.iter.IterableWrapper(data_dir)\
-			.list_files_by_s3()\
+		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
+			.list_files_by_fsspec()\
 			.shuffle()\
-			.sharding_filter()
-
-		datapipe = torchdata.datapipes.iter.S3FileLoader(dp_s3_urls)\
+			.sharding_filter()\
+			.open_files_by_fsspec(mode='rb')\
 			.load_from_tar() \
 			.batch(2) \
 			.map(self.to_sampels)

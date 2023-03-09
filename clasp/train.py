@@ -35,7 +35,7 @@ class PL_CLASP(pl.LightningModule):
 
 		self.model = CLASP(self.hparams)
 		self.loss_fn = CLAPLoss(cache_labels=True)
-		self.acc_fn = Accuracy(cache_labels=True)
+		# self.acc_fn = Accuracy(cache_labels=True)
 
 	def forward(self, texts:Optional[torch.Tensor], mels:Optional[torch.Tensor]):
 		return self.model(texts, mels)
@@ -78,7 +78,7 @@ class PL_CLASP(pl.LightningModule):
 		model_out = self(texts, mels)
 
 		loss = self.loss_fn(*model_out)
-		acc = self.acc_fn(*model_out)
+		acc = torch.tensor([0.0]) # self.acc_fn(*model_out)
 
 		return model_out, loss, acc
 
@@ -158,7 +158,7 @@ def cli_main():
 			train_valid_test	= ['train', 'test', 'valid'],
 			dataset_names		= dataset_names, 
 			exclude				= exclude,
-			cache_path			= "./tmp/url_list.json",
+			cache_path			= f"./tmp/{os.path.basename(args.dataset_list)}.json",
 			use_cache			= True
 			)
 
@@ -210,11 +210,11 @@ def cli_main():
 	# ------------
 	# Other
 	# ------------
-	strategy = None
-	if args.strategy == 'ddp':
-		strategy = DDPStrategy(find_unused_parameters=False)
-	else:
-		strategy = args.strategy
+	# strategy = None
+	# if args.strategy == 'ddp':
+	# 	strategy = DDPStrategy(find_unused_parameters=False)
+	# else:
+	# 	strategy = args.strategy
 	
 	# from pytorch_lightning.plugins.environments import SLURMEnvironment
 	# import signal
