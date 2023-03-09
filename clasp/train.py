@@ -12,8 +12,8 @@ pl_logger = logging.getLogger('pytorch_lightning')
 
 from clasp import CLASP
 from loss import CLAPLoss
-from datamodules import MultilingualWebdatasetDataModule
-from utils import get_tar_path_s3, get_lists, Accuracy
+from td_datamodules import MultilingualTorchDataDataModule
+from utils import get_s3_paths, get_lists, Accuracy
 
 class PL_CLASP(pl.LightningModule):
 	def __init__(	self, 
@@ -153,7 +153,7 @@ def cli_main():
 			'valid':['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar']
 		}
 	else:
-		urls = get_tar_path_s3(
+		urls = get_s3_paths(
 			base_s3_path		= 's-laion-audio/webdataset_tar/', 
 			train_valid_test	= ['train', 'test', 'valid'],
 			dataset_names		= dataset_names, 
@@ -172,14 +172,13 @@ def cli_main():
 	assert urls['valid'], "Valid URLs is empty"
 	assert urls['test'], "Test URLs is empty"
 
-	dataset = MultilingualWebdatasetDataModule(	
+	dataset = MultilingualTorchDataDataModule(	
 					train_data_dir = urls['train'],
 					test_data_dir = urls['test'],
 					valid_data_dir = urls['valid'],
 					batch_size = args.batch_size,
 					num_workers = args.num_workers,
 					shuffle = False if args.overfit_batches else True,
-					resample = True if args.num_nodes > 1 else False,
 					)
 
 	# ------------
