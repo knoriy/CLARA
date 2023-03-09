@@ -1,6 +1,7 @@
 #!/bin/bash
 #SBATCH --partition=g40
 #SBATCH --job-name=z_out
+#SBATCH --nodes=2
 #SBATCH --ntasks-per-node=8
 #SBATCH --gpus-per-node=8
 #SBATCH --cpus-per-gpu=12
@@ -35,8 +36,8 @@ srun python /fsx/knoriy/code/CLASP/clasp/train.py \
     --gradient_clip_val 1.0 \
     --logger False \
     --name CLASP_ResNeXt_small_200 \
-    --dataset_list /fsx/knoriy/code/CLASP/config/dataset_list.txt
-    # --num_nodes $SLURM_JOB_NUM_NODES \
+    --dataset_list /fsx/knoriy/code/CLASP/config/dataset_list.txt \
+    --num_nodes $SLURM_JOB_NUM_NODES \
     # --precision 16 \
     # --profiler None \ # simple, advanced, pytorch, xla (TPU Only)
     # --checkpoint path/to/checkpoint.pt \

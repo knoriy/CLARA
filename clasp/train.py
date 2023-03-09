@@ -6,6 +6,8 @@ import torch
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pytorch_lightning.strategies import DDPStrategy
+from pytorch_lightning.plugins.environments import SLURMEnvironment
+
 
 import logging
 pl_logger = logging.getLogger('pytorch_lightning')
@@ -216,8 +218,7 @@ def cli_main():
 	else:
 		strategy = args.strategy
 	
-	from pytorch_lightning.plugins.environments import SLURMEnvironment
-	plugins = [SLURMEnvironment(False)]
+	plugins = [SLURMEnvironment(auto_requeue=False)]
 
 	# ------------
 	# Get Trainer
