@@ -93,7 +93,7 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 		for (a, t) in data:
 			mel = librosa.feature.melspectrogram(y=a[0], sr=a[1], fmin=0, fmax=8000, n_mels=80, n_fft=1024, win_length=1024, hop_length=512)
 			mel = librosa.power_to_db(mel, ref=np.max)
-			mels.append(torch.tensor(mel).T)
+			mels.append(torch.tensor(mel, dtype=torch.float32).T)
 
 			texts.append(
 				torch.tensor(
@@ -147,10 +147,10 @@ if __name__ == '__main__':
 		for i in tqdm.tqdm(dataset.train_dataloader(), desc="train minibatch"):
 			pass
 
-	for epoch in tqdm.trange(2, desc="valid"):
-		for i in tqdm.tqdm(dataset.val_dataloader(), desc="valid minibatch"):
-			pass
+	# for epoch in tqdm.trange(2, desc="valid"):
+	# 	for i in tqdm.tqdm(dataset.val_dataloader(), desc="valid minibatch"):
+	# 		pass
 
-	for epoch in tqdm.trange(2, desc="test"):
-		for i in tqdm.tqdm(dataset.test_dataloader(), desc="test minibatch"):
-			pass
+	# for epoch in tqdm.trange(2, desc="test"):
+	# 	for i in tqdm.tqdm(dataset.test_dataloader(), desc="test minibatch"):
+	# 		pass
