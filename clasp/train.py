@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from typing import Optional
 
 import os
+import signal
 import torch
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
@@ -203,7 +204,7 @@ def cli_main():
 	# Loggers
 	# ------------
 	logger = None
-	if args.logger and not args.fast_dev_run and args.mode == 'train':
+	if args.logger == 'wandb' and not args.fast_dev_run and args.mode == 'train':
 		from pytorch_lightning.loggers import WandbLogger
 		logger = WandbLogger(name=args.name, save_dir="logs/", project="CLASP")
 		if args.monitor_lr:
@@ -218,7 +219,7 @@ def cli_main():
 	else:
 		strategy = args.strategy
 	
-	plugins = [SLURMEnvironment(auto_requeue=False)]
+	plugins = [SLURMEnvironment(auto_requeue=True, requeue_signal=signal.SIGTERM)]
 
 	# ------------
 	# Get Trainer

@@ -1,13 +1,14 @@
 #!/bin/bash
 #SBATCH --partition=g40
 #SBATCH --job-name=z_out
-#SBATCH --nodes=2
+#SBATCH --nodes=1
 #SBATCH --ntasks-per-node=8
 #SBATCH --gpus-per-node=8
 #SBATCH --cpus-per-gpu=12
 #SBATCH --account clap
 #SBATCH --output=%x_%j.out
 #SBATCH --signal=SIGUSR1@90
+#SBATCH --signal=SIGTERM@90
 
 module load openmpi
 module load cuda/11.7
@@ -30,11 +31,11 @@ srun python /fsx/knoriy/code/CLASP/clasp/train.py \
     --accelerator 'gpu' \
     --strategy 'ddp' \
     --num_workers 6 \
-    --devices 8 \
+    --devices $(echo $CUDA_VISIBLE_DEVICES | tr ',' '\n' | wc -l) \
     --log_every_n_steps 1000 \
-    --accumulate_grad_batches 8 \
+    --accumulate_grad_batches 10 \
     --gradient_clip_val 1.0 \
-    --logger False \
+    --logger True \
     --name CLASP_ResNeXt_small_200 \
     --dataset_list /fsx/knoriy/code/CLASP/config/dataset_list.txt \
     --num_nodes $SLURM_JOB_NUM_NODES \
