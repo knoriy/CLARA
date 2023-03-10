@@ -130,6 +130,7 @@ MNIST
 DATA
 
 *.out
+*.ckpt
 test.ipynb
 test.py
 .archive
