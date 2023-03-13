@@ -48,7 +48,6 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 	def _create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
 			.shuffle()\
-			.sharding_filter()\
 			.open_files_by_fsspec(mode='rb')\
 			.load_from_tar() \
 			.batch(2) \
@@ -67,7 +66,7 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 			self.valid = self._create_pipeline(self.valid_data_dir)
 
 	def train_dataloader(self):
-		return DataLoader(self.train, self.batch_size, num_workers=self.num_workers, collate_fn=self.collate_fn)
+		return DataLoader(self.train, self.batch_size, num_workers=self.num_workers, collate_fn=self.collate_fn, shuffle=self.shuffle)
 
 	def val_dataloader(self):
 		return DataLoader(self.valid, self.batch_size, num_workers=self.num_workers, collate_fn=self.collate_fn)
