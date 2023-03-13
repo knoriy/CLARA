@@ -125,6 +125,7 @@ def cli_main():
 	parser = ArgumentParser()
 	parser.add_argument('--batch_size', default=16, type=int)
 	parser.add_argument('--num_workers', default=6, type=int)
+	parser.add_argument('--persistent_workers', default=True, type=int)
 	parser.add_argument('--early_stoping_patience', type=int, default=10)
 	parser.add_argument('--monitor_lr', type=bool, default=True)
 	parser.add_argument('--checkpoint', type=str, default=None)
@@ -181,6 +182,7 @@ def cli_main():
 					valid_data_dir = urls['valid'],
 					batch_size = args.batch_size,
 					num_workers = args.num_workers,
+					persistent_workers = args.persistent_workers,
 					shuffle = False if args.overfit_batches else True,
 					)
 
@@ -219,6 +221,7 @@ def cli_main():
 	else:
 		strategy = args.strategy
 	
+	plugins = None
 	plugins = [SLURMEnvironment(auto_requeue=True, requeue_signal=signal.SIGTERM)]
 
 	# ------------

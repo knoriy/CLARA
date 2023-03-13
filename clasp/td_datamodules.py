@@ -26,6 +26,7 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 			epochs:Optional[int]=1,
 			batch_size:Optional[int]=None,
 			num_workers:Optional[int]=0,
+			persistent_workers:bool=True,
 			shuffle:Optional[bool]=True,
         ):
 		super().__init__()
@@ -38,6 +39,7 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 		self.shuffle = shuffle
 		self.batch_size = batch_size
 		self.num_workers = num_workers
+		self.persistent_workers = persistent_workers
 
 		self.cleaner = EnglishTextNormalizer()
 		self.tokenizer = Tokeniser() # self.tokenizer = get_tokenizer(True)
@@ -48,6 +50,7 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 	def _create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
 			.shuffle()\
+			.sharding_filter()\
 			.open_files_by_fsspec(mode='rb')\
 			.load_from_tar() \
 			.batch(2) \
@@ -66,16 +69,16 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 			self.valid = self._create_pipeline(self.valid_data_dir)
 
 	def train_dataloader(self):
-		return DataLoader(self.train, self.batch_size, num_workers=self.num_workers, collate_fn=self.collate_fn, shuffle=self.shuffle)
+		return DataLoader(self.train, self.batch_size, num_workers=self.num_workers, collate_fn=self.collate_fn, shuffle=self.shuffle, persistent_workers=self.persistent_workers)
 
 	def val_dataloader(self):
-		return DataLoader(self.valid, self.batch_size, num_workers=self.num_workers, collate_fn=self.collate_fn)
+		return DataLoader(self.valid, self.batch_size, num_workers=self.num_workers, collate_fn=self.collate_fn, persistent_workers=self.persistent_workers)
 
 	def test_dataloader(self):
-		return DataLoader(self.test, self.batch_size, num_workers=self.num_workers, collate_fn=self.collate_fn)
+		return DataLoader(self.test, self.batch_size, num_workers=self.num_workers, collate_fn=self.collate_fn, persistent_workers=self.persistent_workers)
 
 	def predict_dataloader(self):
-		return DataLoader(self.test, self.batch_size, num_workers=self.num_workers, collate_fn=self.collate_fn)
+		return DataLoader(self.test, self.batch_size, num_workers=self.num_workers, collate_fn=self.collate_fn, persistent_workers=self.persistent_workers)
 	
 	def tokeniser_encode(self, text:str, lanuage:str='en'):
 		return self.tokenizer.encode(self.cleaner(text), language=lanuage)
