@@ -11,7 +11,7 @@ class Accuracy(nn.Module):
         super().__init__()
 
         self.cache_labels = cache_labels
-        self.accuracy = torchmetrics.Accuracy('multiclass', top_k=top_k)
+        self.accuracy = torchmetrics.Accuracy(top_k=top_k)
 
         # cache state
         self.prev_num_logits = 0

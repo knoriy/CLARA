@@ -38,7 +38,7 @@ class PL_CLASP(pl.LightningModule):
 
 		self.model = CLASP(self.hparams)
 		self.loss_fn = CLAPLoss(cache_labels=True)
-		# self.acc_fn = Accuracy(cache_labels=True)
+		self.acc_fn = Accuracy(cache_labels=True)
 
 	def forward(self, texts:Optional[torch.Tensor], mels:Optional[torch.Tensor]):
 		return self.model(texts, mels)
@@ -81,7 +81,7 @@ class PL_CLASP(pl.LightningModule):
 		model_out = self(texts, mels)
 
 		loss = self.loss_fn(*model_out)
-		acc = torch.tensor([0.0]) # self.acc_fn(*model_out)
+		acc = self.acc_fn(*model_out)
 
 		return model_out, loss, acc
 
