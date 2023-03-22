@@ -130,8 +130,10 @@ MNIST
 DATA
 
 *.out
+*.ckpt
 test.ipynb
 test.py
 .archive
 checkpoints/
 tmp/
+config/test_list.txt
