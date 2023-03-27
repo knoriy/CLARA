@@ -16,20 +16,16 @@ class CLAPLoss(nn.Module):
         self.labels = {}
 
 
-    def forward(self, text_features, audio_features, text_temperature:float=1.0, audio_temperature:float=1.0, mlp_text_features=None, mlp_audio_features=None):
+    def forward(self, text_features, audio_features, text_temperature:float=1.0, audio_temperature:float=1.0):
         device = audio_features.device
 
-        t_logits_per_audio = text_temperature * mlp_audio_features @ text_features.T
-        t_logits_per_text = text_temperature * text_features @ mlp_audio_features.T
-        a_logits_per_audio = audio_temperature * audio_features @ mlp_text_features.T
-        a_logits_per_text = audio_temperature * mlp_text_features @ audio_features.T
+        logits_per_audio = audio_temperature * audio_features @ text_features.T
+        logits_per_text = text_temperature * text_features @ audio_features.T
 
         # calculated ground-truth and cache if enabled
-        num_logits = a_logits_per_audio.shape[0]
+        num_logits = logits_per_audio.shape[0]
         if self.prev_num_logits != num_logits or device not in self.labels:
             labels = torch.arange(num_logits, device=device, dtype=torch.long)
-            # if self.world_size > 1 and self.local_loss:
-            #     labels = labels + num_logits * self.rank
             if self.cache_labels:
                 self.labels[device] = labels
                 self.prev_num_logits = num_logits
@@ -37,10 +33,8 @@ class CLAPLoss(nn.Module):
             labels = self.labels[device]
         
         total_loss = (
-            F.cross_entropy(a_logits_per_audio, labels) + 
-            F.cross_entropy(a_logits_per_text, labels) + 
-            F.cross_entropy(t_logits_per_audio, labels) + 
-            F.cross_entropy(t_logits_per_text, labels)) / 4
+            F.cross_entropy(logits_per_audio, labels) + 
+            F.cross_entropy(logits_per_text, labels)) / 2
         return total_loss
 
 class CLIPLoss(nn.Module):

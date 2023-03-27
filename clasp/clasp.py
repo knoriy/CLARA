@@ -89,8 +89,8 @@ class CLASP(nn.Module):
         audio_features = self.encode_audio(audio)
         audio_features = F.normalize(audio_features, dim=-1)
 
-        # Final MLP transform
-        mlp_text_features = self.text_transform(text_features)
-        mlp_audio_features = self.audio_transform(audio_features)
+        # Projection
+        text_features = self.text_transform(text_features)
+        audio_features = self.audio_transform(audio_features)
 
-        return text_features, audio_features, self.text_tempeture.exp(), self.audio_tempeture.exp(), mlp_text_features, mlp_audio_features
+        return text_features, audio_features, self.text_tempeture.exp(), self.audio_tempeture.exp()
