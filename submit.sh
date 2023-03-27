@@ -1,9 +1,10 @@
 #!/bin/bash
 #SBATCH --partition=g40
-#SBATCH --job-name=z_out
+#SBATCH --job-name=base
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=8
 #SBATCH --gpus-per-node=8
+#SBATCH --nodes 1
 #SBATCH --cpus-per-gpu=12
 #SBATCH --account clap
 #SBATCH --output=%x_%j.out
@@ -25,11 +26,11 @@ echo "Number of Nodes: $(echo $SLURM_JOB_NUM_NODES)"
 echo "Number of GPUs available: $(echo $CUDA_VISIBLE_DEVICES | tr ',' '\n' | wc -l)"
 
 
-srun python /fsx/knoriy/code/CLASP/clasp/train.py \
+srun /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/code/CLASP/clasp/train.py \
     --max_epochs 200 \
-    --batch_size 16 \
+    --batch_size 32 \
     --accelerator 'gpu' \
-    --strategy 'ddp' \
+    --strategy 'dp' \
     --num_workers 6 \
     --devices $(echo $CUDA_VISIBLE_DEVICES | tr ',' '\n' | wc -l) \
     --log_every_n_steps 1000 \
