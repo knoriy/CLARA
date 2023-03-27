@@ -267,8 +267,6 @@ def cli_main():
 				audio_features = model.encode_audio(mels)
 				audio_features = F.normalize(audio_features, dim=-1)
 
-				breakpoint()
-
 				actual = text
 
 				# text_features = model.encode_text(text)
@@ -288,11 +286,8 @@ def cli_main():
 			logits_per_audio = (text_tmp * audio_features @ text_features.T).detach().cpu()
 			logits_per_text  = logits_per_audio.T
 
-			breakpoint()
-
 			prediction = torch.argsort(logits_per_audio)
 			actual = [[1, 2, 3], [0, 3], [2], [1, 2, 3], [1]]
-			breakpoint()
 
 			for k in [1,2,3]:
 				print(mapk(actual, prediction, k=k))
