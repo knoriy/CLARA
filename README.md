@@ -67,6 +67,11 @@ srun --comment clap --output=%x_%j.out /fsx/home-knoriy/miniconda3/envs/clasp/bi
 --overfit_batches 1
 ```
 
+## zeroshot
+```bash
+python clasp/train.py --accelerator gpu --devices 1 --mode eval-zeroshot --dataset_list /fsx/knoriy/code/CLASP/config/test_list.txt --checkpoint CHKP_PATH
+```
+
 ## Tensorboard
 
 ```bash
