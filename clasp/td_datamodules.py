@@ -4,6 +4,7 @@ import torch
 import torchdata
 from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
+from torchdata.dataloader2 import DataLoader2, DistributedReadingService, MultiProcessingReadingService, SequentialReadingService 
 
 import pytorch_lightning as pl
 
@@ -43,6 +44,11 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 
 		self.cleaner = EnglishTextNormalizer()
 		self.tokenizer = Tokeniser() # self.tokenizer = get_tokenizer(True)
+
+		self.mp_rs = MultiProcessingReadingService(num_workers=num_workers)
+		self.dist_rs = DistributedReadingService()
+		self.reading_service = SequentialReadingService(self.dist_rs, self.mp_rs)
+
 	def to_sampels(self, data):
 		a, t = data
 		return soundfile.read(io.BytesIO(a[1].read())), json.loads(t[1].read().decode('utf-8'))
@@ -54,7 +60,9 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 			.open_files_by_fsspec(mode='rb')\
 			.load_from_tar() \
 			.batch(2) \
-			.map(self.to_sampels)
+			.map(self.to_sampels) \
+			.batch(self.batch_size) \
+			.map(self.collate_fn)
 		
 		return datapipe
 
@@ -69,16 +77,20 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 			self.valid = self._create_pipeline(self.valid_data_dir)
 
 	def train_dataloader(self):
-		return DataLoader(self.train, self.batch_size, num_workers=self.num_workers, collate_fn=self.collate_fn, shuffle=self.shuffle, persistent_workers=self.persistent_workers)
+		self.train_dl = DataLoader2(self.train, reading_service=self.reading_service)
+		return self.train_dl
 
 	def val_dataloader(self):
-		return DataLoader(self.valid, self.batch_size, num_workers=self.num_workers, collate_fn=self.collate_fn, persistent_workers=self.persistent_workers)
+		self.val_dl = DataLoader2(self.valid, reading_service=self.reading_service)
+		return self.val_dl
 
 	def test_dataloader(self):
-		return DataLoader(self.test, self.batch_size, num_workers=self.num_workers, collate_fn=self.collate_fn, persistent_workers=self.persistent_workers)
+		self.test_dl = DataLoader2(self.test, reading_service=self.reading_service)
+		return self.test_dl
 
 	def predict_dataloader(self):
-		return DataLoader(self.test, self.batch_size, num_workers=self.num_workers, collate_fn=self.collate_fn, persistent_workers=self.persistent_workers)
+		self.predict_dl = DataLoader2(self.valid, reading_service=self.reading_service)
+		return self.predict_dl
 	
 	def tokeniser_encode(self, text:str, lanuage:str='en'):
 		return self.tokenizer.encode(self.cleaner(text), language=lanuage)
@@ -114,6 +126,16 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 		mels = pad_sequence(mels).permute(1,2,0).contiguous()
 
 		return texts, mels, text_lengths, mel_lengths
+
+	def teardown(self, stage: str):
+		if hasattr(self, 'train_dl'):
+			self.train_dl.shutdown() 
+		if hasattr(self, 'val_dl'):
+			self.val_dl.shutdown()
+		if hasattr(self, 'test_dl'):
+			self.test_dl.shutdown()
+		if hasattr(self, 'predict_dl'):
+			self.predict_dl.shutdown()
 
 
 
