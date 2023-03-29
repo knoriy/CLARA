@@ -45,10 +45,6 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 		self.cleaner = EnglishTextNormalizer()
 		self.tokenizer = Tokeniser() # self.tokenizer = get_tokenizer(True)
 
-		self.mp_rs = MultiProcessingReadingService(num_workers=num_workers)
-		self.dist_rs = DistributedReadingService()
-		self.reading_service = SequentialReadingService(self.dist_rs, self.mp_rs)
-
 	def to_sampels(self, data):
 		a, t = data
 		return soundfile.read(io.BytesIO(a[1].read())), json.loads(t[1].read().decode('utf-8'))
@@ -77,19 +73,39 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 			self.valid = self._create_pipeline(self.valid_data_dir)
 
 	def train_dataloader(self):
-		self.train_dl = DataLoader2(self.train, reading_service=self.reading_service)
+		service = [
+			MultiProcessingReadingService(num_workers=self.num_workers),
+			DistributedReadingService(),
+	     ]
+		reading_service = SequentialReadingService(*service)
+		self.train_dl = DataLoader2(self.train, reading_service=reading_service)
 		return self.train_dl
 
 	def val_dataloader(self):
-		self.val_dl = DataLoader2(self.valid, reading_service=self.reading_service)
+		service = [
+			MultiProcessingReadingService(num_workers=self.num_workers),
+			DistributedReadingService()
+	     ]
+		reading_service = SequentialReadingService(*service)
+		self.val_dl = DataLoader2(self.valid, reading_service=reading_service)
 		return self.val_dl
 
 	def test_dataloader(self):
-		self.test_dl = DataLoader2(self.test, reading_service=self.reading_service)
+		service = [
+			MultiProcessingReadingService(num_workers=self.num_workers),
+			DistributedReadingService()
+	     ]
+		reading_service = SequentialReadingService(*service)
+		self.test_dl = DataLoader2(self.test, reading_service=reading_service)
 		return self.test_dl
 
 	def predict_dataloader(self):
-		self.predict_dl = DataLoader2(self.valid, reading_service=self.reading_service)
+		service = [
+			MultiProcessingReadingService(num_workers=self.num_workers),
+			DistributedReadingService()
+	     ]
+		reading_service = SequentialReadingService(*service)
+		self.predict_dl = DataLoader2(self.valid, reading_service=reading_service)
 		return self.predict_dl
 	
 	def tokeniser_encode(self, text:str, lanuage:str='en'):
@@ -127,16 +143,16 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 
 		return texts, mels, text_lengths, mel_lengths
 
-	def teardown(self, stage: str):
-		if hasattr(self, 'train_dl'):
-			self.train_dl.shutdown() 
-		if hasattr(self, 'val_dl'):
-			self.val_dl.shutdown()
-		if hasattr(self, 'test_dl'):
-			self.test_dl.shutdown()
-		if hasattr(self, 'predict_dl'):
-			self.predict_dl.shutdown()
-
+	# def teardown(self, stage: str) -> None:
+	# 	super().teardown(stage)
+	# 	if hasattr(self, 'train_dl'):
+	# 		self.train_dl.shutdown() 
+	# 	if hasattr(self, 'val_dl'):
+	# 		self.val_dl.shutdown()
+	# 	if hasattr(self, 'test_dl'):
+	# 		self.test_dl.shutdown()
+	# 	if hasattr(self, 'predict_dl'):
+	# 		self.predict_dl.shutdown()
 
 
 if __name__ == '__main__':
