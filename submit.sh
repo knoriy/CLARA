@@ -41,6 +41,6 @@ srun /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/code/CLASP/cl
     --name CLASP_ResNeXt_small_200 \
     --dataset_list /fsx/knoriy/code/CLASP/config/test_list.txt \
     --num_nodes $SLURM_JOB_NUM_NODES \
-    # --precision 16 \
+    # --overfit_batches 1 \
     # --profiler None \ # simple, advanced, pytorch, xla (TPU Only)
     # --checkpoint path/to/checkpoint.pt \
