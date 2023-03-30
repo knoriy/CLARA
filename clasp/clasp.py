@@ -71,7 +71,6 @@ class CLASP(nn.Module):
         return x
 
     def encode_audio(self, audio:torch.Tensor):
-        # audio = audio.unsqueeze(1).permute(0,1,3,2)
         x = self.audio_encoder(audio)
 
         x1 = torch.mean(x, dim=2)

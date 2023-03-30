@@ -14,7 +14,7 @@ import logging
 pl_logger = logging.getLogger('pytorch_lightning')
 
 from clasp import CLASP
-from loss import CLAPLoss
+from loss import CLAPLoss, CLIPLoss
 from td_datamodules import MultilingualTorchDataDataModule
 from utils import get_s3_paths, get_lists, Accuracy
 
@@ -38,7 +38,7 @@ class PL_CLASP(pl.LightningModule):
 
 		self.model = CLASP(self.hparams)
 		self.loss_fn = CLAPLoss(cache_labels=True)
-		self.acc_fn = Accuracy(cache_labels=True)
+		# self.acc_fn = Accuracy(cache_labels=True)
 
 	def forward(self, texts:Optional[torch.Tensor], mels:Optional[torch.Tensor]):
 		return self.model(texts, mels)
@@ -64,11 +64,11 @@ class PL_CLASP(pl.LightningModule):
 
 		return loss
 
-	def validation_step(self, batch, batch_idx):
-		_, loss, acc = self._shared_eval_step(batch, batch_idx)
+	# def validation_step(self, batch, batch_idx):
+	# 	_, loss, acc = self._shared_eval_step(batch, batch_idx)
 
-		metrics = {"val_acc": acc, "val_loss": loss}
-		self.log_dict(metrics, prog_bar=True, sync_dist=True)
+	# 	metrics = {"val_acc": acc, "val_loss": loss}
+	# 	self.log_dict(metrics, prog_bar=True, sync_dist=True)
 
 	def test_step(self, batch, batch_idx):
 		_, loss, acc = self._shared_eval_step(batch, batch_idx)
@@ -81,7 +81,8 @@ class PL_CLASP(pl.LightningModule):
 		model_out = self(texts, mels)
 
 		loss = self.loss_fn(*model_out)
-		acc = self.acc_fn(*model_out)
+		# acc = self.acc_fn(*model_out)
+		acc = torch.tensor(0.0)
 
 		return model_out, loss, acc
 
@@ -100,8 +101,6 @@ class PL_CLASP(pl.LightningModule):
 
 	@staticmethod
 	def add_model_specific_args(parent_parser):
-		from text.simple_cleaner.symbols import symbols
-
 		parser = ArgumentParser(parents=[parent_parser], add_help=False)
 		parser.add_argument('--hidden_dim', type=int, default=128)
 		parser.add_argument('--learning_rate', type=float, default=1e-3)
@@ -133,6 +132,7 @@ def cli_main():
 	parser.add_argument('--mode', type=str, default='train', choices=['train', 'test', 'predict', 'eval-zeroshot'], help='The mode in which to run the script: train a new model, predict using an existing model, or evaluate the performance of an existing model.')
 	parser.add_argument('--dataset_list', type=str, default='/fsx/knoriy/code/CLASP/config/dataset_list.txt')
 	parser.add_argument('--exclude_list', type=str, default='/fsx/knoriy/code/CLASP/config/exclude_list.txt')
+	parser.add_argument('--zeroshot_templates', type=str, default='/fsx/knoriy/code/CLASP/config/zeroshot_templates.txt')
 
 	parser = pl.Trainer.add_argparse_args(parser)
 	parser = PL_CLASP.add_model_specific_args(parser)
@@ -150,21 +150,20 @@ def cli_main():
 	
 	pl_logger.info(f"Dataset names: \n{dataset_names}\n")
 
+	urls = get_s3_paths(
+		base_s3_path		= 's-laion-audio/webdataset_tar/', 
+		train_valid_test	= ['train', 'test', 'valid'],
+		dataset_names		= dataset_names, 
+		exclude				= exclude,
+		cache_path			= f"./tmp/{os.path.basename(args.dataset_list)}.json",
+		use_cache			= True
+		)
 	if args.overfit_batches:
 		urls = {
-			'train':['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar'], 
-			'test':['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar'], 
-			'valid':['/fsx/knoriy/processed_datasets/clasp_local_data/train/0.tar']
+			'train':urls['train'][:1], 
+			'test':urls['test'][:1], 
+			'valid':urls['valid'][:1]
 		}
-	else:
-		urls = get_s3_paths(
-			base_s3_path		= 's-laion-audio/webdataset_tar/', 
-			train_valid_test	= ['train', 'test', 'valid'],
-			dataset_names		= dataset_names, 
-			exclude				= exclude,
-			cache_path			= f"./tmp/{os.path.basename(args.dataset_list)}.json",
-			use_cache			= True
-			)
 
 	pl_logger.info(f"Urls found: \
 		\n\t{len(urls['train'])} train \
@@ -193,12 +192,14 @@ def cli_main():
 	if os.path.isfile(str(args.checkpoint)):
 		model = model.load_from_checkpoint(str(args.checkpoint))
 		pl_logger.info(f"Model state loaded from checkpoint: {args.checkpoint}")
+	elif args.checkpoint != None:
+		pl_logger.warning(f"Checkpoint not found: {args.checkpoint}")
 
 	# ------------
 	# Callbacks
 	# ------------
 	callbacks = [
-		ModelCheckpoint(verbose=True, every_n_train_steps=1000)
+		ModelCheckpoint(verbose=True)
 		# EarlyStopping(monitor="val_loss", patience=args.early_stoping_patience)
 	]
 
@@ -206,7 +207,8 @@ def cli_main():
 	# Loggers
 	# ------------
 	logger = None
-	if args.logger == 'wandb' and not args.fast_dev_run and args.mode == 'train':
+	if args.logger and not args.fast_dev_run and args.mode == 'train':
+		os.makedirs("logs/", exist_ok=True)
 		from pytorch_lightning.loggers import WandbLogger
 		logger = WandbLogger(name=args.name, save_dir="logs/", project="CLASP")
 		if args.monitor_lr:
@@ -222,7 +224,7 @@ def cli_main():
 		strategy = args.strategy
 	
 	plugins = None
-	plugins = [SLURMEnvironment(auto_requeue=True, requeue_signal=signal.SIGTERM)]
+	plugins = [SLURMEnvironment(auto_requeue=True, requeue_signal=signal.SIGUSR1)]
 
 	# ------------
 	# Get Trainer
@@ -234,7 +236,7 @@ def cli_main():
 		plugins=plugins,
 	)
 	
-	pl_logger.info(f"mode: {args.mode}")
+	pl_logger.info(f'{f" Mode: {args.mode} ":*^50}')
 	if args.mode == 'train':
 		trainer.fit(model, datamodule=dataset, ckpt_path=args.checkpoint)
 
@@ -253,47 +255,16 @@ def cli_main():
 			break
 	
 	if args.mode == 'eval-zeroshot':
-		import torch.nn.functional as F
-		from torch.nn.utils.rnn import pad_sequence
-		from utils import mapk
+		from eval.zeroshot import zeroshot_eval
 
 		dataset.setup()
-		dataloader = dataset.test_dataloader()
+		templates = get_lists(args.zeroshot_templates)
+		classes = ["hello world", "how are you?", "some random thing", "it's a beautiful day", "i love you", "goodbye", "i hate you", "today is not the day"]
 
-		model.eval()
-		with torch.no_grad():
-			for batch in dataloader:
-				text, mels, _, _ = batch
-				audio_features = model.encode_audio(mels)
-				audio_features = F.normalize(audio_features, dim=-1)
+		acc1, acc5 = zeroshot_eval(model, classes, templates, dataset.val_dataloader())
+		pl_logger.info(f"acc1: {acc1:.3f}, acc5: {acc5:.3f}")
 
-				actual = text
-
-				# text_features = model.encode_text(text)
-				# text_features = F.normalize(text_features, dim=-1)
-
-				break
-
-			texts = [torch.tensor(dataset.tokeniser_encode(f'A person saying "{t}"')) for t in ["hello world", "how are you?", "some random thing"]]
-			texts = pad_sequence(texts).T.contiguous()
-			text_features = model.encode_text(texts)
-
-			text_features = F.normalize(text_features, dim=-1)
-
-			# get temps
-			text_tmp, audio_temp = model.get_temps()
-
-			logits_per_audio = (text_tmp * audio_features @ text_features.T).detach().cpu()
-			logits_per_text  = logits_per_audio.T
-
-			prediction = torch.argsort(logits_per_audio)
-			actual = [[1, 2, 3], [0, 3], [2], [1, 2, 3], [1]]
-
-			for k in [1,2,3]:
-				print(mapk(actual, prediction, k=k))
-			breakpoint()
-
-	pl_logger.info("The END")
+	pl_logger.info(f'{" The END ":*^50}')
 
 if __name__ == '__main__':
 	cli_main()
