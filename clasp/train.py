@@ -9,6 +9,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pytorch_lightning.strategies import DDPStrategy
 from pytorch_lightning.plugins.environments import SLURMEnvironment
 
+from scheduler import CosineAnnealingWithWarmup
 
 import logging
 pl_logger = logging.getLogger('pytorch_lightning')
@@ -93,7 +94,7 @@ class PL_CLASP(pl.LightningModule):
 	def configure_optimizers(self):
 		optimizer = torch.optim.AdamW(self.parameters(), lr=self.hparams.learning_rate)
 		lr_scheduler = {
-			'scheduler': torch.optim.lr_scheduler.CosineAnnealingLR(optimizer=optimizer, T_max=10),
+			'scheduler': CosineAnnealingWithWarmup(optimizer=optimizer, T_max=10, warmup_steps=200),
 			'name': 'lr_scheduler',
 			'monitor': 'valid_loss',
 		}
