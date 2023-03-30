@@ -35,8 +35,8 @@ class CLASP(nn.Module):
             # self.audio_encoder = Cnn1D10(80, 1024)
             # self.audio_encoder = Cnn1D12(80, 1024)
             # self.audio_encoder = resnet18(1024)
-            # self.audio_encoder = ResNeXt(5,12,1024, 2, 4)
-            self.audio_encoder = WhisperAudioEncoder(80, 1024, 1, 1, batch_first=True)
+            self.audio_encoder = ResNeXt(5,12,1024, 2, 4)
+            # self.audio_encoder = WhisperAudioEncoder(80, 1024, 1, 1, batch_first=True)
 
         # ------------
         # Text Layers
@@ -71,7 +71,6 @@ class CLASP(nn.Module):
         return x
 
     def encode_audio(self, audio:torch.Tensor):
-        # audio = audio.unsqueeze(1).permute(0,1,3,2)
         x = self.audio_encoder(audio)
 
         x1 = torch.mean(x, dim=2)
@@ -89,8 +88,8 @@ class CLASP(nn.Module):
         audio_features = self.encode_audio(audio)
         audio_features = F.normalize(audio_features, dim=-1)
 
-        # Final MLP transform
-        mlp_text_features = self.text_transform(text_features)
-        mlp_audio_features = self.audio_transform(audio_features)
+        # Projection
+        text_features = self.text_transform(text_features)
+        audio_features = self.audio_transform(audio_features)
 
-        return text_features, audio_features, self.text_tempeture.exp(), self.audio_tempeture.exp(), mlp_text_features, mlp_audio_features
+        return text_features, audio_features, self.text_tempeture.exp(), self.audio_tempeture.exp()
