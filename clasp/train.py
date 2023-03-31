@@ -124,6 +124,7 @@ def cli_main():
 	# args
 	# ------------
 	parser = ArgumentParser()
+	parser.add_argument('--root_data_path', type=str)
 	parser.add_argument('--batch_size', default=16, type=int)
 	parser.add_argument('--num_workers', default=6, type=int)
 	parser.add_argument('--persistent_workers', default=True, type=int)
@@ -153,7 +154,7 @@ def cli_main():
 	pl_logger.info(f"Dataset names: \n{dataset_names}\n")
 
 	urls = get_s3_paths(
-		base_path			= 's-laion-audio/webdataset_tar/', 
+		base_path			= args.root_data_path, #'s-laion-audio/webdataset_tar/' or '/fsx/knoriy/processed_datasets/', 
 		train_valid_test	= ['train', 'test', 'valid'],
 		dataset_names		= dataset_names, 
 		exclude				= exclude,
