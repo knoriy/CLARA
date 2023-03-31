@@ -94,7 +94,7 @@ class PL_CLASP(pl.LightningModule):
 	def configure_optimizers(self):
 		optimizer = torch.optim.AdamW(self.parameters(), lr=self.hparams.learning_rate)
 		lr_scheduler = {
-			'scheduler': CosineAnnealingWithWarmup(optimizer=optimizer, T_max=10, warmup_steps=200),
+			'scheduler': CosineAnnealingWithWarmup(optimizer=optimizer, T_max=200, warmup_steps=20),
 			'name': 'lr_scheduler',
 			'monitor': 'valid_loss',
 		}
