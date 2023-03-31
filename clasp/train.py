@@ -17,7 +17,7 @@ pl_logger = logging.getLogger('pytorch_lightning')
 from clasp import CLASP
 from loss import CLAPLoss, CLIPLoss
 from td_datamodules import MultilingualTorchDataDataModule
-from utils import get_local_paths, get_lists, Accuracy
+from utils import get_s3_paths, get_lists, Accuracy
 
 class PL_CLASP(pl.LightningModule):
 	def __init__(	self, 
@@ -153,7 +153,7 @@ def cli_main():
 	
 	pl_logger.info(f"Dataset names: \n{dataset_names}\n")
 
-	urls = get_local_paths(
+	urls = get_s3_paths(
 		base_path			= args.root_data_path, #'s-laion-audio/webdataset_tar/' or '/fsx/knoriy/processed_datasets/', 
 		train_valid_test	= ['train', 'test', 'valid'],
 		dataset_names		= dataset_names, 
