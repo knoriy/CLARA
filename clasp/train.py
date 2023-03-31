@@ -17,7 +17,7 @@ pl_logger = logging.getLogger('pytorch_lightning')
 from clasp import CLASP
 from loss import CLAPLoss, CLIPLoss
 from td_datamodules import MultilingualTorchDataDataModule
-from utils import get_s3_paths, get_lists, Accuracy
+from utils import get_local_paths, get_lists, Accuracy
 
 class PL_CLASP(pl.LightningModule):
 	def __init__(	self, 
@@ -94,7 +94,8 @@ class PL_CLASP(pl.LightningModule):
 	def configure_optimizers(self):
 		optimizer = torch.optim.AdamW(self.parameters(), lr=self.hparams.learning_rate)
 		lr_scheduler = {
-			'scheduler': CosineAnnealingWithWarmup(optimizer=optimizer, T_max=200, warmup_steps=20),
+			'scheduler': torch.optim.lr_scheduler.CosineAnnealingLR(optimizer=optimizer, T_max=10),
+			# 'scheduler': CosineAnnealingWithWarmup(optimizer=optimizer, T_max=200, warmup_steps=20),
 			'name': 'lr_scheduler',
 			'monitor': 'valid_loss',
 		}
@@ -123,6 +124,7 @@ def cli_main():
 	# args
 	# ------------
 	parser = ArgumentParser()
+	parser.add_argument('--root_data_path', type=str, help='The path to the root of the dataset.')
 	parser.add_argument('--batch_size', default=16, type=int)
 	parser.add_argument('--num_workers', default=6, type=int)
 	parser.add_argument('--persistent_workers', default=True, type=int)
@@ -151,14 +153,15 @@ def cli_main():
 	
 	pl_logger.info(f"Dataset names: \n{dataset_names}\n")
 
-	urls = get_s3_paths(
-		base_s3_path		= 's-laion-audio/webdataset_tar/', 
+	urls = get_local_paths(
+		base_path			= 's-laion-audio/webdataset_tar/', 
 		train_valid_test	= ['train', 'test', 'valid'],
 		dataset_names		= dataset_names, 
 		exclude				= exclude,
 		cache_path			= f"./tmp/{os.path.basename(args.dataset_list)}.json",
 		use_cache			= True
 		)
+	
 	if args.overfit_batches:
 		urls = {
 			'train':urls['train'][:1], 
