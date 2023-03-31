@@ -146,8 +146,6 @@ def cli_main():
 	exclude = get_lists(args.exclude_list)
 	dataset_names = get_lists(args.dataset_list)
 
-	dataset_names = ["tmp_data"]
-	
 	dataset_names_intersection = set(dataset_names).intersection(exclude)
 	if dataset_names_intersection:
 		raise Warning(f'Found similary dataset names in datasets and excluded dataset: {dataset_names_intersection}')
