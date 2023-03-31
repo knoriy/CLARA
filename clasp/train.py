@@ -147,8 +147,6 @@ def cli_main():
 	exclude = get_lists(args.exclude_list)
 	dataset_names = get_lists(args.dataset_list)
 
-	print(dataset_names, exclude)
-
 	dataset_names_intersection = set(dataset_names).intersection(exclude)
 	if dataset_names_intersection:
 		raise Warning(f'Found similary dataset names in datasets and excluded dataset: {dataset_names_intersection}')
@@ -236,32 +234,32 @@ def cli_main():
 	)
 	
 	pl_logger.info(f'{f" Mode: {args.mode} ":*^50}')
-	# if args.mode == 'train':
-	# 	trainer.fit(model, datamodule=dataset, ckpt_path=args.checkpoint)
+	if args.mode == 'train':
+		trainer.fit(model, datamodule=dataset, ckpt_path=args.checkpoint)
 
-	# if args.mode == 'test' and not args.fast_dev_run:
-	# 	trainer.test(ckpt_path='best', datamodule=dataset)
+	if args.mode == 'test' and not args.fast_dev_run:
+		trainer.test(ckpt_path='best', datamodule=dataset)
 
-	# if args.mode == 'predict':
-	# 	predictions = trainer.predict(model, dataloaders=dataset)
+	if args.mode == 'predict':
+		predictions = trainer.predict(model, dataloaders=dataset)
 
-	# 	for prediction in predictions:
-	# 		model_out, loss, acc = prediction
-	# 		print("\n")
-	# 		print(f"audio features: {model_out[0].shape}")
-	# 		print(f"text features: {model_out[1].shape}")
-	# 		print(loss, acc)
-	# 		break
+		for prediction in predictions:
+			model_out, loss, acc = prediction
+			print("\n")
+			print(f"audio features: {model_out[0].shape}")
+			print(f"text features: {model_out[1].shape}")
+			print(loss, acc)
+			break
 	
-	# if args.mode == 'eval-zeroshot':
-	# 	from eval.zeroshot import zeroshot_eval
+	if args.mode == 'eval-zeroshot':
+		from eval.zeroshot import zeroshot_eval
 
-	# 	dataset.setup()
-	# 	templates = get_lists(args.zeroshot_templates)
-	# 	classes = ["hello world", "how are you?", "some random thing", "it's a beautiful day", "i love you", "goodbye", "i hate you", "today is not the day"]
+		dataset.setup()
+		templates = get_lists(args.zeroshot_templates)
+		classes = ["hello world", "how are you?", "some random thing", "it's a beautiful day", "i love you", "goodbye", "i hate you", "today is not the day"]
 
-	# 	acc1, acc5 = zeroshot_eval(model, classes, templates, dataset.val_dataloader())
-	# 	pl_logger.info(f"acc1: {acc1:.3f}, acc5: {acc5:.3f}")
+		acc1, acc5 = zeroshot_eval(model, classes, templates, dataset.val_dataloader())
+		pl_logger.info(f"acc1: {acc1:.3f}, acc5: {acc5:.3f}")
 
 	pl_logger.info(f'{" The END ":*^50}')
 
