@@ -32,7 +32,7 @@ First, install dependencies
 git clone https://github.com/knoriy/CLASP.git
 cd CLASP
 
-# create conda env
+# reate conda env
 conda env create -f environments/env.yaml
 
 # or
@@ -49,7 +49,7 @@ By default the container start a juypter note book, to start container in intera
 docker run -it --rm --gpus=all -v $(pwd):/workspace --name clasp knoriy/clasp bash
 ```
 
-## train model
+## Train model
 
 Command to start a train CLASP
 
@@ -77,7 +77,7 @@ Or to run test on cluster
 ```
 srun --comment clap --output=%x_%j.out /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/code/CLASP/tests/test_datasets.py
 ```
-## zeroshot
+## Zeroshot
 ```bash
 python clasp/train.py --accelerator gpu --devices 1 --mode eval-zeroshot --dataset_list /fsx/knoriy/code/CLASP/config/test_list.txt --checkpoint CHKP_PATH
 ```
