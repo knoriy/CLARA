@@ -124,7 +124,6 @@ def cli_main():
 	# args
 	# ------------
 	parser = ArgumentParser()
-	parser.add_argument('--root_data_path', type=str, help='The path to the root of the dataset.')
 	parser.add_argument('--batch_size', default=16, type=int)
 	parser.add_argument('--num_workers', default=6, type=int)
 	parser.add_argument('--persistent_workers', default=True, type=int)
@@ -146,6 +145,8 @@ def cli_main():
 	# ------------
 	exclude = get_lists(args.exclude_list)
 	dataset_names = get_lists(args.dataset_list)
+
+	dataset_names = ["tmp_data"]
 	
 	dataset_names_intersection = set(dataset_names).intersection(exclude)
 	if dataset_names_intersection:
@@ -154,20 +155,13 @@ def cli_main():
 	pl_logger.info(f"Dataset names: \n{dataset_names}\n")
 
 	urls = get_local_paths(
-		base_path			= 's-laion-audio/webdataset_tar/', 
+		base_path			= '/fsx/knoriy/processed_datasets/',#'s-laion-audio/webdataset_tar/', 
 		train_valid_test	= ['train', 'test', 'valid'],
 		dataset_names		= dataset_names, 
 		exclude				= exclude,
-		cache_path			= f"./tmp/{os.path.basename(args.dataset_list)}.json",
+		cache_path			= f"./tmp/local_{os.path.basename(args.dataset_list)}.json",
 		use_cache			= True
 		)
-	
-	if args.overfit_batches:
-		urls = {
-			'train':urls['train'][:1], 
-			'test':urls['test'][:1], 
-			'valid':urls['valid'][:1]
-		}
 
 	pl_logger.info(f"Urls found: \
 		\n\t{len(urls['train'])} train \
