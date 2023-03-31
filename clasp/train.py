@@ -133,9 +133,9 @@ def cli_main():
 	parser.add_argument('--checkpoint', type=str, default=None)
 	parser.add_argument('--name', type=str, default=None)
 	parser.add_argument('--mode', type=str, default='train', choices=['train', 'test', 'predict', 'eval-zeroshot'], help='The mode in which to run the script: train a new model, predict using an existing model, or evaluate the performance of an existing model.')
-	parser.add_argument('--dataset_list', type=str, default='/fsx/knoriy/code/CLASP/config/dataset_list.txt')
-	parser.add_argument('--exclude_list', type=str, default='/fsx/knoriy/code/CLASP/config/exclude_list.txt')
-	parser.add_argument('--zeroshot_templates', type=str, default='/fsx/knoriy/code/CLASP/config/zeroshot_templates.txt')
+	parser.add_argument('--dataset_list', type=str, default='./config/dataset_list.txt')
+	parser.add_argument('--exclude_list', type=str, default='./config/exclude_list.txt')
+	parser.add_argument('--zeroshot_templates', type=str, default='./config/zeroshot_templates.txt')
 
 	parser = pl.Trainer.add_argparse_args(parser)
 	parser = PL_CLASP.add_model_specific_args(parser)

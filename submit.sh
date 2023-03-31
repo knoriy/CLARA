@@ -2,14 +2,14 @@
 #SBATCH --partition=g40
 #SBATCH --job-name=base
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=8
-#SBATCH --gpus-per-node=8
+#SBATCH --ntasks-per-node=1
+#SBATCH --gpus-per-node=1
 #SBATCH --cpus-per-task=12
 #SBATCH --account clap
 #SBATCH --output=%x_%j.out
 #SBATCH --signal=SIGUSR1@90
 #SBATCH --signal=SIGTERM@90
-#SBATCH --exclude ip-26-0-134-43
+#SBATCH --exclude ip-26-0-134-43,ip-26-0-131-108
 
 module load openmpi
 module load cuda/11.7
@@ -29,7 +29,7 @@ export FI_EFA_TX_MIN_CREDITS=64
 export NCCL_TREE_THRESHOLD=0
 
 srun /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/code/CLASP/clasp/train.py \
-    --max_epochs 100 \
+    --max_epochs 1000 \
     --batch_size 32 \
     --accelerator 'gpu' \
     --strategy 'ddp' \
@@ -38,9 +38,11 @@ srun /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/code/CLASP/cl
     --accumulate_grad_batches 10 \
     --gradient_clip_val 1.0 \
     --logger True \
-    --name CLASP_ResNeXt_small_200 \
+    --name Overfit_adamw_10batch \
     --dataset_list /fsx/knoriy/code/CLASP/config/test_list.txt \
     --num_nodes $SLURM_JOB_NUM_NODES \
-    # --overfit_batches 1 \
+    --log_every_n_steps 1 \
+    --overfit_batches 10 \
+    --root_data_path 's-laion-audio/webdataset_tar/'
     # --profiler None \ # simple, advanced, pytorch, xla (TPU Only)
     # --checkpoint path/to/checkpoint.pt \
