@@ -133,9 +133,9 @@ def cli_main():
 	parser.add_argument('--checkpoint', type=str, default=None)
 	parser.add_argument('--name', type=str, default=None)
 	parser.add_argument('--mode', type=str, default='train', choices=['train', 'test', 'predict', 'eval-zeroshot'], help='The mode in which to run the script: train a new model, predict using an existing model, or evaluate the performance of an existing model.')
-	parser.add_argument('--dataset_list', type=str, default='/fsx/knoriy/code/CLASP/config/dataset_list.txt')
-	parser.add_argument('--exclude_list', type=str, default='/fsx/knoriy/code/CLASP/config/exclude_list.txt')
-	parser.add_argument('--zeroshot_templates', type=str, default='/fsx/knoriy/code/CLASP/config/zeroshot_templates.txt')
+	parser.add_argument('--dataset_list', type=str, default='./config/dataset_list.txt')
+	parser.add_argument('--exclude_list', type=str, default='./config/exclude_list.txt')
+	parser.add_argument('--zeroshot_templates', type=str, default='./config/zeroshot_templates.txt')
 
 	parser = pl.Trainer.add_argparse_args(parser)
 	parser = PL_CLASP.add_model_specific_args(parser)
@@ -146,6 +146,8 @@ def cli_main():
 	# ------------
 	exclude = get_lists(args.exclude_list)
 	dataset_names = get_lists(args.dataset_list)
+
+	print(dataset_names, exclude)
 
 	dataset_names_intersection = set(dataset_names).intersection(exclude)
 	if dataset_names_intersection:
@@ -234,32 +236,32 @@ def cli_main():
 	)
 	
 	pl_logger.info(f'{f" Mode: {args.mode} ":*^50}')
-	if args.mode == 'train':
-		trainer.fit(model, datamodule=dataset, ckpt_path=args.checkpoint)
+	# if args.mode == 'train':
+	# 	trainer.fit(model, datamodule=dataset, ckpt_path=args.checkpoint)
 
-	if args.mode == 'test' and not args.fast_dev_run:
-		trainer.test(ckpt_path='best', datamodule=dataset)
+	# if args.mode == 'test' and not args.fast_dev_run:
+	# 	trainer.test(ckpt_path='best', datamodule=dataset)
 
-	if args.mode == 'predict':
-		predictions = trainer.predict(model, dataloaders=dataset)
+	# if args.mode == 'predict':
+	# 	predictions = trainer.predict(model, dataloaders=dataset)
 
-		for prediction in predictions:
-			model_out, loss, acc = prediction
-			print("\n")
-			print(f"audio features: {model_out[0].shape}")
-			print(f"text features: {model_out[1].shape}")
-			print(loss, acc)
-			break
+	# 	for prediction in predictions:
+	# 		model_out, loss, acc = prediction
+	# 		print("\n")
+	# 		print(f"audio features: {model_out[0].shape}")
+	# 		print(f"text features: {model_out[1].shape}")
+	# 		print(loss, acc)
+	# 		break
 	
-	if args.mode == 'eval-zeroshot':
-		from eval.zeroshot import zeroshot_eval
+	# if args.mode == 'eval-zeroshot':
+	# 	from eval.zeroshot import zeroshot_eval
 
-		dataset.setup()
-		templates = get_lists(args.zeroshot_templates)
-		classes = ["hello world", "how are you?", "some random thing", "it's a beautiful day", "i love you", "goodbye", "i hate you", "today is not the day"]
+	# 	dataset.setup()
+	# 	templates = get_lists(args.zeroshot_templates)
+	# 	classes = ["hello world", "how are you?", "some random thing", "it's a beautiful day", "i love you", "goodbye", "i hate you", "today is not the day"]
 
-		acc1, acc5 = zeroshot_eval(model, classes, templates, dataset.val_dataloader())
-		pl_logger.info(f"acc1: {acc1:.3f}, acc5: {acc5:.3f}")
+	# 	acc1, acc5 = zeroshot_eval(model, classes, templates, dataset.val_dataloader())
+	# 	pl_logger.info(f"acc1: {acc1:.3f}, acc5: {acc5:.3f}")
 
 	pl_logger.info(f'{" The END ":*^50}')
 
