@@ -6,6 +6,12 @@ import pathlib
 import logging
 pl_logger = logging.getLogger('pytorch_lightning')
 
+def create_cache(cache_path, urls):
+	os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+	pl_logger.info(f"Creating URL cache: {cache_path}")
+	with open(cache_path, 'w') as f:
+		json.dump(urls, f)
+
 def get_tar_path_from_dataset_name(
 	dataset_names:list[str],
 	dataset_types:list[str],
@@ -70,9 +76,7 @@ def get_s3_paths(base_path:str,
 		and all(exclude_name not in url for exclude_name in exclude)] for state in train_valid_test}
 
 	if cache_path:
-		pl_logger.info(f"Creating URL cache: {cache_path}")
-		with open(cache_path, 'w') as f:
-			json.dump(final_urls, f)
+		create_cache(cache_path, final_urls)
 
 	return final_urls
 
@@ -95,8 +99,7 @@ def get_local_paths(base_path:str,
 	final_urls = {state:[url for url in final_urls if state in url and all(exclude_name not in url for exclude_name in exclude)] for state in train_valid_test}
 
 	if cache_path:
-		with open(cache_path, 'w') as f:
-			json.dump(final_urls, f)
+		create_cache(cache_path, final_urls)
 
 	return final_urls
 
