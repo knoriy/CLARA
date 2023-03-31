@@ -140,8 +140,6 @@ TO_LANGUAGE_CODE = {
 
 }
 
-
-
 class Tokeniser(GPT2TokenizerFast):
     def __init__(self) -> None:
         self.tokeniser = self.get_tokeniser()
@@ -174,11 +172,10 @@ class Tokeniser(GPT2TokenizerFast):
     def get_vocab_size(self) -> int:
         return len(self.tokeniser.get_vocab())
 
-    def get_tokeniser(name:str = "multilingual"):
+    def get_tokeniser(self, name:str = "multilingual"):
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
         path = os.path.join(os.path.dirname(__file__), "whisper/assets", name)
-        tokenizer = GPT2TokenizerFast.from_pretrained(path)
-
+        tokenizer = GPT2TokenizerFast.from_pretrained(str(path))
         specials = [
             "<|startoftranscript|>",
             *[f"<|{lang}|>" for lang in LANGUAGES.keys()],
