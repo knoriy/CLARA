@@ -51,22 +51,32 @@ docker run -it --rm --gpus=all -v $(pwd):/workspace --name clasp knoriy/clasp ba
 
 ## train model
 
-```bash
+Command to start a train CLASP
 
-# run module
-python clasp/train.py --max_epochs 2 --accelerator gpu --devices 1
-# for distributed add or see here https://pytorch-lightning.readthedocs.io/en/stable/extensions/strategy.html#selecting-a-built-in-strategy 
---strategy ddp
-# predict set mode to predict and provide checkpoint
---mode predict --checkpoint path/to/my/model.pt
-# Test dataset for error or bugs
-python tests/test_datasets.py
-## Or
-srun --comment clap --output=%x_%j.out /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/code/CLASP/tests/test_datasets.py
-# overfit to single batch 
---overfit_batches 1
+``` bash
+python clasp/train.py --root_data_path 's-laion-audio/webdataset_tar/' --max_epochs 2 --accelerator gpu --devices 1 --strategy ddp
+```
+Optinal arguments during training
+```bash
+--name NAME_GOES_HERE
+--gradient_clip_val 1.0
+--logger True
+--dataset_list /fsx/knoriy/code/CLASP/config/test_list.txt
+--log_every_n_steps 50
 ```
 
+For predicting outputs set `--mode` to `predict` and provide checkpoint
+```bash
+--mode predict --checkpoint path/to/my/model.pt
+```
+Test dataset for error or bugs
+```
+python tests/test_datasets.py
+```
+Or to run test on cluster
+```
+srun --comment clap --output=%x_%j.out /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/code/CLASP/tests/test_datasets.py
+```
 ## zeroshot
 ```bash
 python clasp/train.py --accelerator gpu --devices 1 --mode eval-zeroshot --dataset_list /fsx/knoriy/code/CLASP/config/test_list.txt --checkpoint CHKP_PATH
