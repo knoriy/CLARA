@@ -176,8 +176,7 @@ class Tokeniser(GPT2TokenizerFast):
 
     def get_tokeniser(name:str = "multilingual"):
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
-        # path = os.path.join(os.path.dirname(__file__), "assets", name)
-        path = "/fsx/knoriy/code/CLASP/clasp/text/whisper/assets/multilingual"
+        path = os.path.join(os.path.dirname(__file__), "whisper/assets", name)
         tokenizer = GPT2TokenizerFast.from_pretrained(path)
 
         specials = [
