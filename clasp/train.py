@@ -221,7 +221,8 @@ def cli_main():
 		strategy = args.strategy
 	
 	plugins = None
-	plugins = [SLURMEnvironment(auto_requeue=True, requeue_signal=signal.SIGUSR1)]
+	if "SLURM_JOB_ID" in os.environ:
+		plugins = [SLURMEnvironment(auto_requeue=True, requeue_signal=signal.SIGUSR1)]
 
 	# ------------
 	# Get Trainer
