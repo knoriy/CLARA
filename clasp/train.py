@@ -2,6 +2,7 @@
 import logging
 log = logging.getLogger(__name__)
 
+import torch
 import pytorch_lightning as pl
 from pytorch_lightning.core.datamodule import LightningDataModule
 from pytorch_lightning.cli import LightningCLI
@@ -48,4 +49,5 @@ class MyLightningCLI(LightningCLI):
 		}
 
 if __name__ == '__main__':
+	torch.set_float32_matmul_precision('medium')
 	cli = MyLightningCLI(PLCLASP, MultilingualTorchDataDataModule, trainer_class=Trainer, save_config_callback=None)
