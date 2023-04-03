@@ -20,8 +20,8 @@ class CosineAnnealingWithWarmup(_LRScheduler):
     def __init__(self,
                  optimizer : torch.optim.Optimizer,
                  T_max : int,
-                 max_lr : float = 0.1,
-                 min_lr : float = 0.001,
+                 max_lr : float = 0.001,
+                 min_lr : float = 0.0,
                  warmup_steps : int = 0,
                  gamma : float = 1.,
                  last_epoch : int = -1
