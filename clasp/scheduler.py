@@ -9,7 +9,7 @@ from torch.optim.lr_scheduler import _LRScheduler
 class CosineAnnealingWithWarmup(_LRScheduler):
     """
         optimizer (Optimizer): Wrapped optimizer.
-        first_cycle_steps (int): First cycle step size.
+        T_max (int): Cycle step size.
         max_lr(float): First cycle's max learning rate. Default: 0.1.
         min_lr(float): Min learning rate. Default: 0.001.
         warmup_steps(int): Linear warmup step size. Default: 0.
@@ -26,9 +26,7 @@ class CosineAnnealingWithWarmup(_LRScheduler):
                  gamma : float = 1.,
                  last_epoch : int = -1
         ):
-        assert warmup_steps < T_max
-        
-        self.first_cycle_steps = T_max # first cycle step size
+
         self.base_max_lr = max_lr # first max learning rate
         self.max_lr = max_lr # max learning rate in the current cycle
         self.min_lr = min_lr # min learning rate
@@ -58,15 +56,32 @@ class CosineAnnealingWithWarmup(_LRScheduler):
         else:
             return [base_lr + (self.max_lr - base_lr) \
                     * (1 + math.cos(math.pi * (self.step_in_cycle-self.warmup_steps) \
-                                    / (self.cur_cycle_steps - self.warmup_steps))) / 2
+                                    / self.cur_cycle_steps)) / 2
                     for base_lr in self.base_lrs]
 
     def step(self, epoch=None):
         if epoch is None:
             epoch = self.last_epoch + 1
-            self.step_in_cycle = self.step_in_cycle + 1
+            self.step_in_cycle += 1
                 
         self.max_lr = self.base_max_lr * (self.gamma**self.cycle)
         self.last_epoch = math.floor(epoch)
         for param_group, lr in zip(self.optimizer.param_groups, self.get_lr()):
             param_group['lr'] = lr
+
+if __name__ == '__main__':
+    import matplotlib.pyplot as plt
+    lr = 0.001
+    model = torch.nn.Linear(10, 10)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+
+    lr_scheduler = CosineAnnealingWithWarmup(optimizer=optimizer, T_max=150, warmup_steps=100, max_lr=lr, min_lr=0.0)
+
+
+    lrs = []
+    for i in range(300):
+        lr_scheduler.step()
+        lrs.append(lr_scheduler.get_lr()[0])
+
+    plt.plot(lrs)
+    plt.savefig('../tmp/lr.png')
