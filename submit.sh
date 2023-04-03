@@ -28,21 +28,6 @@ export FI_PROVIDER=efa
 export FI_EFA_TX_MIN_CREDITS=64
 export NCCL_TREE_THRESHOLD=0
 
-srun /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/code/CLASP/clasp/train.py \
-    --max_epochs 1000 \
-    --batch_size 32 \
-    --accelerator 'gpu' \
-    --strategy 'ddp' \
-    --num_workers 12 \
-    --devices $(echo $CUDA_VISIBLE_DEVICES | tr ',' '\n' | wc -l) \
-    --accumulate_grad_batches 10 \
-    --gradient_clip_val 1.0 \
-    --logger True \
-    --name Overfit_adamw_10batch \
-    --dataset_list /fsx/knoriy/code/CLASP/config/test_list.txt \
-    --num_nodes $SLURM_JOB_NUM_NODES \
-    --log_every_n_steps 1 \
-    --overfit_batches 10 \
-    --root_data_path 's-laion-audio/webdataset_tar/'
-    # --profiler None \ # simple, advanced, pytorch, xla (TPU Only)
-    # --checkpoint path/to/checkpoint.pt \
+srun /fsx/home-knoriy/miniconda3/envs/clasp_2/bin/python /fsx/knoriy/code/CLASP/clasp/train.py fit\
+    --config /fsx/knoriy/code/CLASP/config/config.yaml \
+    --trainer.num_nodes $SLURM_JOB_NUM_NODES \
