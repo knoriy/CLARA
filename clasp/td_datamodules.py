@@ -18,7 +18,7 @@ pl_logger = logging.getLogger('pytorch_lightning')
 
 from text.whisper.normalizers import EnglishTextNormalizer
 from text.tokeniser import Tokeniser # from text.whisper.tokenizer import get_tokenizer
-from utils import get_s3_paths, get_lists 
+from utils import get_s3_paths, get_local_paths, get_lists 
 
 class MultilingualTorchDataDataModule(pl.LightningDataModule):
 	def __init__(self, 
@@ -41,14 +41,25 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 		if dataset_names_intersection:
 			raise Warning(f'Found similary dataset names in datasets and excluded dataset: {dataset_names_intersection}')
 		
-		urls = get_s3_paths(
-			base_path			= root_data_path,
-			train_valid_test	= ['train', 'test', 'valid'],
-			dataset_names		= dataset_names, 
-			exclude				= exclude,
-			cache_path			= f"./tmp/s3_{os.path.basename(dataset_list)}.json",
-			use_cache			= True
-			)
+		if root_data_path.startswith('s3://'):
+			root_data_path = root_data_path.replace('s3://', '')
+			urls = get_s3_paths(
+				base_path			= root_data_path,
+				train_valid_test	= ['train', 'test', 'valid'],
+				dataset_names		= dataset_names, 
+				exclude				= exclude,
+				cache_path			= f"./tmp/s3_{os.path.basename(dataset_list)}.json",
+				use_cache			= True
+				)
+		else:
+			urls = get_local_paths(
+				base_path			= root_data_path,
+				train_valid_test	= ['train', 'test', 'valid'],
+				dataset_names		= dataset_names, 
+				exclude				= exclude,
+				cache_path			= f"./tmp/local_{os.path.basename(dataset_list)}.json",
+				use_cache			= True
+				)
 
 		pl_logger.info(f"Urls found: \
 			\n\t{len(urls['train'])} train \
