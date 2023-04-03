@@ -80,7 +80,7 @@ class CLASP(nn.Module):
         x2, _ = torch.max(x, dim=2)
         x = x1 + x2
 
-        x = F.relu(self.audio_fc1(x))
+        x = F.leaky_relu(self.audio_fc1(x))
 
         return x
 

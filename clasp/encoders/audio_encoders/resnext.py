@@ -49,13 +49,13 @@ class ResNeXtBottleneck(nn.Module):
 
     def forward(self, x):
         bottleneck = self.conv_reduce(x)
-        bottleneck = F.relu(self.bn_reduce(bottleneck), inplace=True)
+        bottleneck = F.leaky_relu(self.bn_reduce(bottleneck), inplace=True)
         bottleneck = self.conv_conv(bottleneck)
-        bottleneck = F.relu(self.bn(bottleneck), inplace=True)
+        bottleneck = F.leaky_relu(self.bn(bottleneck), inplace=True)
         bottleneck = self.conv_expand(bottleneck)
         bottleneck = self.bn_expand(bottleneck)
         residual = self.shortcut(x)
-        return F.relu(residual + bottleneck, inplace=True)
+        return F.leaky_relu(residual + bottleneck, inplace=True)
 
 
 class CifarResNeXt(nn.Module):
@@ -123,7 +123,7 @@ class CifarResNeXt(nn.Module):
     def forward(self, x):
         x = x.unsqueeze(1)
         x = self.conv_1_3x3(x)
-        x = F.relu(self.bn_1(x), inplace=True)
+        x = F.leaky_relu(self.bn_1(x), inplace=True)
         x = self.stage_1(x)
         x = self.stage_2(x)
         x = self.stage_3(x)
