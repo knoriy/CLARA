@@ -113,7 +113,7 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 	def train_dataloader(self):
 		service = [
 			MultiProcessingReadingService(num_workers=self.num_workers),
-			DistributedReadingService()
+			# DistributedReadingService()
 	     ]
 		reading_service = SequentialReadingService(*service)
 		self.train_dl = DataLoader2(self.train, reading_service=reading_service)
@@ -159,6 +159,7 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 		for (a, t) in data:
 			mel = librosa.feature.melspectrogram(y=a[0], sr=a[1], fmin=0, fmax=8000, n_mels=80, n_fft=1024, win_length=1024, hop_length=512)
 			mel = librosa.power_to_db(mel, ref=np.max)
+			mel = (mel+40)/40
 			mels.append(torch.tensor(mel, dtype=torch.float32).T)
 
 			texts.append(
@@ -174,7 +175,6 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 		mel_lengths = torch.tensor(mel_lengths)
 		text_lengths = [text.shape[0] for text in texts]
 		text_lengths = torch.tensor(text_lengths)
-
 
 		texts = pad_sequence(texts).T.contiguous()
 		mels = pad_sequence(mels).permute(1,2,0).contiguous()
@@ -197,7 +197,7 @@ if __name__ == '__main__':
 	import tqdm
 
 	dataset = MultilingualTorchDataDataModule(
-			root_data_path='s-laion-audio/webdataset_tar/', 
+			root_data_path='s3://s-laion-audio/webdataset_tar/', 
 			dataset_list='/fsx/knoriy/code/CLASP/config/test_list.txt',
 			exclude_list='/fsx/knoriy/code/CLASP/config/exclude_list.txt',
 			batch_size = 64,
