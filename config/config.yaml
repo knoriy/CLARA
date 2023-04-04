@@ -2,7 +2,7 @@
 seed_everything: 1234
 trainer:
   accelerator: auto
-  strategy: ddp
+  strategy: auto
   devices: auto
   num_nodes: 1
   precision: 32-true
