@@ -9,7 +9,7 @@ trainer:
   logger:
     - class_path: pytorch_lightning.loggers.WandbLogger
       init_args:
-        name: Marchin
+        name: Base
         save_dir: logs
         project: CLASP
   callbacks:
@@ -22,7 +22,7 @@ trainer:
     #       patience: 10
     #       monitor: val_loss
   fast_dev_run: false
-  max_epochs: 1000
+  max_epochs: 100
   min_epochs: null
   max_steps: -1
   min_steps: null
@@ -71,7 +71,7 @@ data:
   root_data_path: s3://s-laion-audio/webdataset_tar/
   dataset_list: ./config/test_list.txt
   exclude_list: ./config/exclude_list.txt
-  batch_size: 32
+  batch_size: 16
   num_workers: 12
   persistent_workers: true
   shuffle: true

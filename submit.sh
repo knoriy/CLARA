@@ -9,7 +9,7 @@
 #SBATCH --output=%x_%j.out
 #SBATCH --signal=SIGUSR1@90
 #SBATCH --signal=SIGTERM@90
-#SBATCH --exclude ip-26-0-134-43,ip-26-0-131-108
+#SBATCH --exclude ip-26-0-134-43,ip-26-0-131-108,ip-26-0-140-150
 
 module load openmpi
 module load cuda/11.7
@@ -21,7 +21,7 @@ export FI_EFA_USE_DEVICE_RDMA=1
 
 export PYTHONFAULTHANDLER=1
 
-export CUDA_LAUNCH_BLOCKING=0
+export CUDA_LAUNCH_BLOCKING=1
 export OMPI_MCA_mtl_base_verbose=1
 export FI_EFA_ENABLE_SHM_TRANSFER=0
 export FI_PROVIDER=efa
