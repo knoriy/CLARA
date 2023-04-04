@@ -13,6 +13,8 @@ import pytorch_lightning as pl
 from torch.nn.utils.rnn import pad_sequence
 from torchdata.dataloader2 import DataLoader2, DistributedReadingService, MultiProcessingReadingService, SequentialReadingService 
 
+from torch.utils.data import DataLoader
+
 import logging
 pl_logger = logging.getLogger('pytorch_lightning')
 
@@ -62,9 +64,9 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 				)
 
 		pl_logger.info(f"Urls found: \
-			\n\t{len(urls['train'])} train \
-			\n\t{len(urls['valid'])} valid \
-			\n\t{len(urls['test'])} test"
+			\n\tTrain: {len(urls['train'])} \
+			\n\tValid: {len(urls['valid'])} \
+			\n\tTest: {len(urls['test'])}"
 		)
 
 		assert urls['train'], "Train URLs is empty"
@@ -90,10 +92,11 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 	def _create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
 			.shuffle()\
-			.sharding_filter()\
 			.open_files_by_fsspec(mode='rb')\
 			.load_from_tar() \
 			.batch(2) \
+			.sharding_filter()\
+			.shuffle()\
 			.map(self.to_sampels) \
 			.batch(self.batch_size) \
 			.map(self.collate_fn)
@@ -110,41 +113,28 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 		if len(self.valid_data_dir)>0:
 			self.valid = self._create_pipeline(self.valid_data_dir)
 
-	def train_dataloader(self):
+	def _dataloader2(self, dataset):
 		service = [
+			DistributedReadingService(),
 			MultiProcessingReadingService(num_workers=self.num_workers),
-			DistributedReadingService()
 	     ]
 		reading_service = SequentialReadingService(*service)
-		self.train_dl = DataLoader2(self.train, reading_service=reading_service)
-		return self.train_dl
+		return DataLoader2(dataset, reading_service=reading_service)
+	
+	def _dataloader(self, dataset):
+		return DataLoader(dataset, num_workers=self.num_workers, batch_size=self.batch_size, collate_fn=self.collate_fn)
+
+	def train_dataloader(self):
+		return self._dataloader2(self.train)
 
 	# def val_dataloader(self):
-	# 	service = [
-	# 		MultiProcessingReadingService(num_workers=self.num_workers),
-	# 		DistributedReadingService()
-	#      ]
-	# 	reading_service = SequentialReadingService(*service)
-	# 	self.val_dl = DataLoader2(self.valid, reading_service=reading_service)
-	# 	return self.val_dl
+	# 	return self._dataloader(self.valid)
 
 	def test_dataloader(self):
-		service = [
-			MultiProcessingReadingService(num_workers=self.num_workers),
-			DistributedReadingService()
-	     ]
-		reading_service = SequentialReadingService(*service)
-		self.test_dl = DataLoader2(self.test, reading_service=reading_service)
-		return self.test_dl
+		return self._dataloader(self.test)
 
 	def predict_dataloader(self):
-		service = [
-			MultiProcessingReadingService(num_workers=self.num_workers),
-			DistributedReadingService()
-	     ]
-		reading_service = SequentialReadingService(*service)
-		self.predict_dl = DataLoader2(self.valid, reading_service=reading_service)
-		return self.predict_dl
+		return self._dataloader(self.valid)
 	
 	def tokeniser_encode(self, text:str, lanuage:str='en'):
 		return self.tokenizer.encode(self.cleaner(text), language=lanuage)
