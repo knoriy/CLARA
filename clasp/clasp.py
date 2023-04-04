@@ -12,6 +12,8 @@ from encoders.audio_encoders import WhisperAudioEncoder, SimpleCNN, SimpleCNNLar
 from encoders.modules import PositionalEncoding, LayerNorm, MLPLayers
 from loss import CLAPLoss, CLIPLoss
 
+from scheduler import CosineAnnealingWithWarmup
+
 class CLASP(nn.Module):
     '''
     Contrastive Language-Speech Pre-training 
@@ -171,8 +173,8 @@ class PLCLASP(pl.LightningModule):
 	def configure_optimizers(self):
 		optimizer = torch.optim.AdamW(self.parameters(), lr=self.hparams.learning_rate)
 		lr_scheduler = {
-			'scheduler': torch.optim.lr_scheduler.CosineAnnealingLR(optimizer=optimizer, T_max=10),
-			# 'scheduler': CosineAnnealingWithWarmup(optimizer=optimizer, T_max=200, warmup_steps=20),
+			# 'scheduler': torch.optim.lr_scheduler.CosineAnnealingLR(optimizer=optimizer, T_max=10),
+			'scheduler': CosineAnnealingWithWarmup(optimizer=optimizer, T_max=50, warmup_steps=20, max_lr=self.hparams.learning_rate, min_lr=0.0),
 			'name': 'lr_scheduler',
 			'monitor': 'valid_loss',
 		}
