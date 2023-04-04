@@ -34,7 +34,6 @@ class CosineAnnealingWithWarmup(_LRScheduler):
         self.gamma = gamma # decrease rate of max learning rate by cycle
         
         self.cur_cycle_steps = T_max # first cycle step size
-        self.cycle = 0 # cycle count
         self.step_in_cycle = last_epoch # step size of the current cycle
         
         super(CosineAnnealingWithWarmup, self).__init__(optimizer, last_epoch)
@@ -63,8 +62,8 @@ class CosineAnnealingWithWarmup(_LRScheduler):
         if epoch is None:
             epoch = self.last_epoch + 1
             self.step_in_cycle += 1
-                
-        self.max_lr = self.base_max_lr * (self.gamma**self.cycle)
+
+        self.max_lr = self.base_max_lr * (self.gamma**(self.step_in_cycle**0.2))
         self.last_epoch = math.floor(epoch)
         for param_group, lr in zip(self.optimizer.param_groups, self.get_lr()):
             param_group['lr'] = lr
