@@ -111,6 +111,10 @@ class PLCLASP(pl.LightningModule):
 					vocab_size:int=50373,
 					n_mels:int=80,
 					audio_encoder_embedding:int=1024,
+					LR_sheduler_T_max:int=20,
+					LR_sheduler_warmup_steps:int=20,
+					LR_sheduler_min_lr:float=0.0,
+					LR_sheduler_decay:float=1.0,
 					):
 
 		super().__init__()
@@ -173,8 +177,12 @@ class PLCLASP(pl.LightningModule):
 	def configure_optimizers(self):
 		optimizer = torch.optim.AdamW(self.parameters(), lr=self.hparams.learning_rate)
 		lr_scheduler = {
-			# 'scheduler': torch.optim.lr_scheduler.CosineAnnealingLR(optimizer=optimizer, T_max=10),
-			'scheduler': CosineAnnealingWithWarmup(optimizer=optimizer, T_max=50, warmup_steps=20, max_lr=self.hparams.learning_rate, min_lr=0.0),
+			'scheduler': CosineAnnealingWithWarmup(optimizer=optimizer, 
+					                                T_max=self.hparams.LR_sheduler_T_max, 
+		                                            warmup_steps=self.hparams.LR_sheduler_warmup_steps, 
+						                            max_lr=self.hparams.learning_rate, 
+						                            min_lr=self.hparams.LR_sheduler_min_lr, 
+						                            gamma=self.hparams.LR_sheduler_decay),
 			'name': 'lr_scheduler',
 			'monitor': 'valid_loss',
 		}
