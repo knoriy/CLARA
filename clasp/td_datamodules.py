@@ -4,6 +4,7 @@ import json
 import librosa
 import soundfile
 import numpy as np
+import random
 
 from typing import Optional
 
@@ -96,7 +97,7 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 			.load_from_tar() \
 			.batch(2) \
 			.sharding_filter()\
-			.shuffle()\
+			.shuffle(buffer_size=self.batch_size)\
 			.map(self.to_sampels) \
 			.batch(self.batch_size) \
 			.map(self.collate_fn)
@@ -115,7 +116,7 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 
 	def _dataloader2(self, dataset):
 		service = [
-			DistributedReadingService(),
+			# DistributedReadingService(),
 			MultiProcessingReadingService(num_workers=self.num_workers),
 	     ]
 		reading_service = SequentialReadingService(*service)
@@ -197,10 +198,11 @@ if __name__ == '__main__':
 	dataset.setup()
 
 	for epoch in tqdm.trange(2, desc="train"):
-		for i in tqdm.tqdm(dataset.train_dataloader(), desc="train minibatch"):
-			print(i[0].shape)
-			pass
-
+		for i in tqdm.tqdm(dataset.train, desc="train minibatch"):
+			print(i)
+			breakpoint()
+			break
+		break
 	# for epoch in tqdm.trange(2, desc="valid"):
 	# 	for i in tqdm.tqdm(dataset.val_dataloader(), desc="valid minibatch"):
 	# 		pass
