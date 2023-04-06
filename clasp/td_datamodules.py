@@ -116,9 +116,9 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 
 	def _dataloader2(self, dataset):
 		service = [
-			DistributedReadingService(),
 			MultiProcessingReadingService(num_workers=self.num_workers),
-	     ]
+			DistributedReadingService(),
+		]
 		reading_service = SequentialReadingService(*service)
 		return DataLoader2(dataset, reading_service=reading_service)
 	
