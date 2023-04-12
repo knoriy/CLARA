@@ -126,16 +126,20 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 		return DataLoader(dataset, num_workers=self.num_workers, batch_size=self.batch_size, collate_fn=self.collate_fn)
 
 	def train_dataloader(self):
-		return self._dataloader2(self.train)
+		self.train_dl = self._dataloader2(self.train)
+		return self.train_dl
 
 	# def val_dataloader(self):
-	# 	return self._dataloader(self.valid)
+	# 	self.val_dl self._dataloader(self.valid)
+	# 	return self.val_dl
 
 	def test_dataloader(self):
-		return self._dataloader(self.test)
+		self.test_dl = self._dataloader2(self.test)
+		return self.test_dl
 
 	def predict_dataloader(self):
-		return self._dataloader(self.valid)
+		self.predict_dl = self._dataloader2(self.valid)
+		return self.predict_dl
 	
 	def tokeniser_encode(self, text:str, lanuage:str='en'):
 		return self.tokenizer.encode(self.cleaner(text), language=lanuage)
@@ -172,16 +176,16 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 
 		return texts, mels, text_lengths, mel_lengths
 
-	# def teardown(self, stage: str) -> None:
-	# 	super().teardown(stage)
-	# 	if hasattr(self, 'train_dl'):
-	# 		self.train_dl.shutdown() 
-	# 	if hasattr(self, 'val_dl'):
-	# 		self.val_dl.shutdown()
-	# 	if hasattr(self, 'test_dl'):
-	# 		self.test_dl.shutdown()
-	# 	if hasattr(self, 'predict_dl'):
-	# 		self.predict_dl.shutdown()
+	def teardown(self, stage: str) -> None:
+		super().teardown(stage)
+		if hasattr(self, 'train_dl'):
+			self.train_dl.shutdown() 
+		if hasattr(self, 'val_dl'):
+			self.val_dl.shutdown()
+		if hasattr(self, 'test_dl'):
+			self.test_dl.shutdown()
+		if hasattr(self, 'predict_dl'):
+			self.predict_dl.shutdown()
 
 
 if __name__ == '__main__':
