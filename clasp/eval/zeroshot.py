@@ -20,27 +20,32 @@ def zeroshot_classifier(model, classnames, templates, language='en'):
             texts = pad_sequence(texts).T.contiguous().to(device)
             class_embeddings = model.encode_text(texts)
             class_embedding = F.normalize(class_embeddings, dim=-1).mean(dim=0)
+            class_embedding = model.model.text_transform(class_embedding)
             class_embedding /= class_embedding.norm()
             zeroshot_weights.append(class_embedding)
         zeroshot_weights = torch.stack(zeroshot_weights).to(device)
     return zeroshot_weights
 
 def run(model, zeroshot_weights, dataloader):
+    device = model.device
     model.eval()
     with torch.no_grad():
         top1, top5, n = 0, 0, 0
         for batch in tqdm.tqdm(dataloader, desc='MiniBatch'):
             text, mels, _, _ = batch
+            # text = text.to(device)
+            mels = mels.to(device)
             audio_features = model.encode_audio(mels)
             audio_features = F.normalize(audio_features, dim=-1)
+            audio_features = model.model.audio_transform(audio_features)
             text_temp, audio_temp = model.get_temps()
 
             logits_per_audio = (audio_temp * (audio_features @ zeroshot_weights.T))
 
             # measure accuracy
-            labels = torch.arange(text.shape[0], dtype=torch.long)
+            labels = torch.arange(text.shape[0], dtype=torch.long, device=device)
 
-            acc1, acc5 = accuracy(logits_per_audio, labels, topk=(1, 4))
+            acc1, acc5 = accuracy(logits_per_audio, labels, topk=(1, 5))
             top1 += acc1
             top5 += acc5
             n += mels.size(0)
