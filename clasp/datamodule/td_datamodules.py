@@ -39,6 +39,8 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 			exclude = get_lists(exclude_list)
 
 		dataset_names = get_lists(dataset_list)
+		nl = "\n\t"
+		pl_logger.info(f"Dataset names:{nl}{nl.join(map(str ,dataset_names))}")
 
 		dataset_names_intersection = set(dataset_names).intersection(exclude)
 		if dataset_names_intersection:
@@ -52,7 +54,8 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 				dataset_names		= dataset_names, 
 				exclude				= exclude,
 				cache_path			= f"./tmp/s3_{os.path.basename(dataset_list)}.json",
-				use_cache			= True
+				use_cache			= True,
+				recache				= True,
 				)
 		else:
 			urls = get_local_paths(
@@ -75,8 +78,8 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 		assert urls['test'], "Test URLs is empty"
 
 		self.train_data_dir = urls['train']
-		self.test_data_dir = urls['valid']
-		self.valid_data_dir = urls['test']
+		self.test_data_dir = urls['test']
+		self.valid_data_dir = urls['valid']
 
 		self.shuffle = shuffle
 		self.batch_size = batch_size
@@ -93,11 +96,11 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 	def _create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
 			.shuffle()\
+			.sharding_filter()\
 			.open_files_by_fsspec(mode='rb')\
 			.load_from_tar() \
 			.batch(2) \
 			.shuffle(buffer_size=self.batch_size)\
-			.sharding_filter()\
 			.map(self.to_sampels) \
 			.batch(self.batch_size) \
 			.map(self.collate_fn)
@@ -116,7 +119,7 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 
 	def _dataloader2(self, dataset):
 		service = [
-			DistributedReadingService(),
+			# DistributedReadingService(),
 			MultiProcessingReadingService(num_workers=self.num_workers),
 		]
 		reading_service = SequentialReadingService(*service)
@@ -130,7 +133,7 @@ class MultilingualTorchDataDataModule(pl.LightningDataModule):
 		return self.train_dl
 
 	# def val_dataloader(self):
-	# 	self.val_dl self._dataloader(self.valid)
+	# 	self.val_dl = self._dataloader2(self.valid)
 	# 	return self.val_dl
 
 	def test_dataloader(self):
