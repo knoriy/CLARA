@@ -167,7 +167,7 @@ class PLCLASP(pl.LightningModule):
 		model_out = self(texts, mels)
 
 		loss = self.loss_fn(*model_out)
-		acc = self.acc_fn(*model_out)[0]
+		acc = self.acc_fn(*model_out)[0] / mels.size(0)
 
 		return model_out, loss, acc
 
