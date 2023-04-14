@@ -1,10 +1,12 @@
 import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import io
 import json
 import librosa
 import soundfile
 import numpy as np
-import random
 
 from typing import Optional
 
@@ -194,7 +196,7 @@ class MultilingualTDM(pl.LightningDataModule):
 if __name__ == '__main__':
 	import tqdm
 
-	dataset = MultilingualTorchDataDataModule(
+	dataset = MultilingualTDM(
 			root_data_path='s3://s-laion-audio/webdataset_tar/', 
 			dataset_list='/fsx/knoriy/code/CLASP/config/test_list.txt',
 			exclude_list='/fsx/knoriy/code/CLASP/config/exclude_list.txt',
