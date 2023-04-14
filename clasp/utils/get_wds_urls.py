@@ -70,7 +70,7 @@ def get_s3_paths(base_path:str,
 	urls = [os.popen(cmd).read() for cmd in cmds]
 	# cleaning the urls to conform with webdataset
 	final_urls = [i.split(' ')[-1] for url in urls for i in url.split('\n')]
-	final_urls = [f's3://{os.path.join(base_path, *i.split("/")[1:])}' for i in final_urls]
+	final_urls = [f's3://{os.path.join(base_path, *i.split("/")[-3:])}' for i in final_urls]
 	# Spliting url by state e.g. train, test and valud
 	final_urls = {state:[url for url in final_urls if state in url 
 		and all(exclude_name not in url for exclude_name in exclude)] for state in train_valid_test}
