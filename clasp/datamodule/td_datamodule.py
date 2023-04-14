@@ -34,6 +34,9 @@ class MultilingualTDM(pl.LightningDataModule):
 			num_workers:Optional[int]=0,
 			persistent_workers:Optional[bool]=True,
 			shuffle:Optional[bool]=True,
+			cache_path:Optional[str]=None,
+			use_cache:Optional[bool]=True,
+			recache:Optional[bool]=False,
         ):
 		super().__init__()
 		exclude = []
@@ -48,6 +51,9 @@ class MultilingualTDM(pl.LightningDataModule):
 		if dataset_names_intersection:
 			raise Warning(f'Found similary dataset names in datasets and excluded dataset: {dataset_names_intersection}')
 		
+		if not cache_path:
+			cache_path = f"./tmp/{os.path.basename(dataset_list)}.json"
+		
 		if root_data_path.startswith('s3://'):
 			root_data_path = root_data_path.replace('s3://', '')
 			urls = get_s3_paths(
@@ -55,9 +61,9 @@ class MultilingualTDM(pl.LightningDataModule):
 				train_valid_test	= ['train', 'test', 'valid'],
 				dataset_names		= dataset_names, 
 				exclude				= exclude,
-				cache_path			= f"./tmp/s3_{os.path.basename(dataset_list)}.json",
-				use_cache			= True,
-				recache				= True,
+				cache_path			= cache_path,
+				use_cache			= use_cache,
+				recache				= recache
 				)
 		else:
 			urls = get_local_paths(
@@ -65,8 +71,9 @@ class MultilingualTDM(pl.LightningDataModule):
 				train_valid_test	= ['train', 'test', 'valid'],
 				dataset_names		= dataset_names, 
 				exclude				= exclude,
-				cache_path			= f"./tmp/local_{os.path.basename(dataset_list)}.json",
-				use_cache			= True
+				cache_path			= cache_path,
+				use_cache			= use_cache,
+				recache				= recache
 				)
 
 		pl_logger.info(f"Urls found: \
