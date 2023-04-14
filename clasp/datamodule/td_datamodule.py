@@ -181,17 +181,6 @@ class MultilingualTDM(pl.LightningDataModule):
 
 		return texts, mels, text_lengths, mel_lengths
 
-	def teardown(self, stage: str) -> None:
-		super().teardown(stage)
-		if hasattr(self, 'train_dl'):
-			self.train_dl.shutdown() 
-		if hasattr(self, 'val_dl'):
-			self.val_dl.shutdown()
-		if hasattr(self, 'test_dl'):
-			self.test_dl.shutdown()
-		if hasattr(self, 'predict_dl'):
-			self.predict_dl.shutdown()
-
 
 if __name__ == '__main__':
 	import tqdm

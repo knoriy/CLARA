@@ -18,14 +18,14 @@ class TensoredTDM(MultilingualTDM):
 	def _create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
 			.shuffle()\
-			.sharding_filter()\
 			.open_files_by_fsspec(mode='rb')\
 			.load_from_tar() \
 			.batch(2) \
+			.sharding_filter()\
 			.shuffle(buffer_size=self.batch_size)\
 			.map(self.to_sampels) \
-			.batch(self.batch_size) \
-			.map(self.collate_fn)
+			# .batch(self.batch_size) \
+			# .map(self.collate_fn)
 		
 		return datapipe
 	
@@ -51,6 +51,17 @@ class TensoredTDM(MultilingualTDM):
 
 		return texts, mels, text_lengths, mel_lengths
 
+	def train_dataloader(self):
+		self.train_dl = self._dataloader(self.train)
+		return self.train_dl
+
+	def val_dataloader(self):
+		self.val_dl = self._dataloader(self.valid)
+		return self.val_dl
+
+	def test_dataloader(self):
+		self.test_dl = self._dataloader(self.test)
+		return self.test_dl
 
 if __name__ == '__main__':
 	import tqdm
