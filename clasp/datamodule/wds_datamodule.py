@@ -16,7 +16,7 @@ from text.tokeniser import Tokeniser # from text.whisper.tokenizer import get_to
 
 import audio as Audio
 
-class MultilingualWebdatasetDataModule(pl.LightningDataModule):
+class MultilingualWDM(pl.LightningDataModule):
 	def __init__(
 			self, train_data_dir:str, 
 			test_data_dir:str, 

@@ -5,9 +5,9 @@ import torchdata
 
 from torch.nn.utils.rnn import pad_sequence
 
-from td_datamodules import MultilingualTorchDataDataModule
+from td_datamodules import MultilingualTDM
 
-class TensoredTDM(MultilingualTorchDataDataModule):
+class TensoredTDM(MultilingualTDM):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 
@@ -44,7 +44,7 @@ if __name__ == '__main__':
 	)
 	dataset.setup()
 
-	for i in tqdm.tqdm(dataset.train_dataloader, desc="train minibatch"):
-			print(i)
-			breakpoint()
-			break
+	for i in tqdm.tqdm(dataset.train, desc="train minibatch"):
+		print(i)
+		breakpoint()
+		break
