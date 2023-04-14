@@ -13,6 +13,8 @@ from encoders.modules import PositionalEncoding, LayerNorm, MLPLayers
 from loss import CLAPLoss, CLIPLoss
 
 from scheduler import CosineAnnealingWithWarmup
+from utils import Accuracy
+
 
 class CLASP(nn.Module):
     '''
@@ -122,7 +124,7 @@ class PLCLASP(pl.LightningModule):
 
 		self.model = CLASP(self.hparams)
 		self.loss_fn = CLAPLoss(cache_labels=True)
-		# self.acc_fn = Accuracy(cache_labels=True)
+		self.acc_fn = Accuracy(cache_labels=True)
 
 	def forward(self, texts:Optional[torch.Tensor], mels:Optional[torch.Tensor]):
 		return self.model(texts, mels)
@@ -165,8 +167,7 @@ class PLCLASP(pl.LightningModule):
 		model_out = self(texts, mels)
 
 		loss = self.loss_fn(*model_out)
-		# acc = self.acc_fn(*model_out)
-		acc = torch.tensor(0.0)
+		acc = self.acc_fn(*model_out)[0]
 
 		return model_out, loss, acc
 

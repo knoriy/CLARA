@@ -1,17 +1,21 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import torchmetrics
+from typing_extensions import Literal
+
+def accuracy(output, target, topk=(1,)):
+    pred = output.topk(max(topk), -1, True, True)[1].t()
+    correct = pred.eq(target.view(1, -1).expand_as(pred))
+    return [float(correct[:k].reshape(-1).float().sum(0, keepdim=True).cpu().numpy()) for k in topk]
 
 class Accuracy(nn.Module):
     '''
     CLAPLoss is adopted from the mlfoundations' open_clip: https://github.com/mlfoundations/open_clip
     '''
-    def __init__(self, top_k:int = None, cache_labels:bool = False) -> None:
+    def __init__(self, top_k = (1,), cache_labels:bool = False) -> None:
         super().__init__()
 
         self.cache_labels = cache_labels
-        self.accuracy = torchmetrics.Accuracy(top_k=top_k)
+        self.top_k = top_k
 
         # cache state
         self.prev_num_logits = 0
@@ -36,5 +40,5 @@ class Accuracy(nn.Module):
         else:
             labels = self.labels[device]
         
-        acc = self.accuracy(logits_per_audio, labels)
+        acc = accuracy(logits_per_audio, labels, topk=self.top_k)
         return acc
