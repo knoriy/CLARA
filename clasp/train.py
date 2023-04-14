@@ -12,7 +12,7 @@ from pytorch_lightning.trainer import call
 
 from typing import Dict, Set, Optional
 
-from td_datamodules import MultilingualTorchDataDataModule
+from datamodule.td_tensored import TensoredTDM
 from clasp import PLCLASP
 from eval.zeroshot import zeroshot_eval
 from utils import get_lists
@@ -76,4 +76,4 @@ class MyLightningCLI(LightningCLI):
 
 if __name__ == '__main__':
 	torch.set_float32_matmul_precision('medium')
-	cli = MyLightningCLI(PLCLASP, MultilingualTorchDataDataModule, trainer_class=Trainer, save_config_callback=None)
+	cli = MyLightningCLI(PLCLASP, TensoredTDM, trainer_class=Trainer, save_config_callback=None)
