@@ -5,7 +5,7 @@ import torchdata
 
 from torch.nn.utils.rnn import pad_sequence
 
-from td_datamodule import MultilingualTDM
+from .td_datamodule import MultilingualTDM
 
 class TensoredTDM(MultilingualTDM):
 	def __init__(self, *args, **kwargs):
