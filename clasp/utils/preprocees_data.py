@@ -132,22 +132,22 @@ def main():
 
 	dataset.setup()
 
-	total = len(dataset.train_data_dir)*(samples_per_tar//batch_size)
-	pbar = tqdm.tqdm(dataset.train_dataloader(), desc="train", total=total)
-	for i in pbar:
-		pbar.set_description(f"Processing {i}")
-		pbar.update(1)
-	print("train_dataloader end")
+	# total = len(dataset.train_data_dir)*(samples_per_tar//batch_size)
+	# pbar = tqdm.tqdm(dataset.train_dataloader(), desc="train", total=total)
+	# for i in pbar:
+	# 	pbar.set_description(f"Processing {i}")
+	# 	pbar.update(1)
+	# print("train_dataloader end")
 
-	total = len(dataset.train_data_dir)*(samples_per_tar//batch_size)
-	pbar = tqdm.tqdm(dataset.val_dataloader(), desc="valid")
-	for i in pbar:
-		pbar.set_description(f"Processing {i}")
-		pbar.update(1)
-	print("val_dataloader end")
+	# total = len(dataset.valid_data_dir)*(samples_per_tar//batch_size)
+	# pbar = tqdm.tqdm(dataset.val_dataloader(), desc="valid", total=total)
+	# for i in pbar:
+	# 	pbar.set_description(f"Processing {i}")
+	# 	pbar.update(1)
+	# print("val_dataloader end")
 
-	total = len(dataset.train_data_dir)*(samples_per_tar//batch_size)
-	pbar = tqdm.tqdm(dataset.test_dataloader(), desc="test")
+	total = len(dataset.test_data_dir)*(samples_per_tar//batch_size)
+	pbar = tqdm.tqdm(dataset.test_dataloader(), desc="test", total=total)
 	for i in pbar:
 		pbar.set_description(f"Processing {i}")
 		pbar.update(1)
