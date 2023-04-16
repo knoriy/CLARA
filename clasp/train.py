@@ -75,7 +75,7 @@ class MyLightningCLI(LightningCLI):
 		}
 
 if __name__ == '__main__':
-	import time
-	pl_logger.info(f"Starting at {time.time()}")
+	import datetime
+	pl_logger.info(f"Starting at {datetime.datetime.now()}")
 	torch.set_float32_matmul_precision('medium')
 	cli = MyLightningCLI(PLCLASP, TensoredTDM, trainer_class=Trainer, save_config_callback=None)
