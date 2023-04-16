@@ -13,12 +13,12 @@ class TensoredTDM(MultilingualTDM):
 
 	def to_sampels(self, data):
 		a, t = data
-		return torch.load(io.BytesIO(a[1].read())), json.loads(t[1].read().decode('utf-8'))
+		return torch.load(io.BytesIO(a[1].read())), torch.load(io.BytesIO(t[1].read()))
 	
 	def _create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
 			.shuffle()\
-			.open_files_by_fsspec(mode='rb')\
+			.open_files_by_fsspec(mode='rb', kwargs_for_open={'timeout':0})\
 			.load_from_tar() \
 			.batch(2) \
 			.sharding_filter()\
@@ -30,16 +30,8 @@ class TensoredTDM(MultilingualTDM):
 		return datapipe
 	
 	def collate_fn(self, data):
-		def to_token(t):
-			return torch.tensor(
-					self.tokeniser_encode(
-						', '.join(t['text']) if isinstance(t['text'], list) else t['text'], \
-							'en' if 'original_data' not in t.keys() else t["original_data"]["language"] if "language" in t["original_data"].keys() else 'en'
-					)
-				)
-	
 		mels = [a.T for (a, _) in data]
-		texts = [to_token(t) for (_, t) in data]
+		texts = [t for (_, t) in data]
 
 		mel_lengths = [mel.shape[0] for mel in mels]
 		mel_lengths = torch.tensor(mel_lengths)
@@ -67,13 +59,13 @@ if __name__ == '__main__':
 	import tqdm
 	dataset = TensoredTDM(
 		root_data_path='s3://s-laion/knoriy/tensored/', 
-		dataset_list='/fsx/knoriy/code/CLASP/config/test_list.txt',
+		dataset_list='/fsx/knoriy/code/CLASP/config/dataset_list.txt',
 		exclude_list='/fsx/knoriy/code/CLASP/config/exclude_list.txt',
 		batch_size = 64,
-		num_workers=0,
+		num_workers=12,
 	)
 	dataset.setup()
 
-	for i in tqdm.tqdm(dataset.train, desc="train minibatch"):
+	for i in tqdm.tqdm(dataset.train_dataloader(), desc="train minibatch"):
 		print(i)
 		break
