@@ -30,10 +30,10 @@ class TensoredTDM(MultilingualTDM):
 		return datapipe
 	
 	def collate_fn(self, data):
-		mels = [a.T for (a, _) in data]
-		texts = [t for (_, t) in data]
+		mels, texts = zip(*data)
+		mels = [mel.T for mel in mels]
 
-		mel_lengths = [mel.shape[0] for mel in mels]
+		mel_lengths = [mel.T.shape[0] for mel in mels]
 		mel_lengths = torch.tensor(mel_lengths)
 		text_lengths = [text.shape[0] for text in texts]
 		text_lengths = torch.tensor(text_lengths)
