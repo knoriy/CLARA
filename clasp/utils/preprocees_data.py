@@ -15,6 +15,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from datamodule import MultilingualTDM
 
+
+
+
 class PreCacheTDM(MultilingualTDM):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
@@ -27,6 +30,14 @@ class PreCacheTDM(MultilingualTDM):
 		file_path = file_path[0] + '.tar',  file_path[1]
 
 		return audio, text, file_path
+
+	def to_token(self, t):
+		return torch.tensor(
+				self.tokeniser_encode(
+					', '.join(t['text']) if isinstance(t['text'], list) else t['text'], \
+						'en' if 'original_data' not in t.keys() else t["original_data"]["language"] if "language" in t["original_data"].keys() else 'en'
+				)
+			)
 
 	def create_tar_file(self, data_list):
 		filedata = {}
@@ -42,8 +53,8 @@ class PreCacheTDM(MultilingualTDM):
 			os.makedirs(os.path.dirname(local_tar_path), exist_ok=True)
 			with tarfile.open(local_tar_path, mode='a') as tar:
 				for data in filedata[tar_path]:
-					audio_file_name = data['path_audio'].split('/')[-1].replace('.flac', '.pt')
-					text_file_name = audio_file_name.replace('.pt', '.json')
+					audio_file_name = data['path_audio'].split('/')[-1].replace('.flac', '.pta')
+					text_file_name = audio_file_name.replace('.pta', '.ptt')
 					audio_data = data['mel']
 					text_data = data['text']
 
@@ -55,10 +66,9 @@ class PreCacheTDM(MultilingualTDM):
 					audio_info.size = buffer.getbuffer().nbytes
 					tar.addfile(audio_info, fileobj=buffer)
 
-					# # Add text file to tar
+					# Add text file to tar
 					buffer = io.BytesIO()
-					json_bytes = json.dumps(text_data, ensure_ascii=False).encode('utf-8')
-					buffer.write(json_bytes)
+					torch.save(text_data, buffer)
 					buffer.seek(0)
 					text_info = tarfile.TarInfo(text_file_name)
 					text_info.size = buffer.getbuffer().nbytes
@@ -76,7 +86,7 @@ class PreCacheTDM(MultilingualTDM):
 			mel = librosa.power_to_db(mel, ref=np.max)
 			mel = (mel+40)/40
 			output.append({"mel":torch.tensor(mel, dtype=torch.float32), 
-		  				   "text":t, 
+		  				   "text":self.to_token(t), 
 						   "path_tar":path[0],
 						   "path_audio":path[1]})
 
@@ -108,32 +118,45 @@ class PreCacheTDM(MultilingualTDM):
 
 
 def main():
+	batch_size = 64
+	samples_per_tar = 512
+
 	dataset = PreCacheTDM(
 			root_data_path='s3://s-laion-audio/webdataset_tar/', 
-			dataset_list='/fsx/knoriy/code/CLASP/config/test_list.txt',
-			exclude_list='/fsx/knoriy/code/CLASP/config/exclude_list.txt',
-			batch_size = 64,
-			num_workers=90,
+			dataset_list='/fsx/knoriy/code/CLASP/config/dataset_list.txt',
+			# exclude_list='/fsx/knoriy/code/CLASP/config/exclude_list.txt',
+			batch_size = batch_size,
+			num_workers=62,
+			cache_path='/fsx/knoriy/code/CLASP/tmp/tensored_list.json', 
 		)
 
 	dataset.setup()
 
-	# pbar = tqdm.tqdm(dataset.train_dataloader(), desc="train")
-	# for i in pbar:
-	# 	pbar.set_description(f"Processing {i}")
-	# 	pbar.update(1)
+	total = len(dataset.train_data_dir)*(samples_per_tar//batch_size)
+	pbar = tqdm.tqdm(dataset.train_dataloader(), desc="train", total=total)
+	for i in pbar:
+		pbar.set_description(f"Processing {i}")
+		pbar.update(1)
+	print("train_dataloader end")
 
+	total = len(dataset.train_data_dir)*(samples_per_tar//batch_size)
 	pbar = tqdm.tqdm(dataset.val_dataloader(), desc="valid")
 	for i in pbar:
 		pbar.set_description(f"Processing {i}")
 		pbar.update(1)
+	print("val_dataloader end")
 
-	# pbar = tqdm.tqdm(dataset.test_dataloader(), desc="test")
-	# for i in pbar:
-	# 	pbar.set_description(f"Processing {i}")
-	# 	pbar.update(1)
+	total = len(dataset.train_data_dir)*(samples_per_tar//batch_size)
+	pbar = tqdm.tqdm(dataset.test_dataloader(), desc="test")
+	for i in pbar:
+		pbar.set_description(f"Processing {i}")
+		pbar.update(1)
+	print("test_dataloader end")
 
-	dataset.teardown('fit')
+	# dataset.teardown('fit')
 
 if __name__ == '__main__':
 	main()
+
+	upload_to_s3_cmd = "aws s3 cp --recursive ./tmp/ s3://s-laion/knoriy/tensored/ --dryrun"
+	print("end")
