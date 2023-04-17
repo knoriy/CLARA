@@ -1,15 +1,17 @@
 import io
-import json
 import torch
 import torchdata
+from typing import Optional
 
 from torch.nn.utils.rnn import pad_sequence
 
 from .td_datamodule import MultilingualTDM
 
 class TensoredTDM(MultilingualTDM):
-	def __init__(self, *args, **kwargs):
+	def __init__(self, connection_timeout:Optional[int]=0, read_timeout:Optional[int]=0, *args, **kwargs):
 		super().__init__(*args, **kwargs)
+		self.connection_timeout = connection_timeout
+		self.read_timeout = read_timeout
 
 	def to_sampels(self, data):
 		a, t = data
@@ -18,7 +20,7 @@ class TensoredTDM(MultilingualTDM):
 	def _create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
 			.shuffle()\
-			.open_files_by_fsspec(mode='rb', kwargs_for_open={'timeout':0})\
+			.open_files_by_fsspec(mode='rb', storage_options={'client_kwargs': {'connect_timeout': self.connection_timeout,'read_timeout': self.read_timeout}})\
 			.load_from_tar() \
 			.batch(2) \
 			.sharding_filter()\
@@ -59,8 +61,8 @@ if __name__ == '__main__':
 	import tqdm
 	dataset = TensoredTDM(
 		root_data_path='s3://s-laion/knoriy/tensored/', 
-		dataset_list='/fsx/knoriy/code/CLASP/config/dataset_list.txt',
-		exclude_list='/fsx/knoriy/code/CLASP/config/exclude_list.txt',
+		dataset_list='./config/dataset_list.txt',
+		exclude_list='./config/exclude_list.txt',
 		batch_size = 64,
 		num_workers=12,
 	)
