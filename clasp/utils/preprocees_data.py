@@ -8,15 +8,11 @@ import tqdm
 import tarfile
 import torch
 import torchdata
-from torch.nn.utils.rnn import pad_sequence
 
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from datamodule import MultilingualTDM
-
-
-
 
 class PreCacheTDM(MultilingualTDM):
 	def __init__(self, *args, **kwargs):
@@ -123,11 +119,11 @@ def main():
 
 	dataset = PreCacheTDM(
 			root_data_path='s3://s-laion-audio/webdataset_tar/', 
-			dataset_list='/fsx/knoriy/code/CLASP/config/dataset_list.txt',
-			# exclude_list='/fsx/knoriy/code/CLASP/config/exclude_list.txt',
+			dataset_list='./config/dataset_list.txt',
+			# exclude_list='./config/exclude_list.txt',
 			batch_size = batch_size,
-			num_workers=62,
-			cache_path='/fsx/knoriy/code/CLASP/tmp/tensored_list.json', 
+			num_workers=124,
+			cache_path='./tmp/tensored_list.json', 
 		)
 
 	dataset.setup()
@@ -157,6 +153,5 @@ def main():
 
 if __name__ == '__main__':
 	main()
-
-	upload_to_s3_cmd = "aws s3 cp --recursive ./tmp/ s3://s-laion/knoriy/tensored/ --dryrun"
+	upload_to_s3_cmd = "srun --partition=cpu64 --exclusive --comment clap --job-name=aws s3 cp --recursive ./tmp/tensored/ s3://s-laion/knoriy/tensored/ --dryrun"
 	print("end")
