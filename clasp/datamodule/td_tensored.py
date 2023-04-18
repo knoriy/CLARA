@@ -1,15 +1,17 @@
 import io
+import warnings
 import torch
+from torch.nn.utils.rnn import pad_sequence
+
 import torchdata
 from typing import Optional
-
-from torch.nn.utils.rnn import pad_sequence
 
 from .td_datamodule import MultilingualTDM
 
 class TensoredTDM(MultilingualTDM):
 	def __init__(self, connection_timeout:Optional[int]=0, read_timeout:Optional[int]=0, *args, **kwargs):
 		super().__init__(*args, **kwargs)
+		warnings.warn("Connection timeout and read timeout are not implemented yet.")
 		self.connection_timeout = connection_timeout
 		self.read_timeout = read_timeout
 
@@ -20,7 +22,7 @@ class TensoredTDM(MultilingualTDM):
 	def _create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
 			.shuffle()\
-			.open_files_by_fsspec(mode='rb', storage_options={'client_kwargs': {'connect_timeout': self.connection_timeout,'read_timeout': self.read_timeout}})\
+			.open_files_by_fsspec(mode='rb')\
 			.load_from_tar() \
 			.batch(2) \
 			.sharding_filter()\
