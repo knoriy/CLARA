@@ -315,3 +315,10 @@ def pad(input_ele, mel_max_length=None):
         out_list.append(one_batch_padded)
     out_padded = torch.stack(out_list)
     return out_padded
+
+def get_key(src, val):
+    for key, value in src.items():
+        if val == value:
+            return key
+
+    return "key doesn't exist"
