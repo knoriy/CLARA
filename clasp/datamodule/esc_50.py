@@ -62,15 +62,3 @@ class ESC50TDM():
 		mels = pad_sequence(mels).permute(1,2,0).contiguous()
 
 		return labels, mels, text_lengths, mel_lengths
-
-if __name__ == '__main__':
-	import tqdm
-	dataset = ESC50TDM(
-		root_data_path=['/fsx/knoriy/code/CLASP/tmp/raw_datasets/ESC-50-master/audio/'],
-		batch_size=2,
-	)
-	dataset.setup()
-
-	for i in tqdm.tqdm(dataset.test_dataloader(), desc="train minibatch"):
-		print(i)
-		break
