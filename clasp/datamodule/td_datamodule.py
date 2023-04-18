@@ -37,6 +37,7 @@ class MultilingualTDM(pl.LightningDataModule):
 			cache_path:Optional[str]=None,
 			use_cache:Optional[bool]=True,
 			recache:Optional[bool]=False,
+			train_valid_test:Optional[list]=['train', 'valid', 'test'],
         ):
 		super().__init__()
 		exclude = []
@@ -58,7 +59,7 @@ class MultilingualTDM(pl.LightningDataModule):
 			root_data_path = root_data_path.replace('s3://', '')
 			urls = get_s3_paths(
 				base_path			= root_data_path,
-				train_valid_test	= ['train', 'test', 'valid'],
+				train_valid_test	= train_valid_test,
 				dataset_names		= dataset_names, 
 				exclude				= exclude,
 				cache_path			= cache_path,
@@ -68,7 +69,7 @@ class MultilingualTDM(pl.LightningDataModule):
 		else:
 			urls = get_local_paths(
 				base_path			= root_data_path,
-				train_valid_test	= ['train', 'test', 'valid'],
+				train_valid_test	= train_valid_test,
 				dataset_names		= dataset_names, 
 				exclude				= exclude,
 				cache_path			= cache_path,
@@ -194,8 +195,8 @@ if __name__ == '__main__':
 
 	dataset = MultilingualTDM(
 			root_data_path='s3://s-laion-audio/webdataset_tar/', 
-			dataset_list='/fsx/knoriy/code/CLASP/config/test_list.txt',
-			exclude_list='/fsx/knoriy/code/CLASP/config/exclude_list.txt',
+			dataset_list='./config/test_list.txt',
+			exclude_list='./config/exclude_list.txt',
 			batch_size = 64,
 			num_workers=0,
 		)
