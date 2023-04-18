@@ -1,12 +1,12 @@
 #!/bin/bash
 #SBATCH --partition=g40
-#SBATCH --job-name=base
+#SBATCH --job-name=base_4
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --gpus-per-node=1
+#SBATCH --ntasks-per-node=4
+#SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-task=12
 #SBATCH --account laion
-#SBATCH --output=%x_%j.out
+#SBATCH --output=tmp/outs/%x_%j.out
 #SBATCH --signal=SIGUSR1@90
 #SBATCH --signal=SIGTERM@90
 #SBATCH --exclude ip-26-0-134-43,ip-26-0-131-108,ip-26-0-140-150,ip-26-0-143-39
@@ -31,3 +31,4 @@ export NCCL_TREE_THRESHOLD=0
 srun /fsx/home-knoriy/miniconda3/envs/clasp_2/bin/python /fsx/knoriy/code/CLASP/clasp/train.py fit\
     --config /fsx/knoriy/code/CLASP/config/config.yaml \
     --trainer.num_nodes $SLURM_JOB_NUM_NODES \
+    --data.num_workers 48 \
