@@ -26,11 +26,12 @@ def zeroshot_classifier(model, classnames, templates, language='en'):
         zeroshot_weights = torch.stack(zeroshot_weights).to(device)
     return zeroshot_weights
 
-def run(model, zeroshot_weights, dataloader):
+def run(model, zeroshot_weights, dataloader, topk=(1, 5)):
     device = model.device
     model.eval()
     with torch.no_grad():
-        top1, top5, n = 0, 0, 0
+        tops = len(topk) * [0] 
+        n = 0
         for batch in tqdm.tqdm(dataloader, desc='MiniBatch'):
             text, mels, _, _ = batch
             # text = text.to(device)
@@ -45,14 +46,14 @@ def run(model, zeroshot_weights, dataloader):
             # measure accuracy
             labels = torch.arange(text.shape[0], dtype=torch.long, device=device)
 
-            acc1, acc5 = accuracy(logits_per_audio, labels, topk=(1, 5))
-            top1 += acc1
-            top5 += acc5
+            accs = accuracy(logits_per_audio, labels, topk=topk)
+            for i, acc in enumerate(accs):
+                tops[i] += acc
             n += mels.size(0)
 
-        top1 = (top1 / n)
-        top5 = (top5 / n)
-    return top1, top5
+        avg_accs = [acc/n for acc in tops]
+
+    return avg_accs
 
 def zeroshot_eval(model, classnames, templates, dataloader, language='en'):
     zeroshot_weights = zeroshot_classifier(model, classnames, templates, language=language)
