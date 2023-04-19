@@ -1,4 +1,5 @@
-import io
+import os
+import json
 import soundfile
 import librosa
 import numpy as np
@@ -7,28 +8,46 @@ import torch
 import torchdata
 from torch.nn.utils.rnn import pad_sequence
 
+# from .base_tdm import BaseTDM
 from .base_tdm import BaseTDM
 
+KEYS = ("id","utterance","description","emotion","date_created","status","gender","age","level","audio_recording","user_id")
 
-class ESC50TDM(BaseTDM):
+def parse_csv(data):
+	data = data[1].split('|')
+	data = {k:v for k,v in zip(KEYS, data)}
+	return data
+
+class EMNSTDM(BaseTDM):
+	def __init__(self, classes:str, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		with open(classes, 'r') as f:
+			self.emotions = json.load(f)
 	def to_sampels(self, data):
-		return soundfile.read(io.BytesIO(data[1].read())), torch.tensor(int(data[0].split('/')[-1].split('-')[-1].split('.')[0]))
+		path, label = data['audio_recording'], data['emotion']
+		path = os.path.basename(path).replace('.webm', '.flac')
+		path = os.path.join('/fsx/knoriy/raw_datasets/EMNS/cleaned_webm', path)
+
+		return soundfile.read(path), label.strip().lower()
 
 	def create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
-			.list_files()\
-			.shuffle()\
+			.open_files()\
 			.sharding_filter()\
-			.open_files(mode='rb')\
-			.map(self.to_sampels) \
+			.shuffle()\
+			.readlines(skip_lines=1)\
+			.map(parse_csv)\
+			.map(self.to_sampels)\
+			.shuffle()\
 			# .batch(self.batch_size) \
 			# .map(self.collate_fn)
-		
+
 		return datapipe
 
 	def collate_fn(self, batch):
 		audios, labels = zip(*batch)
-		labels = torch.stack(labels)
+
+		labels = torch.tensor([self.emotions[l] for l in labels])
 
 		mels = []
 		for a in audios:
