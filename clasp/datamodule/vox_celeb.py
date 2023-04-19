@@ -5,20 +5,29 @@ import numpy as np
 
 import torch
 import torchdata
-from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
 
-from typing import Optional
 from base_tdm import BaseTDM
 
 
-class ESC50TDM(BaseTDM):
-	def to_sampels(self, data):
-		return soundfile.read(io.BytesIO(data[1].read())), torch.tensor(int(data[0].split('/')[-1].split('-')[-1].split('.')[0]))
+def gender_to_int(gender):
+	if gender == 'males':
+		return 0
+	elif gender == 'females':
+		return 1
+	else:
+		return 2
 
-	def _create_pipeline(self, data_dir):
+def map_gender_to_int(genders):
+	return list(map(gender_to_int, genders))
+
+class VoxCelebTDM(BaseTDM):
+	def to_sampels(self, data):
+		return soundfile.read(io.BytesIO(data[1].read())), data[0].split("/")[-2]
+
+	def create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
-			.list_files()\
+			.list_files(masks=["*.flac"], recursive=True)\
 			.shuffle()\
 			.sharding_filter()\
 			.open_files(mode='rb')\
@@ -30,7 +39,7 @@ class ESC50TDM(BaseTDM):
 
 	def collate_fn(self, batch):
 		audios, labels = zip(*batch)
-		labels = torch.stack(labels)
+		labels = map_gender_to_int(labels)
 
 		mels = []
 		for a in audios:
@@ -45,5 +54,17 @@ class ESC50TDM(BaseTDM):
 		text_lengths = torch.tensor(text_lengths)
 
 		mels = pad_sequence(mels).permute(1,2,0).contiguous()
+		labels = torch.tensor(labels)
 
 		return labels, mels, text_lengths, mel_lengths
+
+if __name__ == '__main__':
+	dataset = VoxCelebTDM(
+				test_urls=['/fsx/knoriy/raw_datasets/VoxCeleb_gender/'],
+				batch_size = 100,
+				num_workers=12,
+			)
+	dataset.setup()
+	for batch in dataset.test_dataloader():
+		print(batch[0])
+		break

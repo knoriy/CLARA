@@ -142,9 +142,9 @@ class MultilingualTDM(pl.LightningDataModule):
 		self.train_dl = self._dataloader2(self.train)
 		return self.train_dl
 
-	# def val_dataloader(self):
-	# 	self.val_dl = self._dataloader2(self.valid)
-	# 	return self.val_dl
+	def val_dataloader(self):
+		self.val_dl = self._dataloader2(self.valid)
+		return self.val_dl
 
 	def test_dataloader(self):
 		self.test_dl = self._dataloader2(self.test)
