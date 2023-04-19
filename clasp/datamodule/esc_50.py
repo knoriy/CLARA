@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
 
 from typing import Optional
-from base_tdm import BaseTDM
+from .base_tdm import BaseTDM
 
 
 class ESC50TDM(BaseTDM):

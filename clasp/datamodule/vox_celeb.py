@@ -7,7 +7,7 @@ import torch
 import torchdata
 from torch.nn.utils.rnn import pad_sequence
 
-from base_tdm import BaseTDM
+from .base_tdm import BaseTDM
 
 
 def gender_to_int(gender):
@@ -57,14 +57,3 @@ class VoxCelebTDM(BaseTDM):
 		labels = torch.tensor(labels)
 
 		return labels, mels, text_lengths, mel_lengths
-
-if __name__ == '__main__':
-	dataset = VoxCelebTDM(
-				test_urls=['/fsx/knoriy/raw_datasets/VoxCeleb_gender/'],
-				batch_size = 100,
-				num_workers=12,
-			)
-	dataset.setup()
-	for batch in dataset.test_dataloader():
-		print(batch[0])
-		break
