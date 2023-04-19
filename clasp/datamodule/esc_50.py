@@ -16,7 +16,7 @@ class ESC50TDM(BaseTDM):
 	def to_sampels(self, data):
 		return soundfile.read(io.BytesIO(data[1].read())), torch.tensor(int(data[0].split('/')[-1].split('-')[-1].split('.')[0]))
 
-	def _create_pipeline(self, data_dir):
+	def create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
 			.list_files()\
 			.shuffle()\
