@@ -13,7 +13,7 @@ from encoders.modules import PositionalEncoding, LayerNorm, MLPLayers
 from loss import CLAPLoss, CLIPLoss
 
 from scheduler import CosineAnnealingWithWarmup
-from utils import Accuracy
+from utils.accuracy import Accuracy, accuracy
 
 
 class CLASP(nn.Module):
@@ -188,3 +188,40 @@ class PLCLASP(pl.LightningModule):
 			'monitor': 'valid_loss',
 		}
 		return [optimizer], [lr_scheduler]
+
+class LinearProbeCLASP(pl.LightningModule):
+	def __init__(self, in_features:int, num_classes:int, checkpoint_path:str, *args, **kwargs) -> None:
+		super().__init__(*args, **kwargs)
+		self.feature_extractor = PLCLASP.load_from_checkpoint(checkpoint_path)
+		self.feature_extractor.freeze()
+
+		self.classifier = nn.Linear(in_features, num_classes)
+
+	def forward(self, x:torch.Tensor) -> torch.Tensor:
+		return self.classifier(self.feature_extractor.encode_audio(x))
+
+	def training_step(self, batch, batch_idx):
+		x, y = batch
+		y_hat = self(x)
+		loss = F.cross_entropy(y_hat, y)
+		self.log('train_loss', loss, prog_bar=True, sync_dist=True)
+		return loss
+
+	def validation_step(self, batch, batch_idx):
+		_, loss, acc = self._shared_eval_step(batch, batch_idx)
+		metrics = {"val_acc": acc, "val_loss": loss}
+		self.log_dict(metrics, prog_bar=True, sync_dist=True)
+
+	def test_step(self, batch, batch_idx):
+		_, loss, acc = self._shared_eval_step(batch, batch_idx)
+		metrics = {"test_acc": acc, "test_loss": loss}
+		self.log_dict(metrics, sync_dist=True)
+
+	def _shared_eval_step(self, batch, batch_idx):
+		x, y = batch 
+		y_hat = self(x)
+
+		loss = F.cross_entropy(y_hat, y)
+		acc = accuracy(y_hat, y)[0] / x.size(0)
+
+		return y_hat, loss, acc
