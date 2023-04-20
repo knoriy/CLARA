@@ -15,6 +15,8 @@ from typing import Dict, Set, Optional
 
 from datamodule import TensoredTDM, EMNSTDM
 from clasp import PLCLASP, LinearProbeCLASP
+
+
 from eval.zeroshot import zeroshot_eval
 from utils import get_lists
 
@@ -76,5 +78,12 @@ class MyLightningCLI(LightningCLI):
 if __name__ == '__main__':
 	import datetime
 	pl_logger.info(f"Starting at {datetime.datetime.now()}")
+
 	torch.set_float32_matmul_precision('medium')
-	cli = MyLightningCLI(PLCLASP, TensoredTDM, trainer_class=Trainer, save_config_callback=None)
+
+	cli = MyLightningCLI(
+		model_class			=PLCLASP, 
+		datamodule_class	=TensoredTDM, 
+		trainer_class		=Trainer, 
+		save_config_callback=None,
+	)
