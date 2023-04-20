@@ -81,7 +81,7 @@ model:
 data:
   class_path: datamodule.TensoredTDM
   init_args:
-    root_data_path: s3://s-laion/knoriy/tensored/
+    root_data_path: ./tmp/tensored
     dataset_list: ./config/dataset_list.txt
     exclude_list: ./config/exclude_list.txt
     batch_size: 16
