@@ -77,7 +77,7 @@ model:
   LR_sheduler_min_lr: 0.0
   LR_sheduler_decay: 1.0
 data:
-  root_data_path: s3://s-laion/knoriy/tensored/
+  root_data_path: /fsx/knoriy/code/CLASP/tmp/tensored/
   dataset_list: ./config/dataset_list.txt
   exclude_list: ./config/exclude_list.txt
   batch_size: 16
