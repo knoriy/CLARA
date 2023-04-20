@@ -1,0 +1,15 @@
+model:
+  hidden_dim: 128
+  text_encoder_width: 1024
+  text_encoder_embedding: 1024
+  text_encoder_layers: 1
+  text_encoder_heads: 4
+  vocab_size: 50373
+  n_mels: 80
+  audio_encoder_embedding: 1024
+  learning_rate: 0.001
+  learning_rate_patience: 10
+  LR_sheduler_T_max: 20
+  LR_sheduler_warmup_steps: 20
+  LR_sheduler_min_lr: 0.0
+  LR_sheduler_decay: 1.0
