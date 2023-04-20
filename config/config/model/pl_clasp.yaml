@@ -1,4 +1,5 @@
-model:
+class_path: clasp.PLCLASP
+init_args:
   hidden_dim: 128
   text_encoder_width: 1024
   text_encoder_embedding: 1024

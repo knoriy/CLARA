@@ -1,4 +1,5 @@
-model:
+class_path: clasp.LinearProbeCLASP
+init_args:
   in_features: 1024
   num_classes: 8
   checkpoint_path: ./logs/CLASP/kp0bwbfe/checkpoints/epoch=99-step=14700.ckpt
