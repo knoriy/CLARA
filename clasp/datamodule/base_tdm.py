@@ -15,11 +15,11 @@ class BaseTDM(pl.LightningDataModule, ABC):
 			train_urls:Optional[list]=None,
 			test_urls:Optional[list]=None,
 			valid_urls:Optional[list]=None,
-			batch_size:Optional[int]=None,
+			batch_size:Optional[int]=1,
 			num_workers:Optional[int]=0,
 			persistent_workers:Optional[bool]=True,
 			shuffle:Optional[bool]=True,
-        ):
+		):
 		super().__init__()
 
 		self.train_data_dir = train_urls

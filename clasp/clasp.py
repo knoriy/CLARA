@@ -176,22 +176,24 @@ class PLCLASP(pl.LightningModule):
 		return model_out, loss, acc
 
 	def configure_optimizers(self):
-		optimizer = torch.optim.AdamW(self.parameters(), lr=self.hparams.learning_rate)
-		lr_scheduler = {
-			'scheduler': CosineAnnealingWithWarmup(optimizer=optimizer, 
-					                                T_max=self.hparams.LR_sheduler_T_max, 
-		                                            warmup_steps=self.hparams.LR_sheduler_warmup_steps, 
-						                            max_lr=self.hparams.learning_rate, 
-						                            min_lr=self.hparams.LR_sheduler_min_lr, 
-						                            gamma=self.hparams.LR_sheduler_decay),
-			'name': 'lr_scheduler',
-			'monitor': 'valid_loss',
-		}
-		return [optimizer], [lr_scheduler]
+		return get_optimiser(self)
 
 class LinearProbeCLASP(pl.LightningModule):
-	def __init__(self, in_features:int, num_classes:int, checkpoint_path:str, *args, **kwargs) -> None:
+	def __init__(self, 
+		in_features:int, 
+		num_classes:int, 
+		checkpoint_path:str, 
+		learning_rate:float=1e-3, 
+		LR_sheduler_T_max:int=20,
+		LR_sheduler_warmup_steps:int=20,
+		LR_sheduler_min_lr:float=0.0,
+		LR_sheduler_decay:float=1.0,
+		*args, **kwargs
+	) -> None:
+		
 		super().__init__(*args, **kwargs)
+		self.save_hyperparameters()
+
 		self.feature_extractor = PLCLASP.load_from_checkpoint(checkpoint_path)
 		self.feature_extractor.freeze()
 
@@ -201,9 +203,9 @@ class LinearProbeCLASP(pl.LightningModule):
 		return self.classifier(self.feature_extractor.encode_audio(x))
 
 	def training_step(self, batch, batch_idx):
-		x, y = batch
-		y_hat = self(x)
-		loss = F.cross_entropy(y_hat, y)
+		labels, mels, _, _  = batch
+		y_hat = self(mels)
+		loss = F.cross_entropy(y_hat, labels)
 		self.log('train_loss', loss, prog_bar=True, sync_dist=True)
 		return loss
 
@@ -218,10 +220,27 @@ class LinearProbeCLASP(pl.LightningModule):
 		self.log_dict(metrics, sync_dist=True)
 
 	def _shared_eval_step(self, batch, batch_idx):
-		x, y = batch 
-		y_hat = self(x)
+		labels, mels, _, _  = batch
+		y_hat = self(mels)
 
-		loss = F.cross_entropy(y_hat, y)
-		acc = accuracy(y_hat, y)[0] / x.size(0)
+		loss = F.cross_entropy(y_hat, labels)
+		acc = accuracy(y_hat, labels)[0] / labels.size(0)
 
 		return y_hat, loss, acc
+
+	def configure_optimizers(self):
+		return get_optimiser(self)
+
+def get_optimiser(self):
+	optimizer = torch.optim.AdamW(self.parameters(), lr=self.hparams.learning_rate)
+	lr_scheduler = {
+		'scheduler': CosineAnnealingWithWarmup(optimizer=optimizer, 
+												T_max=self.hparams.LR_sheduler_T_max, 
+												warmup_steps=self.hparams.LR_sheduler_warmup_steps, 
+												max_lr=self.hparams.learning_rate, 
+												min_lr=self.hparams.LR_sheduler_min_lr, 
+												gamma=self.hparams.LR_sheduler_decay),
+		'name': 'lr_scheduler',
+		'monitor': 'valid_loss',
+	}
+	return [optimizer], [lr_scheduler]

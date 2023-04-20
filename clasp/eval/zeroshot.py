@@ -46,7 +46,7 @@ def zeroshot_classifier(model, classnames, templates, language='en'):
             class_embedding /= class_embedding.norm()
             zeroshot_weights.append(class_embedding)
         zeroshot_weights = torch.stack(zeroshot_weights).to(device)
-    return zeroshot_weights, all_texts
+    return zeroshot_weights
 
 def run(model, zeroshot_weights, dataloader, topk=(1, 5)):
     device = model.device
