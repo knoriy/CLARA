@@ -1,21 +1,14 @@
-
-import logging
-pl_logger = logging.getLogger('pytorch_lightning')
 import json
-
+import logging
 import torch
 import pytorch_lightning as pl
 from pytorch_lightning.core.datamodule import LightningDataModule
 from pytorch_lightning.cli import LightningCLI
 from pytorch_lightning.utilities.exceptions import MisconfigurationException
-from pytorch_lightning.trainer import call
-
 
 from typing import Dict, Set, Optional
 
-from datamodule import TensoredTDM, EMNSTDM
-from clasp import PLCLASP, LinearProbeCLASP
-
+pl_logger = logging.getLogger('pytorch_lightning')
 
 from eval.zeroshot import zeroshot_eval
 from utils import get_lists
@@ -82,8 +75,6 @@ if __name__ == '__main__':
 	torch.set_float32_matmul_precision('medium')
 
 	cli = MyLightningCLI(
-		model_class			=PLCLASP, 
-		datamodule_class	=TensoredTDM, 
 		trainer_class		=Trainer, 
 		save_config_callback=None,
 	)

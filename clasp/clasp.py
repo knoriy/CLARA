@@ -179,8 +179,21 @@ class PLCLASP(pl.LightningModule):
 		return get_optimiser(self)
 
 class LinearProbeCLASP(pl.LightningModule):
-	def __init__(self, in_features:int, num_classes:int, checkpoint_path:str, *args, **kwargs) -> None:
+	def __init__(self, 
+		in_features:int, 
+		num_classes:int, 
+		checkpoint_path:str, 
+		learning_rate:float=1e-3, 
+		LR_sheduler_T_max:int=20,
+		LR_sheduler_warmup_steps:int=20,
+		LR_sheduler_min_lr:float=0.0,
+		LR_sheduler_decay:float=1.0,
+		*args, **kwargs
+	) -> None:
+		
 		super().__init__(*args, **kwargs)
+		self.save_hyperparameters()
+
 		self.feature_extractor = PLCLASP.load_from_checkpoint(checkpoint_path)
 		self.feature_extractor.freeze()
 
