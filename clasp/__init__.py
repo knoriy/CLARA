@@ -1,1 +1,1 @@
-from .clasp import CLASP, PLCLASP
+from .clasp import CLASP, PLCLASP, LinearProbeCLASP
