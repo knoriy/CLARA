@@ -1,6 +1,7 @@
 
 import logging
 pl_logger = logging.getLogger('pytorch_lightning')
+import json
 
 import torch
 import pytorch_lightning as pl
@@ -12,8 +13,8 @@ from pytorch_lightning.trainer import call
 
 from typing import Dict, Set, Optional
 
-from datamodule.td_tensored import TensoredTDM
-from clasp import PLCLASP
+from datamodule import TensoredTDM, EMNSTDM
+from clasp import PLCLASP, LinearProbeCLASP
 from eval.zeroshot import zeroshot_eval
 from utils import get_lists
 
@@ -29,7 +30,9 @@ class Trainer(pl.Trainer):
 		datamodule: Optional[LightningDataModule] = None,
 		ckpt_path: Optional[str] = None,
 	) -> tuple[float, float]:
-		"""Zeroshot evaluation.""" 
+		"""
+		Zeroshot evaluation.
+		""" 
 		pl_logger.debug(f"{self.__class__.__name__}: trainer zeroshot stage")
 
 		# if a datamodule comes in as the second arg, then fix it for the user
@@ -48,8 +51,9 @@ class Trainer(pl.Trainer):
 		templates = get_lists(self.zeroshot_templates)
 
 		if not self.zeroshot_classes:
-			raise ValueError("trainer.zeroshot_classes is required, must be a path to a file containing a list of templates (one per line).")
-		classes = get_lists(self.zeroshot_classes)
+			raise ValueError("trainer.zeroshot_classes is required, must be a path to a json file containing class labels.")
+		with open(self.zeroshot_classes) as f:
+			classes = json.load(f)
 
 		pl_logger.info(f"Zeroshot evaluation with {len(classes)} classes and {len(templates)} templates")
 		
@@ -57,11 +61,6 @@ class Trainer(pl.Trainer):
 		pl_logger.info(f"zeroshot accuracy@1: {acc1:.3f}, accuracy@5: {acc5:.3f}")
 
 class MyLightningCLI(LightningCLI):
-
-	def add_arguments_to_parser(self, parser):
-		# parser.add_lightning_class_args(DataParallelStrategy, "ddp_Strategy")
-		# parser.set_defaults({"ddp_Strategy.find_unused_parameters": "False"})
-		pass
 
 	@staticmethod 
 	def subcommands() -> Dict[str, Set[str]]: 
