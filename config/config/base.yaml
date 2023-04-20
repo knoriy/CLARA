@@ -1,0 +1,4 @@
+# pytorch_lightning==2.0.1
+
+seed_everything: 1234
+ckpt_path: null

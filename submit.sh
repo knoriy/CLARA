@@ -29,6 +29,7 @@ export FI_EFA_TX_MIN_CREDITS=64
 export NCCL_TREE_THRESHOLD=0
 
 srun /fsx/home-knoriy/miniconda3/envs/clasp_2/bin/python /fsx/knoriy/code/CLASP/clasp/train.py fit\
+    --config ./config/config/base.yaml \
     --trainer ./config/config/trainer/base.yaml \
     --model ./config/config/model/pl_clasp.yaml \
     --data ./config/config/data/tensored.yaml \
