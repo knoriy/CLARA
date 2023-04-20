@@ -6,7 +6,7 @@
 #SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-task=12
 #SBATCH --account laion
-#SBATCH --output=tmp/outs/%x_%j.out
+#SBATCH --output=logs/outs/%x_%j.out
 #SBATCH --signal=SIGUSR1@90
 #SBATCH --signal=SIGTERM@90
 #SBATCH --exclude ip-26-0-134-43,ip-26-0-131-108,ip-26-0-140-150,ip-26-0-143-39
