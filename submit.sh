@@ -6,7 +6,7 @@
 #SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-task=12
 #SBATCH --account laion
-#SBATCH --output=tmp/outs/%x_%j.out
+#SBATCH --output=logs/outs/%x_%j.out
 #SBATCH --signal=SIGUSR1@90
 #SBATCH --signal=SIGTERM@90
 #SBATCH --exclude ip-26-0-134-43,ip-26-0-131-108,ip-26-0-140-150,ip-26-0-143-39
@@ -29,6 +29,8 @@ export FI_EFA_TX_MIN_CREDITS=64
 export NCCL_TREE_THRESHOLD=0
 
 srun /fsx/home-knoriy/miniconda3/envs/clasp_2/bin/python /fsx/knoriy/code/CLASP/clasp/train.py fit\
-    --config /fsx/knoriy/code/CLASP/config/config.yaml \
+    --trainer ./config/config/trainer/base.yaml \
+    --model ./config/config/model/pl_clasp.yaml \
+    --data ./config/config/data/tensored.yaml \
     --trainer.num_nodes $SLURM_JOB_NUM_NODES \
     --data.num_workers 48 \
