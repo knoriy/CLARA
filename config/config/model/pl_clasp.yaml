@@ -13,4 +13,4 @@ init_args:
   LR_sheduler_T_max: 20
   LR_sheduler_warmup_steps: 20
   LR_sheduler_min_lr: 0.0
-  LR_sheduler_decay: 1.0
+  LR_sheduler_decay: 0.7
