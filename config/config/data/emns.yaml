@@ -1,8 +1,8 @@
 class_path: datamodule.EMNSTDM
 init_args:
   classes: './config/classification/emotion/emns/classes.json'
-  test_urls: ['/fsx/knoriy/raw_datasets/EMNS/metadata.csv']
-  valid_urls: ['/fsx/knoriy/raw_datasets/EMNS/metadata.csv']
-  train_urls: ['/fsx/knoriy/raw_datasets/EMNS/metadata.csv']
+  test_urls: ['/fsx/knoriy/raw_datasets/EMNS/test.csv']
+  valid_urls: ['/fsx/knoriy/raw_datasets/EMNS/valid.csv']
+  train_urls: ['/fsx/knoriy/raw_datasets/EMNS/train.csv']
   batch_size: 16
   num_workers: 12
