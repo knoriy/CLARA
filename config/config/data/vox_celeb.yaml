@@ -1,0 +1,7 @@
+class_path: datamodule.VoxCelebTDM
+init_args:
+  test_urls: ['/fsx/knoriy/raw_datasets/VoxCeleb_gender/test/']
+  valid_urls: ['/fsx/knoriy/raw_datasets/VoxCeleb_gender/valid/']
+  train_urls: ['/fsx/knoriy/raw_datasets/VoxCeleb_gender/train/']
+  batch_size: 8
+  num_workers: 12
