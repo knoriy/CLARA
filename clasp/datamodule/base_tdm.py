@@ -66,20 +66,20 @@ class BaseTDM(pl.LightningDataModule, ABC):
 
 	def train_dataloader(self):
 		if not self.train_data_dir:
-			raise MisconfigurationException('train_data_dir not set.')
+			raise MisconfigurationException('train_urls not set.')
 		return self._dataloader(self.train)
 
 	def val_dataloader(self):
 		if not self.valid_data_dir:
-			raise MisconfigurationException('valid_data_dir not set.')
+			raise MisconfigurationException('valid_urls not set.')
 		return self._dataloader(self.valid)
 
 	def test_dataloader(self):
 		if not self.test_data_dir:
-			raise MisconfigurationException('test_data_dir not set.')
+			raise MisconfigurationException('test_urls not set.')
 		return self._dataloader(self.test)
 
 	def predict_dataloader(self):
 		if not self.test_data_dir:
-			raise MisconfigurationException('test_data_dir not set.')
+			raise MisconfigurationException('valid_urls not set.')
 		return self._dataloader(self.test)
