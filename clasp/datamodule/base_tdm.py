@@ -15,6 +15,7 @@ class BaseTDM(pl.LightningDataModule, ABC):
 			train_urls:Optional[list]=None,
 			test_urls:Optional[list]=None,
 			valid_urls:Optional[list]=None,
+			predict_urls:Optional[list]=None,
 			batch_size:Optional[int]=1,
 			num_workers:Optional[int]=0,
 			persistent_workers:Optional[bool]=True,
@@ -25,6 +26,7 @@ class BaseTDM(pl.LightningDataModule, ABC):
 		self.train_data_dir = train_urls
 		self.test_data_dir = test_urls
 		self.valid_data_dir = valid_urls
+		self.predict_data_dir = predict_urls
 
 		self.shuffle = shuffle
 		self.batch_size = batch_size
@@ -53,6 +55,9 @@ class BaseTDM(pl.LightningDataModule, ABC):
 		if self.valid_data_dir and len(self.valid_data_dir)>0:
 			self.valid = self.create_pipeline(self.valid_data_dir)
 
+		if self.predict_data_dir and len(self.predict_data_dir)>0:
+			self.predict = self.create_pipeline(self.predict_data_dir)
+
 	def _dataloader2(self, dataset):
 		service = [
 			DistributedReadingService(),
@@ -80,6 +85,6 @@ class BaseTDM(pl.LightningDataModule, ABC):
 		return self._dataloader(self.test)
 
 	def predict_dataloader(self):
-		if not self.test_data_dir:
-			raise MisconfigurationException('valid_urls not set.')
-		return self._dataloader(self.test)
+		if not self.predict_data_dir:
+			raise MisconfigurationException('predict_urls not set.')
+		return self._dataloader(self.predict)
