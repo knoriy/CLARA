@@ -129,10 +129,10 @@ class PLCLASP(pl.LightningModule):
 	def forward(self, texts:Optional[torch.Tensor], mels:Optional[torch.Tensor]):
 		return self.model(texts, mels)
 	
-	def encode_audio(self, mels:Optional[torch.Tensor]):
+	def encode_audio(self, mels:torch.Tensor):
 		return self.model.encode_audio(mels)
 
-	def encode_text(self, text:Optional[torch.Tensor]):
+	def encode_text(self, text:torch.Tensor):
 		return self.model.encode_text(text)
 	
 	def get_temps(self):
@@ -197,10 +197,14 @@ class LinearProbeCLASP(pl.LightningModule):
 		self.feature_extractor = PLCLASP.load_from_checkpoint(checkpoint_path)
 		self.feature_extractor.freeze()
 
-		self.classifier = nn.Linear(in_features, num_classes)
+		self.classifier = MLPLayers([1024, 512, 128, num_classes])
 
 	def forward(self, x:torch.Tensor) -> torch.Tensor:
-		return self.classifier(self.feature_extractor.encode_audio(x))
+		x = self.feature_extractor.encode_audio(x)
+		x = F.normalize(x, dim=-1)
+		x = self.feature_extractor.model.audio_transform(x)
+
+		return self.classifier(x)
 
 	def training_step(self, batch, batch_idx):
 		labels, mels, _, _  = batch
