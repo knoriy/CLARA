@@ -7,8 +7,7 @@ import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.nn import functional as F
 
-from torchmetrics import MetricCollection
-from torchmetrics.classification import MulticlassRecall
+from torchmetrics import MetricCollection, Recall
 
 from text.tokeniser import Tokeniser
 
@@ -182,7 +181,7 @@ if __name__ == '__main__':
         if top_k > num_classes:
             break
         metric.add_metrics({
-            f"rec@{top_k}":MulticlassRecall(num_classes=num_classes, top_k=top_k)
+            f"rec@{top_k}":Recall(task='multiclass', num_classes=num_classes, top_k=top_k),
             })
 
     ##############
