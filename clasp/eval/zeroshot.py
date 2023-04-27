@@ -2,14 +2,18 @@ import sys
 sys.path.append('/fsx/knoriy/code/CLASP/clasp')
 
 import tqdm
-import torch
 import json
+import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.nn import functional as F
+
+from torchmetrics import MetricCollection
+from torchmetrics.classification import MulticlassRecall
+
 from text.tokeniser import Tokeniser
 
 from clasp import PLCLASP
-from datamodule import ESC50TDM
+from datamodule import *
 from text.tokeniser import Tokeniser
 from utils import get_lists
 
@@ -24,10 +28,22 @@ from pprint import pprint
 # Zeroshot fn
 ##############
 
-def accuracy(output, target, topk=(1,)):
-    pred = output.topk(max(topk), -1, True, True)[1].t()
-    correct = pred.eq(target.view(1, -1).expand_as(pred))
-    return [float(correct[:k].reshape(-1).float().sum(0, keepdim=True).cpu().numpy()) for k in topk]
+def calculate_average(data):
+    num_items = len(data)
+    if num_items == 0:
+        return None
+
+    keys = data[0].keys()
+
+    avgs = {}
+    for key in keys:
+        sum_key = 0
+        for d in data:
+            sum_key += d[key]
+        avgs[f"avg_{key}"] = sum_key / num_items
+
+    return avgs
+
 
 def zeroshot_classifier(model, classnames, templates, language='en'):
     tokenizer = Tokeniser()
@@ -46,14 +62,14 @@ def zeroshot_classifier(model, classnames, templates, language='en'):
             class_embedding /= class_embedding.norm()
             zeroshot_weights.append(class_embedding)
         zeroshot_weights = torch.stack(zeroshot_weights).to(device)
-    return zeroshot_weights
+    return zeroshot_weights, all_texts
 
-def run(model, zeroshot_weights, dataloader, topk=(1, 5)):
+def run(model, zeroshot_weights, dataloader, metric_fn:MetricCollection):
     device = model.device
     model.eval()
     with torch.no_grad():
-        tops = len(topk) * [0] 
-        n = 0
+        metrics = []
+        metric_fn = metric_fn.to(device)
 
         for batch in tqdm.tqdm(dataloader, desc='MiniBatch'):
             labels, mels, _, _ = batch
@@ -87,22 +103,19 @@ def run(model, zeroshot_weights, dataloader, topk=(1, 5)):
             logits_per_audio = (audio_temp * (audio_features @ zeroshot_weights.T))
 
             ###############
-            # Get Accuracy
+            # Get metrics
             ###############
+            metric = metric_fn(logits_per_audio, labels)
+            metrics.append(metric)
 
-            accs = accuracy(logits_per_audio, labels, topk=topk)
-            for i, acc in enumerate(accs):
-                tops[i] += acc
-            n += mels.size(0)
-
-        avg_accs = [acc/n for acc in tops]
+        avg_metric = calculate_average(metrics)
 
         predict = torch.argmax(logits_per_audio, dim=-1)
         # print("Labels", labels)
         plt.imshow(logits_per_audio.detach().cpu().numpy())
         # # print(logits_per_audio.detach().cpu().numpy())
 
-    return avg_accs, labels, predict
+    return avg_metric, labels, predict
 
 def zeroshot_eval(model, classnames, templates, dataloader, language='en'):
     zeroshot_weights = zeroshot_classifier(model, classnames, templates, language=language)
@@ -113,29 +126,75 @@ if __name__ == '__main__':
     ##############
     # Model
     ##############
-    model = PLCLASP()
-    model = model.load_from_checkpoint("./logs/CLASP/kp0bwbfe/checkpoints/epoch=99-step=14700.ckpt").to('cuda')
-    model = model.to("cuda")
+    # model_path = "./logs/CLASP/kp0bwbfe/checkpoints/epoch=99-step=14700.ckpt"
+    # model_path = "./logs/CLASP/bem5ka5l/checkpoints/epoch=243-step=417761.ckpt"
+    model_path = "./logs/CLASP/3ayhc5jk/checkpoints/epoch=158-step=262555.ckpt"
+
+    model = PLCLASP.load_from_checkpoint(model_path).to('cuda')
 
     ##############
     # DataModule
     ##############
-    tokenizer = Tokeniser()
-    dataset = ESC50TDM(
-                root_data_path=['/fsx/knoriy/raw_datasets/ESC-50-master/audio/'],
-                batch_size = 16,
+    # dataset = ESC50TDM(
+    #             test_urls=['/fsx/knoriy/raw_datasets/ESC-50-master/audio/'],
+    #             batch_size = 1024,
+    #             num_workers=12,
+    #         )
+
+    # templates = get_lists("./config/classification/sounds/esc-50/templates.txt")
+    # with open("./config/classification/sounds/esc-50/minor_classes.json") as f:
+    # 	classes = json.load(f)
+
+    ##############
+    # Gender
+    ##############
+    dataset = VoxCelebTDM(
+                test_urls=['/fsx/knoriy/raw_datasets/VoxCeleb_gender/'],
+                batch_size =8,
                 num_workers=12,
             )
-    dataset.setup()
-
     templates = get_lists("./config/classification/gender/templates.txt")
-    # classes = get_lists("./config/classification/gender/classes.txt")
-
     with open("./config/classification/gender/classes.json") as f:
         classes = json.load(f)
 
+    ##############
+    # Emotion
+    ##############
+    # dataset = EMNSTDM(
+    # 			classes = './config/classification/emotion/emns/classes.json', 
+    # 			test_urls=['/fsx/knoriy/raw_datasets/EMNS/metadata.csv'],
+    # 			batch_size = 8,
+    # 			num_workers=12,
+    # 		)
+
+    # templates = get_lists("./config/classification/emotion/emns/templates.txt")
+    # with open("./config/classification/emotion/emns/classes.json") as f:
+    # 	classes = json.load(f)
+
+    ##############
+    # Metric
+    ##############
+    num_classes = len(classes)
+    metric = MetricCollection({})
+
+    recall = []
+    for top_k in [1, 2, 3, 5, 10]:
+        if top_k > num_classes:
+            break
+        metric.add_metrics({
+            f"rec@{top_k}":MulticlassRecall(num_classes=num_classes, top_k=top_k)
+            })
+
+    ##############
+    # Run
+    ##############
+    dataset.setup()
+
     zeroshot_weights, all_texts = zeroshot_classifier(model, classes, templates)
-    tops, labels, predicts = run(model, zeroshot_weights, dataset.test_dataloader(), topk=(1,3))
+    tops, labels, predicts = run(model, zeroshot_weights, dataset.test_dataloader(), metric)
+
+    pprint(tops)
+    # print(labels)
+    # print(predicts)
 
     pprint([(get_key(classes, label.item()), get_key(classes, predict.item())) for label, predict in zip(labels, predicts)])
-    pprint(tops)
