@@ -82,10 +82,13 @@ class MultilingualTDM(pl.LightningDataModule):
 			\n\tValid: {len(urls['valid'])} \
 			\n\tTest: {len(urls['test'])}"
 		)
-
-		assert urls['train'], "Train URLs is empty"
-		assert urls['valid'], "Valid URLs is empty"
-		assert urls['test'], "Test URLs is empty"
+		
+		if "train" in train_valid_test:
+			assert urls['train'], "Train URLs is empty"
+		if "valid" in train_valid_test:
+			assert urls['valid'], "Valid URLs is empty"
+		if "test" in train_valid_test:
+			assert urls['test'], "Test URLs is empty"
 
 		self.train_data_dir = urls['train']
 		self.test_data_dir = urls['test']
