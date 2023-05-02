@@ -127,8 +127,8 @@ class MultilingualTDM(pl.LightningDataModule):
 		if len(self.test_data_dir)>0:
 			self.test = self._create_pipeline(self.test_data_dir)
 
-		# if len(self.valid_data_dir)>0:
-		# 	self.valid = self._create_pipeline(self.valid_data_dir)
+		if len(self.valid_data_dir)>0:
+			self.valid = self._create_pipeline(self.valid_data_dir)
 
 	def _dataloader2(self, dataset):
 		service = [
