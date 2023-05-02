@@ -51,8 +51,8 @@ class CommonVoiceTDM(BaseTDM):
 	def create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
 			.list_files_by_fsspec()\
-			.shuffle()\
 			.sharding_filter()\
+			.filter(self.exclude_fn)\
 			.open_files_by_fsspec(mode='rb')\
 			.load_from_tar()\
 			.groupby(group_by_filename, group_size=2, guaranteed_group_size=2)\
@@ -67,20 +67,29 @@ class CommonVoiceTDM(BaseTDM):
 	def collate_fn(self, batch):
 		audios, labels = zip(*batch)
 
+		texts = [torch.tensor(self.tokeniser.encode(", ".join(l["text"]))) for l in labels]
+		genders = torch.tensor([label['gender'] for label in labels])
+		age = torch.tensor([label['age'] for label in labels])
 		mels = []
-		for a, l in zip(audios, labels):
+		for a in audios:
 			mel = librosa.feature.melspectrogram(y=a[0], sr=a[1], fmin=0, fmax=8000, n_mels=80, n_fft=1024, win_length=1024, hop_length=512)
 			mel = librosa.power_to_db(mel, ref=np.max)
 			mel = (mel+40)/40
 			mels.append(torch.tensor(mel, dtype=torch.float32).T)
 
-			l["text"] = torch.tensor(self.tokeniser.encode(", ".join(l["text"])))
-
 		mel_lengths = [mel.shape[0] for mel in mels]
 		mel_lengths = torch.tensor(mel_lengths)
-		text_lengths = [l["text"].size(0) for l in labels]
+		text_lengths = [text.size(0) for text in texts]
 		text_lengths = torch.tensor(text_lengths)
 
 		mels = pad_sequence(mels).permute(1,2,0).contiguous()
+		texts = pad_sequence(texts).T.contiguous()
 
-		return labels, mels, text_lengths, mel_lengths
+		new_labels = {
+			"texts": texts,
+			"gender": genders,
+			"age": age,
+			}
+
+		return new_labels, mels, text_lengths, mel_lengths
+	
