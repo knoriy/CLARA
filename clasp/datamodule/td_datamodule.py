@@ -30,7 +30,7 @@ class MultilingualTDM(pl.LightningDataModule):
 			root_data_path:str,#'s-laion-audio/webdataset_tar/' or '/fsx/knoriy/processed_datasets/', 
 			dataset_list:str,
 			exclude_list:Optional[str]=None,
-			batch_size:Optional[int]=None,
+			batch_size:Optional[int]=1,
 			num_workers:Optional[int]=0,
 			persistent_workers:Optional[bool]=True,
 			shuffle:Optional[bool]=True,
@@ -127,8 +127,8 @@ class MultilingualTDM(pl.LightningDataModule):
 		if len(self.test_data_dir)>0:
 			self.test = self._create_pipeline(self.test_data_dir)
 
-		if len(self.valid_data_dir)>0:
-			self.valid = self._create_pipeline(self.valid_data_dir)
+		# if len(self.valid_data_dir)>0:
+		# 	self.valid = self._create_pipeline(self.valid_data_dir)
 
 	def _dataloader2(self, dataset):
 		service = [
