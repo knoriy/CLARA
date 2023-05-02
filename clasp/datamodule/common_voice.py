@@ -50,7 +50,7 @@ class CommonVoiceTDM(BaseTDM):
 
 	def create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
-			.list_files_by_fsspec()\
+			.list_files_by_fsspec(masks=["*.tar"])\
 			.sharding_filter()\
 			.filter(self.exclude_fn)\
 			.open_files_by_fsspec(mode='rb')\
