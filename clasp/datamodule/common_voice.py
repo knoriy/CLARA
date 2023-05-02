@@ -38,8 +38,8 @@ class CommonVoiceTDM(BaseTDM):
 	def to_keys(self, data):
 		audio, labels  = data
 
-		labels['age'] = (labels['age'], _AGE_DICT.get(labels['age'], None))
-		labels['gender'] = (labels['gender'], _GENDER_DICT.get(labels['gender'], None))
+		labels['age'] = _AGE_DICT.get(labels['age'], None)
+		labels['gender'] = _GENDER_DICT.get(labels['gender'], None)
 
 		return audio, labels 
 	
