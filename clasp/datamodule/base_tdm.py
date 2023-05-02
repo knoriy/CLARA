@@ -22,6 +22,7 @@ class BaseTDM(pl.LightningDataModule, ABC):
 			num_workers:Optional[int]=0,
 			persistent_workers:Optional[bool]=True,
 			shuffle:Optional[bool]=True,
+			exclude_urls:Optional[list]=[],
 		):
 		super().__init__()
 
@@ -29,6 +30,8 @@ class BaseTDM(pl.LightningDataModule, ABC):
 		self.test_data_dir = test_urls
 		self.valid_data_dir = valid_urls
 		self.predict_data_dir = predict_urls
+
+		self.exclude_urls = exclude_urls
 
 		self.shuffle = shuffle
 		self.batch_size = batch_size
@@ -46,6 +49,11 @@ class BaseTDM(pl.LightningDataModule, ABC):
 	@abstractmethod
 	def collate_fn(self, data):
 		pass
+
+	def exclude_fn(self, url):
+		if url not in self.exclude_urls:
+			return True
+		return False
 
 	def setup(self, stage:Optional[str] = None):
 		if self.train_data_dir and len(self.train_data_dir)>0:
