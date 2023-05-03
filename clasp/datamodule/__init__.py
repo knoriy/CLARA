@@ -6,3 +6,4 @@ from .esc_50 import ESC50TDM
 from .vox_celeb import VoxCelebTDM
 from .emns import EMNSTDM
 from .common_voice import CommonVoiceTDM
+from .emov_db import EmovDBTDM
