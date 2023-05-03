@@ -1,0 +1,7 @@
+{
+    "amused": 0,
+    "anger": 1,
+    "disgusted": 2,
+    "neutral": 3,
+    "sleepy": 4
+}
