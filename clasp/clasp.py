@@ -35,12 +35,14 @@ class CLASP(nn.Module):
                 nhead = self.hparm.text_encoder_heads, 
                 batch_first=True,
                 )
+            # self.text_encoder = PerceiverIOEncoder(depth=5, dim=self.hparm.text_encoder_embedding, num_latents=1024)
+	    
 
         if self.audio_encoder == None:
             # self.audio_encoder = resnet18(1024)
             # self.audio_encoder = ResNeXt(5,12,1024, 2, 4)
-            # self.audio_encoder = WhisperAudioEncoder(80, 1024, 1, 1, batch_first=True)
-            self.audio_encoder = PerceiverIOEncoder(depth=5, dim=80, num_latents=1024)
+            self.audio_encoder = WhisperAudioEncoder(80, 1024, 1, 1, batch_first=True)
+            # self.audio_encoder = PerceiverIOEncoder(depth=5, dim=80, num_latents=1024)
 
         # ------------
         # Text Layers
@@ -49,6 +51,7 @@ class CLASP(nn.Module):
         self.positional_embedding = PositionalEncoding(self.hparm.text_encoder_embedding)
         self.ln_final = LayerNorm(self.hparm.text_encoder_width)
         self.text_transform = MLPLayers(units=[1024,1024], dropout=0.1)
+        self.text_fc1 = nn.Linear(1024, 1024)
 
         # ------------
         # Audio Layers
@@ -65,12 +68,16 @@ class CLASP(nn.Module):
     def encode_text(self, text:torch.Tensor):
         x = self.text_embedding(text)
         x = self.positional_embedding(x)
-        # x = x.permute(1, 0, 2)  # NLD -> LND
+        # x = x.permute(0,2,1) # (batch, seq, dim) -> (batch, dim, seq)
         x = self.text_encoder(x)
-        # x = x.permute(1, 0, 2)  # LND -> NLD
+        # x = x.permute(0,2,1) # (batch, dim, seq) -> (batch, seq, dim)
         x = self.ln_final(x)
 
-        x = torch.mean(x, 1)
+        x1 = torch.mean(x, 1)
+        x2, _ = torch.max(x, 1)
+        x = x1 + x2
+
+        x = F.leaky_relu(self.text_fc1(x))
 
         return x
 
