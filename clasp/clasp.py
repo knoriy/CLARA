@@ -8,7 +8,7 @@ import numpy as np
 
 from typing import Tuple, Union, Callable, Optional
 from encoders.text_encoders import SimpleTransformer 
-from encoders.audio_encoders import WhisperAudioEncoder, SimpleCNN, SimpleCNNLarge, Cnn1D10, Cnn1D12, resnet18, ResNeXt
+from encoders.audio_encoders import *
 from encoders.modules import PositionalEncoding, LayerNorm, MLPLayers
 from loss import CLAPLoss, CLIPLoss
 
@@ -37,13 +37,10 @@ class CLASP(nn.Module):
                 )
 
         if self.audio_encoder == None:
-            # self.audio_encoder = SimpleCNN(80, 1024)
-            # self.audio_encoder = SimpleCNNLarge(80, 1024)
-            # self.audio_encoder = Cnn1D10(80, 1024)
-            # self.audio_encoder = Cnn1D12(80, 1024)
             # self.audio_encoder = resnet18(1024)
-            self.audio_encoder = ResNeXt(5,12,1024, 2, 4)
+            # self.audio_encoder = ResNeXt(5,12,1024, 2, 4)
             # self.audio_encoder = WhisperAudioEncoder(80, 1024, 1, 1, batch_first=True)
+            self.audio_encoder = PerceiverIOEncoder(depth=5, dim=80, num_latents=1024)
 
         # ------------
         # Text Layers
