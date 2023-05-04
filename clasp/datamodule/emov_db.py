@@ -1,9 +1,6 @@
 import io
 import json
-from typing import Optional
 import soundfile
-import librosa
-import numpy as np
 
 import torch
 import torchdata
@@ -12,6 +9,9 @@ from torch.nn.utils.rnn import pad_sequence
 # from .base_tdm import BaseTDM
 from datamodule.base_tdm import BaseTDM, group_by_filename
 from text.tokeniser import Tokeniser # from text.whisper.tokenizer import get_tokenizer
+
+from .utils import get_log_melspec
+
 
 _EMOTION_DICT = {"angry": 0,"disgusted": 1,"amused": 2,"sleepy": 3,"neutral": 4}
 _GENDER_DICT = {"male": 0,"male": 0, "female": 1, "females": 1}
@@ -62,15 +62,11 @@ class EmovDBTDM(BaseTDM):
 		texts = [torch.tensor(self.tokeniser.encode(", ".join(l["text"]))) for l in labels]
 		genders = torch.tensor([label['gender'] for label in labels])
 		emotion = torch.tensor([label['emotion'] for label in labels])
-		mels = []
-		for a in audios:
-			mel = librosa.feature.melspectrogram(y=a[0], sr=a[1], fmin=0, fmax=8000, n_mels=80, n_fft=1024, win_length=1024, hop_length=512)
-			mel = librosa.power_to_db(mel, ref=np.max)
-			mel = (mel+40)/40
-			mels.append(torch.tensor(mel, dtype=torch.float32).T)
 
+		mels = [get_log_melspec(a[0], a[1]) for a in audios]
 		mel_lengths = [mel.shape[0] for mel in mels]
 		mel_lengths = torch.tensor(mel_lengths)
+		
 		text_lengths = [text.size(0) for text in texts]
 		text_lengths = torch.tensor(text_lengths)
 

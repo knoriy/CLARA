@@ -1,13 +1,12 @@
 import io
 import soundfile
-import librosa
-import numpy as np
 
 import torch
 import torchdata
 from torch.nn.utils.rnn import pad_sequence
 
 from .base_tdm import BaseTDM
+from .utils import get_log_melspec
 
 
 class ESC50TDM(BaseTDM):
@@ -30,12 +29,7 @@ class ESC50TDM(BaseTDM):
 		audios, labels = zip(*batch)
 		labels = torch.stack(labels)
 
-		mels = []
-		for a in audios:
-			mel = librosa.feature.melspectrogram(y=a[0], sr=a[1], fmin=0, fmax=8000, n_mels=80, n_fft=1024, win_length=1024, hop_length=512)
-			mel = librosa.power_to_db(mel, ref=np.max)
-			mel = (mel+40)/40
-			mels.append(torch.tensor(mel, dtype=torch.float32).T)
+		mels = [get_log_melspec(a[0], a[1]) for a in audios]
 
 		mel_lengths = [mel.shape[0] for mel in mels]
 		mel_lengths = torch.tensor(mel_lengths)
