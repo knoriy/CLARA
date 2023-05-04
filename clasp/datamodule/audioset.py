@@ -13,9 +13,10 @@ from text.tokeniser import Tokeniser # from text.whisper.tokenizer import get_to
 from .utils import get_log_melspec
 
 class AudioSetTDM(BaseTDM):
-	def __init__(self, *args, **kwargs):
+	def __init__(self, classes, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self.tokeniser = Tokeniser()
+		self.classes = classes
 
 	def to_sampels(self, data):
 		a, t = data
@@ -23,7 +24,15 @@ class AudioSetTDM(BaseTDM):
 	
 	def to_keys(self, data):
 		audio, labels  = data
-		return audio, labels 
+
+		classes = [self.classes.get(l) for l in labels["original_data"]["class_names"]]
+
+		new_labels = {
+			"text": labels["text"],
+			"labels": classes,
+		}
+
+		return audio, new_labels 
 
 	def create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
@@ -34,15 +43,17 @@ class AudioSetTDM(BaseTDM):
 			.load_from_tar()\
 			.groupby(group_by_filename, group_size=2, guaranteed_group_size=2)\
 			.map(self.to_sampels)\
-			.filter(self.filter_fn)\
 			.map(self.to_keys)\
-			# .batch(self.batch_size) \
-			# .map(self.collate_fn)
+			.batch(self.batch_size) \
+			.map(self.collate_fn)
 
 		return datapipe
 
 	def collate_fn(self, batch):
 		audios, labels = zip(*batch)
+
+		classes = [torch.tensor(l['labels']) for l in labels]
+		texts = [torch.tensor(self.tokeniser.encode(", ".join(l["text"]))) for l in labels]
 
 		mels = [get_log_melspec(a[0], a[1]) for a in audios]
 
@@ -56,7 +67,7 @@ class AudioSetTDM(BaseTDM):
 
 		new_labels = {
 			"texts": texts,
+			"classes": classes,
 			}
 
 		return new_labels, mels, text_lengths, mel_lengths
-	

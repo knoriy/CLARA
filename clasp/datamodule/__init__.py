@@ -7,3 +7,4 @@ from .vox_celeb import VoxCelebTDM
 from .emns import EMNSTDM
 from .common_voice import CommonVoiceTDM
 from .emov_db import EmovDBTDM
+from .audioset import AudioSetTDM
