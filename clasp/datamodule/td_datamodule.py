@@ -102,14 +102,14 @@ class MultilingualTDM(pl.LightningDataModule):
 	def _create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
 			.shuffle()\
-			.sharding_filter()\
 			.open_files_by_fsspec(mode='rb')\
 			.load_from_tar() \
 			.batch(2) \
 			.shuffle(buffer_size=self.batch_size)\
+			.sharding_filter()\
 			.map(self.to_sampels) \
-			.batch(self.batch_size) \
-			.map(self.collate_fn)
+			# .batch(self.batch_size) \
+			# .map(self.collate_fn)
 		
 		return datapipe
 
@@ -135,19 +135,19 @@ class MultilingualTDM(pl.LightningDataModule):
 		return DataLoader(dataset, num_workers=self.num_workers, batch_size=self.batch_size, collate_fn=self.collate_fn)
 
 	def train_dataloader(self):
-		self.train_dl = self._dataloader2(self.train)
+		self.train_dl = self._dataloader(self.train)
 		return self.train_dl
 
 	def val_dataloader(self):
-		self.val_dl = self._dataloader2(self.valid)
+		self.val_dl = self._dataloader(self.valid)
 		return self.val_dl
 
 	def test_dataloader(self):
-		self.test_dl = self._dataloader2(self.test)
+		self.test_dl = self._dataloader(self.test)
 		return self.test_dl
 
 	def predict_dataloader(self):
-		self.predict_dl = self._dataloader2(self.valid)
+		self.predict_dl = self._dataloader(self.valid)
 		return self.predict_dl
 	
 	def tokeniser_encode(self, text:str, lanuage:str='en'):

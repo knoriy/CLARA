@@ -45,10 +45,11 @@ class EmovDBTDM(BaseTDM):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
 			.list_files_by_fsspec(masks=["*.tar"])\
 			.filter(self.exclude_fn)\
-			.sharding_filter()\
 			.open_files_by_fsspec(mode='rb')\
 			.load_from_tar()\
 			.groupby(group_by_filename, group_size=2, guaranteed_group_size=2)\
+			.shuffle(buffer_size=1000)\
+			.sharding_filter()\
 			.map(self.to_sampels)\
 			.map(self.to_keys)\
 			# .batch(self.batch_size) \
