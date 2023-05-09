@@ -1,0 +1,6 @@
+plugins:
+  - class_path: lightning_fabric.plugins.environments.SLURMEnvironment
+    init_args:
+      auto_requeue: True
+      requeue_signal: SIGTERM
+      # requeue_signal: SIGUSR1
