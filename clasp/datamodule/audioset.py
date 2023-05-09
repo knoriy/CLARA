@@ -44,8 +44,8 @@ class AudioSetTDM(BaseTDM):
 			.groupby(group_by_filename, group_size=2, guaranteed_group_size=2)\
 			.map(self.to_sampels)\
 			.map(self.to_keys)\
-			.batch(self.batch_size) \
-			.map(self.collate_fn)
+			# .batch(self.batch_size) \
+			# .map(self.collate_fn)
 
 		return datapipe
 
