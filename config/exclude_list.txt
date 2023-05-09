@@ -52,3 +52,11 @@ mswc/rm-vallader/
 mswc/sv-SE/
 mswc/cnh/
 mswc/zh-CN/
+
+#tensored datasets
+audioset/train/114.tar
+audioset/train/1026.tar
+audioset/train/1044.tar
+audioset/train/1048.tar
+audioset/train/1539.tar
+audioset/train/1100.tar
