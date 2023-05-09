@@ -67,9 +67,9 @@ class CLASP(nn.Module):
     def encode_text(self, text:torch.Tensor):
         x = self.text_embedding(text)
         x = self.positional_embedding(x)
-        x = x.permute(0,2,1) # (batch, seq, dim) -> (batch, dim, seq)
+        # x = x.permute(0,2,1) # (batch, seq, dim) -> (batch, dim, seq)
         x = self.text_encoder(x)
-        x = x.permute(0,2,1) # (batch, dim, seq) -> (batch, seq, dim)
+        # x = x.permute(0,2,1) # (batch, dim, seq) -> (batch, seq, dim)
         x = self.ln_final(x)
 
         x1 = torch.mean(x, 1)
