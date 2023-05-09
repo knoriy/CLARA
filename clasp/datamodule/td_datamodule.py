@@ -57,7 +57,7 @@ class MultilingualTDM(pl.LightningDataModule):
 		
 		if root_data_path.startswith('s3://'):
 			root_data_path = root_data_path.replace('s3://', '')
-			urls = get_s3_paths(
+			self.urls = get_s3_paths(
 				base_path			= root_data_path,
 				train_valid_test	= train_valid_test,
 				dataset_names		= dataset_names, 
@@ -67,7 +67,7 @@ class MultilingualTDM(pl.LightningDataModule):
 				recache				= recache
 				)
 		else:
-			urls = get_local_paths(
+			self.urls = get_local_paths(
 				base_path			= root_data_path,
 				train_valid_test	= train_valid_test,
 				dataset_names		= dataset_names, 
@@ -78,21 +78,14 @@ class MultilingualTDM(pl.LightningDataModule):
 				)
 
 		pl_logger.info(f"Urls found: \
-			\n\tTrain: {len(urls['train'])} \
-			\n\tValid: {len(urls['valid'])} \
-			\n\tTest: {len(urls['test'])}"
+			\n\tTrain: {len(self.urls.get('train', None))} \
+			\n\tValid: {len(self.urls.get('valid', None))} \
+			\n\tTest: {len(self.urls.get('test', None))}"
 		)
 		
-		if "train" in train_valid_test:
-			assert urls['train'], "Train URLs is empty"
-		if "valid" in train_valid_test:
-			assert urls['valid'], "Valid URLs is empty"
-		if "test" in train_valid_test:
-			assert urls['test'], "Test URLs is empty"
-
-		self.train_data_dir = urls['train']
-		self.test_data_dir = urls['test']
-		self.valid_data_dir = urls['valid']
+		self.train_data_dir = self.urls.get('train', None)
+		self.test_data_dir = self.urls.get('test', None)
+		self.valid_data_dir = self.urls.get('valid', None)
 
 		self.shuffle = shuffle
 		self.batch_size = batch_size
