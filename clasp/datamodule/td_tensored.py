@@ -25,8 +25,8 @@ class TensoredTDM(MultilingualTDM):
 			.open_files_by_fsspec(mode='rb')\
 			.load_from_tar() \
 			.batch(2) \
-			.sharding_filter()\
 			.shuffle(buffer_size=self.batch_size)\
+			.sharding_filter()\
 			.map(self.to_sampels) \
 			# .batch(self.batch_size) \
 			# .map(self.collate_fn)
