@@ -35,4 +35,4 @@ srun /fsx/home-knoriy/miniconda3/envs/clasp_2/bin/python /fsx/knoriy/code/CLASP/
     --model ./config/config/model/pl_clasp.yaml \
     --data ./config/config/data/tensored.yaml \
     --trainer.num_nodes $SLURM_JOB_NUM_NODES \
-    --data.num_workers 48 \
+    --data.num_workers 12 \
