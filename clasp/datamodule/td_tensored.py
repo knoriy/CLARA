@@ -7,6 +7,7 @@ import torchdata
 from typing import Optional
 
 from .td_datamodule import MultilingualTDM
+from datamodule.base_tdm import group_by_filename
 
 class TensoredTDM(MultilingualTDM):
 	def __init__(self, connection_timeout:Optional[int]=0, read_timeout:Optional[int]=0, *args, **kwargs):
@@ -24,9 +25,9 @@ class TensoredTDM(MultilingualTDM):
 			.shuffle()\
 			.open_files_by_fsspec(mode='rb')\
 			.load_from_tar() \
-			.batch(2) \
-			.shuffle(buffer_size=self.batch_size)\
+			.groupby(group_by_filename, group_size=2, guaranteed_group_size=2)\
 			.sharding_filter()\
+			.shuffle(buffer_size=self.batch_size)\
 			.map(self.to_sampels) \
 			# .batch(self.batch_size) \
 			# .map(self.collate_fn)
