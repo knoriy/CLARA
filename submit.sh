@@ -2,8 +2,8 @@
 #SBATCH --partition=g40
 #SBATCH --job-name=base_4
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=4
-#SBATCH --gpus-per-node=4
+#SBATCH --ntasks-per-node=8
+#SBATCH --gpus-per-node=8
 #SBATCH --cpus-per-task=12
 #SBATCH --account laion
 #SBATCH --output=logs/outs/%x_%j.out
@@ -36,3 +36,4 @@ srun /fsx/home-knoriy/miniconda3/envs/clasp_2/bin/python /fsx/knoriy/code/CLASP/
     --data ./config/config/data/tensored.yaml \
     --trainer.num_nodes $SLURM_JOB_NUM_NODES \
     --data.num_workers 12 \
+    --trainer.logger.name AudioSet_90m_T-Pio \
