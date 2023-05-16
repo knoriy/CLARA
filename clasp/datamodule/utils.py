@@ -1,3 +1,5 @@
+import os
+import tempfile
 import librosa
 import numpy as np
 import torch
@@ -7,3 +9,7 @@ def get_log_melspec(audio, sr, n_mels=80, n_fft=1024, hop_length=512, win_length
     mel = librosa.power_to_db(mel, ref=np.max)
     mel = (mel+40)/40
     return torch.tensor(mel, dtype=torch.float32).T
+
+def filepath_fn(url):
+	temp_dir = tempfile.gettempdir()
+	return os.path.join(temp_dir, "CLASP", os.path.basename(url))
