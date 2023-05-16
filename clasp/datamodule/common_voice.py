@@ -10,9 +10,9 @@ import torchdata
 from torch.nn.utils.rnn import pad_sequence
 
 # from .base_tdm import BaseTDM
-from datamodule.base_tdm import BaseTDM, group_by_filename
+from datamodule.base_tdm import BaseTDM
 from text.tokeniser import Tokeniser # from text.whisper.tokenizer import get_tokenizer
-from .utils import get_log_melspec
+from .utils import get_log_melspec, group_by_filename
 
 _AGE_DICT = {"teens":0, "twenties": 1, "thirties": 2, "fourties": 3, "fifties": 4, "sixties": 5, "seventies": 6, "eighties": 7, "nineties": 8, "hundreds": 9}
 _GENDER_DICT = {"male": 0,"female": 1}

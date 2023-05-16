@@ -7,7 +7,7 @@ import torchdata
 from typing import Optional
 
 from .td_datamodule import MultilingualTDM
-from datamodule.base_tdm import group_by_filename
+from .utils import group_by_filename
 
 class TensoredTDM(MultilingualTDM):
 	def __init__(self, connection_timeout:Optional[int]=0, read_timeout:Optional[int]=0, *args, **kwargs):

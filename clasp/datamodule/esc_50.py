@@ -1,24 +1,31 @@
 import io
 import soundfile
+import json
 
 import torch
 import torchdata
 from torch.nn.utils.rnn import pad_sequence
 
 from .base_tdm import BaseTDM
-from .utils import get_log_melspec
+from .utils import get_log_melspec, group_by_filename
 
 
 class ESC50TDM(BaseTDM):
+	def __init__(self, classes, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.classes = classes
+
 	def to_sampels(self, data):
-		return soundfile.read(io.BytesIO(data[1].read())), torch.tensor(int(data[0].split('/')[-1].split('-')[-1].split('.')[0]))
+		return soundfile.read(io.BytesIO(data[0][1].read())), torch.tensor(self.classes.get(json.load(data[1][1])['tag'][0]))
 
 	def create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
-			.list_files()\
+		    .list_files_by_fsspec(masks=["*.tar"])\
 			.shuffle()\
 			.sharding_filter()\
-			.open_files(mode='rb')\
+			.open_files_by_fsspec(mode='rb')\
+			.load_from_tar()\
+			.groupby(group_by_filename, group_size=2, guaranteed_group_size=2)\
 			.map(self.to_sampels) \
 			# .batch(self.batch_size) \
 			# .map(self.collate_fn)

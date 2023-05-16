@@ -130,7 +130,7 @@ DATA
 
 *.out
 *.ckpt
-test.ipynb
+notebook.ipynb
 test.py
 .archive
 checkpoints/

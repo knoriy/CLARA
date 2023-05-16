@@ -98,6 +98,3 @@ class BaseTDM(pl.LightningDataModule, ABC):
 		if not self.predict_data_dir:
 			raise MisconfigurationException('predict_urls not set.')
 		return self._dataloader(self.predict)
-
-def group_by_filename(x):
-	return os.path.basename(x[0]).split(".")[0]
