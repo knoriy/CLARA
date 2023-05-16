@@ -4,8 +4,8 @@ import torch
 import torchdata
 from torch.nn.utils.rnn import pad_sequence
 
-from .base_tdm import BaseTDM
-from .utils import get_log_melspec
+from datamodule.base_tdm import BaseTDM
+from datamodule.utils import get_log_melspec
 
 
 def gender_to_int(gender):
@@ -25,10 +25,11 @@ class VoxCelebTDM(BaseTDM):
 
 	def create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
-			.list_files(masks=["*.flac"], recursive=True)\
+		    .list_files_by_fsspec(masks=["*.tar"])\
 			.shuffle()\
 			.sharding_filter()\
-			.open_files(mode='rb')\
+			.open_files_by_fsspec(mode='rb')\
+			.load_from_tar()\
 			.map(self.to_sampels) \
 			# .batch(self.batch_size) \
 			# .map(self.collate_fn)
