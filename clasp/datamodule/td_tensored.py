@@ -7,7 +7,7 @@ import torchdata
 from typing import Optional
 
 from .td_datamodule import MultilingualTDM
-from .utils import group_by_filename, filepath_fn
+from .utils import group_by_filename
 
 class TensoredTDM(MultilingualTDM):
 	def __init__(self, connection_timeout:Optional[int]=0, read_timeout:Optional[int]=0, *args, **kwargs):
@@ -23,11 +23,7 @@ class TensoredTDM(MultilingualTDM):
 	def _create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
 			.shuffle()\
-			.on_disk_cache(filepath_fn=filepath_fn)\
 			.open_files_by_fsspec(mode='rb')\
-			.end_caching(mode="wb", same_filepath_fn=True)\
-		
-		datapipe = datapipe.open_files(mode='rb')\
 			.load_from_tar() \
 			.groupby(group_by_filename, group_size=2, guaranteed_group_size=2)\
 			.sharding_filter()\
