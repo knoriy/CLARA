@@ -29,10 +29,10 @@ class CLASP(nn.Module):
         
         if self.text_encoder == None:
             self.text_encoder = SimpleTransformer(
-                in_channels = self.hparm.text_encoder_width,
-                out_channels = self.hparm.text_encoder_embedding,
-                num_layers = self.hparm.text_encoder_layers,
-                nhead = self.hparm.text_encoder_heads, 
+                in_channels = 1024,
+                out_channels = 1024,
+                num_layers = 10,
+                nhead = 4, 
                 batch_first=True,
                 )
             # self.text_encoder = PerceiverIOEncoder(depth=5, dim=self.hparm.text_encoder_embedding, num_latents=1024)
@@ -41,7 +41,7 @@ class CLASP(nn.Module):
             # self.audio_encoder = resnet18(1024)
             # self.audio_encoder = ResNeXt(5,12,1024, 2, 4)
             # self.audio_encoder = WhisperAudioEncoder(80, 1024, 1, 1)
-            self.audio_encoder = PerceiverIOEncoder(depth=5, dim=80, num_latents=1024)
+            self.audio_encoder = PerceiverIOEncoder(depth=50, dim=80, num_latents=1024, cross_heads=10)
 
         # ------------
         # Text Layers
