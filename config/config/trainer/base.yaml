@@ -26,3 +26,4 @@ check_val_every_n_epoch: 1
 log_every_n_steps: null
 accumulate_grad_batches: 10
 gradient_clip_val: 1.0
+# profiler: pytorch_lightning.profilers.AdvancedProfiler
