@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --partition=g40
 #SBATCH --job-name=base_4
-#SBATCH --nodes=2
+#SBATCH --nodes=4
 #SBATCH --ntasks-per-node=8
 #SBATCH --gpus-per-node=8
 #SBATCH --cpus-per-task=12
@@ -12,8 +12,6 @@
 #SBATCH --exclude ip-26-0-134-43,ip-26-0-131-108,ip-26-0-140-150,ip-26-0-143-39
 
 module load openmpi
-module load cuda/11.7
-
 
 srun /fsx/home-knoriy/miniconda3/envs/clasp_2/bin/python /fsx/knoriy/code/CLASP/clasp/train.py fit\
     --config ./config/config/base.yaml \
@@ -22,5 +20,7 @@ srun /fsx/home-knoriy/miniconda3/envs/clasp_2/bin/python /fsx/knoriy/code/CLASP/
     --model ./config/config/model/pl_clasp.yaml \
     --data ./config/config/data/tensored.yaml \
     --trainer.num_nodes $SLURM_JOB_NUM_NODES \
-    --data.num_workers 16 \
-    --trainer.logger.name AudioSet_90m_T-Pio \
+    --data.num_workers 6 \
+    --data.batch_size 8 \
+    --trainer.logger.name audioset_T-Pio_350M \
+    --trainer.max_epochs 50 \
