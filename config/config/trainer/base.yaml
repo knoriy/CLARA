@@ -24,6 +24,6 @@ overfit_batches: 0.0
 val_check_interval: null
 check_val_every_n_epoch: 1
 log_every_n_steps: null
-accumulate_grad_batches: 10
+accumulate_grad_batches: 5
 gradient_clip_val: 1.0
 # profiler: pytorch_lightning.profilers.AdvancedProfiler
