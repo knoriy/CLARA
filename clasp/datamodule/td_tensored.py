@@ -12,7 +12,6 @@ from .utils import group_by_filename
 class TensoredTDM(MultilingualTDM):
 	def __init__(self, connection_timeout:Optional[int]=0, read_timeout:Optional[int]=0, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		warnings.warn("Connection timeout and read timeout are not implemented yet.")
 		self.connection_timeout = connection_timeout
 		self.read_timeout = read_timeout
 
@@ -23,11 +22,11 @@ class TensoredTDM(MultilingualTDM):
 	def _create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
 			.shuffle()\
+			.sharding_filter()\
 			.open_files_by_fsspec(mode='rb')\
 			.load_from_tar() \
 			.groupby(group_by_filename, group_size=2, guaranteed_group_size=2)\
-			.sharding_filter()\
-			.shuffle(buffer_size=self.batch_size)\
+			.shuffle(buffer_size=100)\
 			.map(self.to_sampels) \
 			# .batch(self.batch_size) \
 			# .map(self.collate_fn)
