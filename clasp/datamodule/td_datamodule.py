@@ -24,6 +24,7 @@ pl_logger = logging.getLogger('pytorch_lightning')
 from text.whisper.normalizers import EnglishTextNormalizer
 from text.tokeniser import Tokeniser # from text.whisper.tokenizer import get_tokenizer
 from utils import get_s3_paths, get_local_paths, get_lists 
+from .utils import Boto3FileOpenerIterDataPipe
 
 class MultilingualTDM(pl.LightningDataModule):
 	def __init__(self, 
@@ -66,16 +67,6 @@ class MultilingualTDM(pl.LightningDataModule):
 				use_cache			= use_cache,
 				recache				= recache
 				)
-		else:
-			self.urls = get_local_paths(
-				base_path			= root_data_path,
-				train_valid_test	= train_valid_test,
-				dataset_names		= dataset_names, 
-				exclude				= exclude,
-				cache_path			= cache_path,
-				use_cache			= use_cache,
-				recache				= recache
-				)
 
 		pl_logger.info(f"Urls found: \
 			\n\tTrain: {len(self.urls.get('train', None))} \
@@ -92,8 +83,8 @@ class MultilingualTDM(pl.LightningDataModule):
 		self.num_workers = num_workers
 		self.persistent_workers = persistent_workers
 
-		self.cleaner = EnglishTextNormalizer()
-		self.tokenizer = Tokeniser() # self.tokenizer = get_tokenizer(True)
+		# self.cleaner = EnglishTextNormalizer()
+		self.tokenizer = Tokeniser()
 
 	def to_sampels(self, data):
 		a, t = data
@@ -102,11 +93,12 @@ class MultilingualTDM(pl.LightningDataModule):
 	def _create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
 			.shuffle()\
-			.open_files_by_fsspec(mode='rb')\
+			.sharding_filter()\
+
+		datapipe = Boto3FileOpenerIterDataPipe(datapipe, mode='rb')\
 			.load_from_tar() \
 			.batch(2) \
-			.shuffle(buffer_size=self.batch_size)\
-			.sharding_filter()\
+			.shuffle(buffer_size=100)\
 			.map(self.to_sampels) \
 			# .batch(self.batch_size) \
 			# .map(self.collate_fn)
@@ -132,7 +124,7 @@ class MultilingualTDM(pl.LightningDataModule):
 		return DataLoader2(dataset, reading_service=reading_service)
 	
 	def _dataloader(self, dataset):
-		return DataLoader(dataset, num_workers=self.num_workers, batch_size=self.batch_size, collate_fn=self.collate_fn)
+		return DataLoader(dataset, num_workers=self.num_workers, batch_size=self.batch_size, collate_fn=self.collate_fn, pin_memory=True)
 
 	def train_dataloader(self):
 		self.train_dl = self._dataloader(self.train)
@@ -151,7 +143,7 @@ class MultilingualTDM(pl.LightningDataModule):
 		return self.predict_dl
 	
 	def tokeniser_encode(self, text:str, lanuage:str='en'):
-		return self.tokenizer.encode(self.cleaner(text), language=lanuage)
+		return self.tokenizer.encode(text, language=lanuage)
 	
 	def tokeniser_decode(self, tensor:torch.Tensor):
 		return self.tokenizer.decode(tensor)

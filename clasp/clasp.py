@@ -12,7 +12,7 @@ from encoders.audio_encoders import *
 from encoders.modules import PositionalEncoding, LayerNorm, MLPLayers
 from loss import CLAPLoss, CLIPLoss
 
-from scheduler import CosineAnnealingWithWarmup
+from scheduler import CosineAnnealingWarmupRestarts
 from utils.accuracy import Accuracy, accuracy
 
 
@@ -29,9 +29,9 @@ class CLASP(nn.Module):
         
         if self.text_encoder == None:
             self.text_encoder = SimpleTransformer(
-                in_channels = 1024,
-                out_channels = 1024,
-                num_layers = 10,
+                in_channels = 512,
+                out_channels = 512,
+                num_layers = 1,
                 nhead = 4, 
                 batch_first=True,
                 )
@@ -41,22 +41,23 @@ class CLASP(nn.Module):
             # self.audio_encoder = resnet18(1024)
             # self.audio_encoder = ResNeXt(5,12,1024, 2, 4)
             # self.audio_encoder = WhisperAudioEncoder(80, 1024, 1, 1)
-            self.audio_encoder = PerceiverIOEncoder(depth=50, dim=80, num_latents=1024, cross_heads=10)
+            self.audio_encoder = PerceiverIOEncoder(depth=5, dim=80, num_latents=512)
 
         # ------------
         # Text Layers
         # ------------
-        self.text_embedding = nn.Embedding(self.hparm.vocab_size, self.hparm.text_encoder_embedding)
-        self.positional_embedding = PositionalEncoding(self.hparm.text_encoder_embedding)
-        self.ln_final = LayerNorm(self.hparm.text_encoder_width)
-        self.text_transform = MLPLayers(units=[1024,1024], dropout=0.1)
-        self.text_fc1 = nn.Linear(1024, 1024)
+        self.text_embedding = nn.Embedding(self.hparm.vocab_size, 512)
+        # self.positional_embedding = PositionalEncoding(512)
+        self.text_layer_norm = LayerNorm(512)
+        self.text_transform = MLPLayers(units=[512,512], dropout=0.1)
+        self.text_fc1 = nn.Linear(512, 512)
 
         # ------------
         # Audio Layers
         # ------------
-        self.audio_fc1 = nn.Linear(1024, 1024)
-        self.audio_transform = MLPLayers(units=[1024,1024], dropout=0.1)
+        self.audio_fc1 = nn.Linear(512, 512)
+        self.audio_transform = MLPLayers(units=[512,512], dropout=0.1)
+        self.audio_layer_norm = LayerNorm(512)
 
         # ------------
         # Other
@@ -66,11 +67,11 @@ class CLASP(nn.Module):
 
     def encode_text(self, text:torch.Tensor):
         x = self.text_embedding(text)
-        x = self.positional_embedding(x)
+        # x = self.positional_embedding(x)
         # x = x.permute(0,2,1) # (batch, seq, dim) -> (batch, dim, seq)
         x = self.text_encoder(x)
         # x = x.permute(0,2,1) # (batch, dim, seq) -> (batch, seq, dim)
-        x = self.ln_final(x)
+        x = self.text_layer_norm(x)
 
         x1 = torch.mean(x, 1)
         x2, _ = torch.max(x, 1)
@@ -82,6 +83,7 @@ class CLASP(nn.Module):
 
     def encode_audio(self, audio:torch.Tensor):
         x = self.audio_encoder(audio)
+        x = self.audio_layer_norm(x)
 
         x1 = torch.mean(x, dim=2)
         x2, _ = torch.max(x, dim=2)
@@ -93,17 +95,17 @@ class CLASP(nn.Module):
 
     def forward(self, text:torch.Tensor, audio:torch.Tensor):
         text_features = self.encode_text(text)
-        text_features = F.normalize(text_features, dim=-1)
-
         audio_features = self.encode_audio(audio)
-        audio_features = F.normalize(audio_features, dim=-1)
 
         # Projection
         text_features = self.text_transform(text_features)
         audio_features = self.audio_transform(audio_features)
 
-        return text_features, audio_features, self.text_tempeture.exp(), self.audio_tempeture.exp()
+        text_features = F.normalize(text_features, dim=-1)
+        audio_features = F.normalize(audio_features, dim=-1)
 
+        return text_features, audio_features, self.text_tempeture.exp(), self.audio_tempeture.exp()
+    
 class PLCLASP(pl.LightningModule):
 	def __init__(	self, 
 					hidden_dim:int=128, 
@@ -142,14 +144,12 @@ class PLCLASP(pl.LightningModule):
 		return self.model.text_tempeture.exp(), self.model.audio_tempeture.exp()
 
 	def training_step(self, batch, batch_idx):
-		texts, mels, _, _  = batch # torch.size([*, 123]), torch.size([*,80,1234])
-
-		model_out = self(texts, mels)
-		loss = self.loss_fn(*model_out)
+		model_out, loss, acc = self._shared_eval_step(batch, batch_idx)
 		
 		self.log('text_temp', model_out[2])
 		self.log('audio_temp', model_out[3])
-		self.log('train_loss', loss, prog_bar=True, sync_dist=True)
+		self.log('train_loss', loss, prog_bar=True)
+		self.log('train_acc', acc, prog_bar=True)
 
 		return loss
 
@@ -157,20 +157,22 @@ class PLCLASP(pl.LightningModule):
 		_, loss, acc = self._shared_eval_step(batch, batch_idx)
 
 		metrics = {"val_acc": acc, "val_loss": loss}
-		self.log_dict(metrics, prog_bar=True, sync_dist=True)
+		self.log_dict(metrics, prog_bar=True)
+		return metrics
 
 	def test_step(self, batch, batch_idx):
 		_, loss, acc = self._shared_eval_step(batch, batch_idx)
 
 		metrics = {"test_acc": acc, "test_loss": loss}
-		self.log_dict(metrics, sync_dist=True)
+		self.log_dict(metrics)
 
 	def _shared_eval_step(self, batch, batch_idx):
 		texts, mels, _, _  = batch # torch.size([*, 123]), torch.size([*,80,1234])
 		model_out = self(texts, mels)
 
 		loss = self.loss_fn(*model_out)
-		acc = self.acc_fn(*model_out)[0] / mels.size(0)
+		# acc = self.acc_fn(*model_out)[0] / mels.size(0)
+		acc = torch.rand(1, requires_grad=True)
 
 		return model_out, loss, acc
 
@@ -210,24 +212,22 @@ class LinearProbeCLASP(pl.LightningModule):
 		return self.classifier(x)
 
 	def training_step(self, batch, batch_idx):
-		labels, mels, _, _  = batch
-		y_hat = self(mels)
-		loss = F.cross_entropy(y_hat, labels)
-		self.log('train_loss', loss, prog_bar=True, sync_dist=True)
+		_, loss, acc = self._shared_eval_step(batch, batch_idx)
+		self.log('train_loss', loss, prog_bar=True)
 		return loss
 
 	def validation_step(self, batch, batch_idx):
 		_, loss, acc = self._shared_eval_step(batch, batch_idx)
 		metrics = {"val_acc": acc, "val_loss": loss}
-		self.log_dict(metrics, prog_bar=True, sync_dist=True)
+		self.log_dict(metrics, prog_bar=True)
 
 	def test_step(self, batch, batch_idx):
 		_, loss, acc = self._shared_eval_step(batch, batch_idx)
 		metrics = {"test_acc": acc, "test_loss": loss}
-		self.log_dict(metrics, sync_dist=True)
+		self.log_dict(metrics)
 
 	def _shared_eval_step(self, batch, batch_idx):
-		labels, mels, _, _  = batch
+		labels, mels = batch
 		y_hat = self(mels)
 
 		loss = F.cross_entropy(y_hat, labels)
@@ -241,7 +241,7 @@ class LinearProbeCLASP(pl.LightningModule):
 def get_optimiser(self):
 	optimizer = torch.optim.AdamW(self.parameters(), lr=self.hparams.learning_rate)
 	lr_scheduler = {
-		'scheduler': CosineAnnealingWithWarmup(optimizer=optimizer, 
+		'scheduler': CosineAnnealingWarmupRestarts(optimizer=optimizer, 
 												T_max=self.hparams.LR_sheduler_T_max, 
 												warmup_steps=self.hparams.LR_sheduler_warmup_steps, 
 												max_lr=self.hparams.learning_rate, 

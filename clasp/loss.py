@@ -2,6 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+import logging
+pl_logger = logging.getLogger('pytorch_lightning')
+
 class CLAPLoss(nn.Module):
     '''
     CLAPLoss is adopted from the mlfoundations' open_clip: https://github.com/mlfoundations/open_clip
@@ -35,7 +38,8 @@ class CLAPLoss(nn.Module):
         total_loss = (
             F.cross_entropy(logits_per_audio, labels) + 
             F.cross_entropy(logits_per_text, labels)) / 2
-        return total_loss
+        
+        return torch.tensor(total_loss, requires_grad=True) # cast to tensor to avoid freezing during training
 
 class CLIPLoss(nn.Module):
     '''
@@ -55,4 +59,4 @@ class CLIPLoss(nn.Module):
         texts_loss = F.cross_entropy(logits, targets)
         images_loss = F.cross_entropy(logits.T, targets.T)
         loss =  (images_loss + texts_loss) / 2 # shape: (batch_size)
-        return loss.mean()
+        return torch.tensor(loss.mean(), requires_grad=True)
