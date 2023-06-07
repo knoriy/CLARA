@@ -39,7 +39,7 @@ class CLAPLoss(nn.Module):
             F.cross_entropy(logits_per_audio, labels) + 
             F.cross_entropy(logits_per_text, labels)) / 2
         
-        return torch.tensor(total_loss, requires_grad=True) # cast to tensor to avoid freezing during training
+        return total_loss.clone().detach().requires_grad_(True) # cast to tensor to avoid freezing during training
 
 class CLIPLoss(nn.Module):
     '''
