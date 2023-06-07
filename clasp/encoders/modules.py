@@ -48,7 +48,7 @@ class PositionalEncoding(nn.Module):
             x: Tensor, shape [seq_len, batch_size, embedding_dim]
         """
         x = x + self.pe[:x.size(0)]
-        return self.dropout(x)
+        return torch.tensor(self.dropout(x), requires_grad=True, device=x.device)
 
 class LayerNorm(nn.LayerNorm):
     """Subclass torch's LayerNorm to handle fp16."""

@@ -14,6 +14,8 @@ from loss import CLAPLoss, CLIPLoss
 
 from scheduler import CosineAnnealingWarmupRestarts
 from utils.accuracy import Accuracy, accuracy
+from einops import rearrange
+
 
 
 class CLASP(nn.Module):
@@ -47,7 +49,7 @@ class CLASP(nn.Module):
         # Text Layers
         # ------------
         self.text_embedding = nn.Embedding(self.hparm.vocab_size, 512)
-        # self.positional_embedding = PositionalEncoding(512)
+        self.text_positional_embedding = nn.Embedding(4096, 512)
         self.text_layer_norm = LayerNorm(512)
         self.text_transform = MLPLayers(units=[512,512], dropout=0.1)
         self.text_fc1 = nn.Linear(512, 512)
@@ -58,6 +60,9 @@ class CLASP(nn.Module):
         self.audio_fc1 = nn.Linear(512, 512)
         self.audio_transform = MLPLayers(units=[512,512], dropout=0.1)
         self.audio_layer_norm = LayerNorm(512)
+        self.audio_positional_embedding = nn.Embedding(4096, 512)
+        self.conv1 = nn.Conv1d(80, 512, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv1d(512, 512, kernel_size=3, stride=2, padding=1)
 
         # ------------
         # Other
@@ -66,8 +71,11 @@ class CLASP(nn.Module):
         self.text_tempeture = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
 
     def encode_text(self, text:torch.Tensor):
+        n, device = text.shape[1], text.device
         x = self.text_embedding(text)
-        # x = self.positional_embedding(x)
+        pos_emb = self.text_positional_embedding(torch.arange(n, device = device))
+        pos_emb = rearrange(pos_emb, 'n d -> () n d')
+        x = x + pos_emb
         # x = x.permute(0,2,1) # (batch, seq, dim) -> (batch, dim, seq)
         x = self.text_encoder(x)
         # x = x.permute(0,2,1) # (batch, dim, seq) -> (batch, seq, dim)
@@ -82,6 +90,14 @@ class CLASP(nn.Module):
         return x
 
     def encode_audio(self, audio:torch.Tensor):
+        x = F.gelu(self.conv1(audio))
+        x = F.gelu(self.conv2(x))
+        x = x.permute(0, 2, 1)
+        pos_emb = self.audio_positional_embedding(torch.arange(x.shape[1], device = audio.device))
+        pos_emb = rearrange(pos_emb, 'n d -> () n d')
+        x = x + pos_emb
+        x = x.permute(0, 2, 1)
+
         x = self.audio_encoder(audio)
         x = self.audio_layer_norm(x)
 
