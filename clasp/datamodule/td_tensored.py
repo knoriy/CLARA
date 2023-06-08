@@ -7,7 +7,8 @@ import torchdata
 from typing import Optional
 
 from .td_datamodule import MultilingualTDM
-from .utils import group_by_filename
+from .utils import group_by_filename, Boto3FileOpenerIterDataPipe
+
 
 class TensoredTDM(MultilingualTDM):
 	def __init__(self, connection_timeout:Optional[int]=0, read_timeout:Optional[int]=0, *args, **kwargs):
@@ -23,7 +24,8 @@ class TensoredTDM(MultilingualTDM):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
 			.shuffle()\
 			.sharding_filter()\
-			.open_files_by_fsspec(mode='rb')\
+			
+		datapipe = Boto3FileOpenerIterDataPipe(datapipe, mode='rb')\
 			.load_from_tar() \
 			.groupby(group_by_filename, group_size=2, guaranteed_group_size=2)\
 			.shuffle(buffer_size=100)\
@@ -70,6 +72,7 @@ if __name__ == '__main__':
 	)
 	dataset.setup()
 
-	for i in tqdm.tqdm(dataset.train_dataloader(), desc="train minibatch"):
+	for i in tqdm.tqdm(dataset.train, desc="train minibatch"):
+		breakpoint()
 		print(i)
 		break
