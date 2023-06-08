@@ -43,7 +43,7 @@ class CLASP(nn.Module):
             # self.audio_encoder = resnet18(1024)
             # self.audio_encoder = ResNeXt(5,12,1024, 2, 4)
             # self.audio_encoder = WhisperAudioEncoder(80, 1024, 1, 1)
-            self.audio_encoder = PerceiverIOEncoder(depth=5, dim=80, num_latents=512)
+            self.audio_encoder = PerceiverIOEncoder(depth=5, dim=512, num_latents=512)
 
         # ------------
         # Text Layers
@@ -98,7 +98,7 @@ class CLASP(nn.Module):
         x = x + pos_emb
         x = x.permute(0, 2, 1)
 
-        x = self.audio_encoder(audio)
+        x = self.audio_encoder(x)
         x = self.audio_layer_norm(x)
 
         x1 = torch.mean(x, dim=2)
