@@ -67,6 +67,16 @@ class MultilingualTDM(pl.LightningDataModule):
 				use_cache			= use_cache,
 				recache				= recache
 				)
+		else:
+			self.urls = get_local_paths(
+				base_path			= root_data_path,
+				train_valid_test	= train_valid_test,
+				dataset_names		= dataset_names, 
+				exclude				= exclude,
+				cache_path			= cache_path,
+				use_cache			= use_cache,
+				recache				= recache
+				)
 
 		pl_logger.info(f"Urls found: \
 			\n\tTrain: {len(self.urls.get('train', None))} \
