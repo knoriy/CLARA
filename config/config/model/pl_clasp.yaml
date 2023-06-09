@@ -14,3 +14,4 @@ init_args:
   LR_sheduler_warmup_steps: 5
   LR_sheduler_min_lr: 1e-4
   LR_sheduler_decay: 0.8
+  lr_interval: epoch
