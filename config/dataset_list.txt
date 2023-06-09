@@ -1,7 +1,7 @@
-# CMU_Arctic
-# EmoV_DB
-# LibriSpeech
-# CREMA-D
+CMU_Arctic
+EmoV_DB
+LibriSpeech
+CREMA-D
 
 audioset
 
@@ -25,6 +25,5 @@ audioset
 
 # Tunebot
 # MACS
-# LibriSpeech
 # VGGSound
 # midi50k
