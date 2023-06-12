@@ -6,7 +6,7 @@ import pytorch_lightning as pl
 
 import numpy as np
 
-from typing import Tuple, Union, Callable, Optional
+from typing import Tuple, Union, Callable, Optional, Literal
 from encoders.text_encoders import SimpleTransformer 
 from encoders.audio_encoders import *
 from encoders.modules import PositionalEncoding, LayerNorm, MLPLayers
@@ -138,6 +138,7 @@ class PLCLASP(pl.LightningModule):
 					LR_sheduler_warmup_steps:int=20,
 					LR_sheduler_min_lr:float=0.0,
 					LR_sheduler_decay:float=1.0,
+					lr_interval:Literal["epoch","step"]='epoch',
 					):
 
 		super().__init__()
@@ -162,10 +163,10 @@ class PLCLASP(pl.LightningModule):
 	def training_step(self, batch, batch_idx):
 		model_out, loss, acc = self._shared_eval_step(batch, batch_idx)
 		
-		self.log('text_temp', model_out[2])
-		self.log('audio_temp', model_out[3])
-		self.log('train_loss', loss, prog_bar=True)
-		self.log('train_acc', acc, prog_bar=True)
+		self.log('text_temp', model_out[2], sync_dist=True)
+		self.log('audio_temp', model_out[3], sync_dist=True)
+		self.log('train_loss', loss, prog_bar=True, sync_dist=True)
+		self.log('train_acc', acc, prog_bar=True, sync_dist=True)
 
 		return loss
 
@@ -173,7 +174,7 @@ class PLCLASP(pl.LightningModule):
 		_, loss, acc = self._shared_eval_step(batch, batch_idx)
 
 		metrics = {"val_acc": acc, "val_loss": loss}
-		self.log_dict(metrics, prog_bar=True)
+		self.log_dict(metrics, prog_bar=True, sync_dist=True)
 		return metrics
 
 	def test_step(self, batch, batch_idx):
@@ -263,6 +264,7 @@ def get_optimiser(self):
 												max_lr=self.hparams.learning_rate, 
 												min_lr=self.hparams.LR_sheduler_min_lr, 
 												gamma=self.hparams.LR_sheduler_decay),
+		'interval': self.hparams.lr_interval,
 		'name': 'lr_scheduler',
 		'monitor': 'valid_loss',
 	}
