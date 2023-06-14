@@ -3,11 +3,11 @@ EmoV_DB
 LibriSpeech
 CREMA-D
 
-audioset
+# audioset
 
-# cambridge_dictionary
-# common_voice
-# mswc
+cambridge_dictionary
+common_voice
+mswc
 
 # Clotho
 # audiocaps

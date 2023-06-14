@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --partition=g40
 #SBATCH --job-name=base_4
-#SBATCH --nodes=4
-#SBATCH --ntasks-per-node=8
-#SBATCH --gpus-per-node=8
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --gpus-per-node=1
 #SBATCH --cpus-per-task=12
-#SBATCH --account laion
+#SBATCH --account clsp
 #SBATCH --output=logs/outs/%x_%j.out
 #SBATCH --signal=SIGUSR1@90
 #SBATCH --signal=SIGTERM@90
@@ -18,9 +18,9 @@ srun /fsx/home-knoriy/miniconda3/envs/clasp_2/bin/python /fsx/knoriy/code/CLASP/
     --trainer ./config/config/trainer/base.yaml \
     --trainer ./config/config/trainer/slurm.yaml \
     --model ./config/config/model/pl_clasp.yaml \
-    --data ./config/config/data/tensored.yaml \
+    --data ./config/config/data/base.yaml \
     --trainer.num_nodes $SLURM_JOB_NUM_NODES \
-    --data.num_workers 6 \
-    --data.batch_size 8 \
-    --trainer.logger.name audioset_T-Pio_350M \
-    --trainer.max_epochs 50 \
+    --data.num_workers 12 \
+    --data.batch_size 16 \
+    --trainer.logger.name large \
+    --trainer.max_epochs 200 \
