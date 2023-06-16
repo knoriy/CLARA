@@ -4,7 +4,6 @@
 
 CMU_Arctic
 EmoV_DB
-LibriSpeech
 CREMA-D
 
 cambridge_dictionary
