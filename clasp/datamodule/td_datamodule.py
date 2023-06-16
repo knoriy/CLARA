@@ -40,8 +40,11 @@ class MultilingualTDM(pl.LightningDataModule):
 			use_cache:Optional[bool]=True,
 			recache:Optional[bool]=False,
 			train_valid_test:Optional[list]=['train', 'valid', 'test'],
+			dataloader2:Optional[bool]=False,
         ):
 		super().__init__()
+		self.dataloader2 = dataloader2
+
 		exclude = []
 		if exclude_list:
 			exclude = get_lists(exclude_list)
@@ -117,20 +120,22 @@ class MultilingualTDM(pl.LightningDataModule):
 			.batch(2) \
 			.shuffle(buffer_size=100)\
 			.map(self.to_sampels) \
-			# .batch(self.batch_size) \
-			# .map(self.collate_fn)
+		
+		if self.dataloader2:
+			datapipe = datapipe.batch(self.batch_size) \
+				.map(self.collate_fn)
 		
 		return datapipe
 
 	def setup(self, stage:Optional[str] = None):
 		if len(self.train_data_dir)>0:
-			self.train = self._create_pipeline(self.train_data_dir)
+			self.train_datapipe = self._create_pipeline(self.train_data_dir)
 
 		if len(self.test_data_dir)>0:
-			self.test = self._create_pipeline(self.test_data_dir)
+			self.test_datapipe = self._create_pipeline(self.test_data_dir)
 
 		if len(self.valid_data_dir)>0:
-			self.valid = self._create_pipeline(self.valid_data_dir)
+			self.valid_datapipe = self._create_pipeline(self.valid_data_dir)
 
 	def _dataloader2(self, dataset):
 		service = [
@@ -144,20 +149,24 @@ class MultilingualTDM(pl.LightningDataModule):
 		return DataLoader(dataset, num_workers=self.num_workers, batch_size=self.batch_size, collate_fn=self.collate_fn, pin_memory=True)
 
 	def train_dataloader(self):
-		self.train_dl = self._dataloader(self.train)
-		return self.train_dl
+		if self.dataloader2:
+			return self._dataloader2(self.train_datapipe)
+		return self._dataloader(self.train_datapipe)
 
 	def val_dataloader(self):
-		self.val_dl = self._dataloader(self.valid)
-		return self.val_dl
+		if self.dataloader2:
+			return self._dataloader2(self.valid_datapipe)
+		return self._dataloader(self.valid_datapipe)
 
 	def test_dataloader(self):
-		self.test_dl = self._dataloader(self.test)
-		return self.test_dl
+		if self.dataloader2:
+			return self._dataloader2(self.test_datapipe)
+		return self._dataloader(self.test_datapipe)
 
 	def predict_dataloader(self):
-		self.predict_dl = self._dataloader(self.valid)
-		return self.predict_dl
+		if self.dataloader2:
+			return self._dataloader2(self.valid_datapipe)
+		return self._dataloader(self.valid_datapipe)
 	
 	def tokeniser_encode(self, text:str, lanuage:str='en'):
 		return self.tokenizer.encode(text, language=lanuage)
