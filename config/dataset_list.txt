@@ -1,21 +1,44 @@
+##########
+# Speech #
+##########
+
 CMU_Arctic
 EmoV_DB
 LibriSpeech
 CREMA-D
 
-# audioset
-
 cambridge_dictionary
-common_voice
-mswc
+#ravdess
+ravdess_updated
 
-# Clotho
+# LJSpeech
+LJSpeech_updated
+librispeech_asr
+LibriSpeech
+
+# common_voice
+# mswc
+
+#YT_dataset
+#YT_DATASET
+
+#########################
+# Contains human voices #
+#########################
+Clotho
+VGGSound
+VocalSketch
+fine_grained_vocal_imitation_set
+
+#######
+# SFX #
+#######
+
+# audioset
 # audiocaps
 # esc50_no_overlap
-# fine_grained_vocal_imitation_set
 # Knocking_sounds
 
-# VocalSketch
 # ESC50_1
 # ESC50_2
 # ESC50_3
@@ -25,5 +48,4 @@ mswc
 
 # Tunebot
 # MACS
-# VGGSound
 # midi50k
