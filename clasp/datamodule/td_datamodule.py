@@ -15,6 +15,7 @@ import torchdata
 import pytorch_lightning as pl
 from torch.nn.utils.rnn import pad_sequence
 from torchdata.dataloader2 import DataLoader2, DistributedReadingService, MultiProcessingReadingService, SequentialReadingService 
+from torchdata.datapipes.iter import FSSpecFileOpener
 
 from torch.utils.data import DataLoader
 
@@ -24,7 +25,7 @@ pl_logger = logging.getLogger('pytorch_lightning')
 from text.whisper.normalizers import EnglishTextNormalizer
 from text.tokeniser import Tokeniser # from text.whisper.tokenizer import get_tokenizer
 from utils import get_s3_paths, get_local_paths, get_lists 
-from .utils import Boto3FileOpenerIterDataPipe
+from .utils import Boto3FileOpenerIterDataPipe as Boto3FileOpener
 
 class MultilingualTDM(pl.LightningDataModule):
 	def __init__(self, 
@@ -57,6 +58,7 @@ class MultilingualTDM(pl.LightningDataModule):
 			cache_path = f"./tmp/{os.path.basename(dataset_list)}.json"
 		
 		if root_data_path.startswith('s3://'):
+			self.is_local = False
 			root_data_path = root_data_path.replace('s3://', '')
 			self.urls = get_s3_paths(
 				base_path			= root_data_path,
@@ -68,6 +70,7 @@ class MultilingualTDM(pl.LightningDataModule):
 				recache				= recache
 				)
 		else:
+			self.is_local = True
 			self.urls = get_local_paths(
 				base_path			= root_data_path,
 				train_valid_test	= train_valid_test,
@@ -104,9 +107,13 @@ class MultilingualTDM(pl.LightningDataModule):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
 			.shuffle()\
 			.sharding_filter()\
+		
+		if self.is_local:
+			datapipe = Boto3FileOpener(datapipe, mode='rb')
+		else:
+			datapipe = FSSpecFileOpener(datapipe, mode='rb')
 
-		datapipe = Boto3FileOpenerIterDataPipe(datapipe, mode='rb')\
-			.load_from_tar() \
+		datapipe = datapipe.load_from_tar() \
 			.batch(2) \
 			.shuffle(buffer_size=100)\
 			.map(self.to_sampels) \
@@ -127,7 +134,7 @@ class MultilingualTDM(pl.LightningDataModule):
 
 	def _dataloader2(self, dataset):
 		service = [
-			# DistributedReadingService(),
+			DistributedReadingService(),
 			MultiProcessingReadingService(num_workers=self.num_workers),
 		]
 		reading_service = SequentialReadingService(*service)

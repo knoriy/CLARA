@@ -138,7 +138,7 @@ class PLCLASP(pl.LightningModule):
 					LR_sheduler_warmup_steps:int=20,
 					LR_sheduler_min_lr:float=0.0,
 					LR_sheduler_decay:float=1.0,
-					lr_interval:Literal["epoch","step"]='epoch',
+					lr_interval:Literal["epoch","step"]='step',
 					):
 
 		super().__init__()
