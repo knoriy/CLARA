@@ -15,7 +15,7 @@ import torchdata
 import pytorch_lightning as pl
 from torch.nn.utils.rnn import pad_sequence
 from torchdata.dataloader2 import DataLoader2, DistributedReadingService, MultiProcessingReadingService, SequentialReadingService 
-from torchdata.datapipes.iter import FSSpecFileOpener
+from torchdata.datapipes.iter import FileOpener, FSSpecFileOpener
 
 from torch.utils.data import DataLoader
 
@@ -109,21 +109,23 @@ class MultilingualTDM(pl.LightningDataModule):
 	def _create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
 			.shuffle()\
-			.sharding_filter()\
+			# .sharding_filter() # Sharding filter here causes the dataloader to hang when using multiple GPUs
 		
 		if self.is_local:
-			datapipe = Boto3FileOpener(datapipe, mode='rb')
-		else:
 			datapipe = FSSpecFileOpener(datapipe, mode='rb')
+		else:
+			datapipe = Boto3FileOpener(datapipe, mode='rb')
 
 		datapipe = datapipe.load_from_tar() \
 			.batch(2) \
+			.sharding_filter()\
 			.shuffle(buffer_size=100)\
 			.map(self.to_sampels) \
 		
 		if self.dataloader2:
 			datapipe = datapipe.batch(self.batch_size) \
-				.map(self.collate_fn)
+				.map(self.collate_fn)\
+				.fullsync()
 		
 		return datapipe
 
@@ -137,7 +139,7 @@ class MultilingualTDM(pl.LightningDataModule):
 		if len(self.valid_data_dir)>0:
 			self.valid_datapipe = self._create_pipeline(self.valid_data_dir)
 
-	def _dataloader2(self, dataset):
+	def _get_dataloader2(self, dataset):
 		service = [
 			DistributedReadingService(),
 			MultiProcessingReadingService(num_workers=self.num_workers),
@@ -145,28 +147,36 @@ class MultilingualTDM(pl.LightningDataModule):
 		reading_service = SequentialReadingService(*service)
 		return DataLoader2(dataset, reading_service=reading_service)
 	
-	def _dataloader(self, dataset):
+	def _get_dataloader(self, dataset):
 		return DataLoader(dataset, num_workers=self.num_workers, batch_size=self.batch_size, collate_fn=self.collate_fn, pin_memory=True)
 
 	def train_dataloader(self):
 		if self.dataloader2:
-			return self._dataloader2(self.train_datapipe)
-		return self._dataloader(self.train_datapipe)
+			self.train_dl =  self._get_dataloader2(self.train_datapipe)
+		else:
+			self.train_dl = self._get_dataloader(self.train_datapipe)
+		return self.train_dl
 
 	def val_dataloader(self):
 		if self.dataloader2:
-			return self._dataloader2(self.valid_datapipe)
-		return self._dataloader(self.valid_datapipe)
+			self.valid_dl =  self._get_dataloader2(self.valid_datapipe)
+		else:
+			self.valid_dl = self._get_dataloader(self.valid_datapipe)
+		return self.valid_dl
 
 	def test_dataloader(self):
 		if self.dataloader2:
-			return self._dataloader2(self.test_datapipe)
-		return self._dataloader(self.test_datapipe)
+			self.test_dl =  self._get_dataloader2(self.test_datapipe)
+		else:
+			self.test_dl = self._get_dataloader(self.test_datapipe)
+		return self.test_dl
 
 	def predict_dataloader(self):
 		if self.dataloader2:
-			return self._dataloader2(self.valid_datapipe)
-		return self._dataloader(self.valid_datapipe)
+			self.valid_dl =  self._get_dataloader2(self.valid_datapipe)
+		else:
+			self.valid_dl = self._get_dataloader(self.valid_datapipe)
+		return self.valid_dl
 	
 	def tokeniser_encode(self, text:str, lanuage:str='en'):
 		return self.tokenizer.encode(text, language=lanuage)
