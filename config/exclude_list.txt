@@ -3,14 +3,30 @@ Tunebot/train/15.tar
 Tunebot/train/8.tar
 
 # long text
+#	Long string: 7627, URL: pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/common_voice/train/1001.tar -, file: 556664
+#	Long string: 1168, URL: pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/common_voice/train/1066.tar -, file: 91672
+#	Long string: 1635, URL: pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/common_voice/train/1093.tar -, file: 838188
+#	Long string: 1298, URL: pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/common_voice/train/1215.tar -, file: 735841
+#	Long string: 1146, URL: pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/common_voice/train/1220.tar -, file: 100751
+#	Long string: 5080, URL: pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/common_voice/train/1183.tar -, file: 502594
+#	Long string: 1562, URL: pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/common_voice/train/1296.tar -, file: 566616
+#	Long string: 2235, URL: pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/common_voice/train/1310.tar -, file: 859469
+#   Long string: 4339, URL: pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/common_voice/train/1292.tar -, file: 397392
+
 common_voice/train/60.tar
 common_voice/train/227.tar
 common_voice/train/469.tar
 common_voice/train/595.tar
 common_voice/train/677.tar
-common_voice/train/1292.tar
 common_voice/train/1001.tar
+common_voice/train/1066.tar
+common_voice/train/1093.tar
 common_voice/train/1183.tar
+common_voice/train/1215.tar
+common_voice/train/1220.tar
+common_voice/train/1292.tar
+common_voice/train/1296.tar
+common_voice/train/1310.tar
 common_voice/test/4.tar
 common_voice/test/36.tar
 common_voice/test/80.tar
@@ -28,6 +44,8 @@ FSD50K/train/60.tar
 FSD50K/valid/0.tar
 
 # Long audio files
+#	Long audio: 33.88s, URL: pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/common_voice/train/1079.tar -, file: 58486
+#	Long audio: 49.93s, URL: pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/common_voice/train/1301.tar -, file: 781316
 common_voice/train/702.tar
 common_voice/train/723.tar
 common_voice/train/788.tar

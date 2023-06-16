@@ -15,7 +15,7 @@ LJSpeech_updated
 librispeech_asr
 LibriSpeech
 
-# common_voice
+common_voice
 # mswc
 
 #YT_dataset
