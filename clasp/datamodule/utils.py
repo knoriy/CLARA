@@ -13,8 +13,10 @@ def get_log_melspec(audio, sr, n_mels=80, n_fft=1024, hop_length=512, win_length
 
 def filepath_fn(url):
 	temp_dir = tempfile.gettempdir()
-	_, dataset_name, folder_name, file_name = url.rsplit('/', 3)
-	return os.path.join(temp_dir, "CLASP", dataset_name, folder_name, file_name)
+	root, dataset_name, folder_name, file_name = url.rsplit('/', 3)
+	if root.startswith("s3://"):
+		root = root.replace("s3://", "")
+	return os.path.join(temp_dir, "CLASP", root, dataset_name, folder_name, file_name)
 
 def delete_primise_fn(url):
 	files = glob.glob(f"{url}.*")
