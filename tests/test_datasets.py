@@ -9,7 +9,7 @@ from utils.get_wds_urls import get_tar_path_s3
 
 __LONG_AUDIO:int = 30
 __SHORT_AUDIO:int = 0.2
-__LONG_TEXT:int = 3000
+__LONG_TEXT:int = 1024
 
 def collate_fn(data):
 	keys, urls, raw_audios, raw_texts = data
@@ -72,7 +72,7 @@ def test_datasets(
 			])
 
 		dataset = wds.DataPipeline(*pipeline)
-		dataloader = DataLoader(dataset, batch_size=None, num_workers=6, persistent_workers=True)
+		dataloader = DataLoader(dataset, batch_size=None, num_workers=96, persistent_workers=True)
 
 		messages = filter(lambda x: len(x) > 0, dataloader)
 
