@@ -57,7 +57,7 @@ class MultilingualTDM(pl.LightningDataModule):
 			raise Warning(f'Found similary dataset names in datasets and excluded dataset: {dataset_names_intersection}')
 		
 		if not cache_path:
-			cache_path = f".logs/{os.path.basename(dataset_list)}.json"
+			cache_path = f"logs/{os.path.basename(dataset_list)}.json"
 		
 		if root_data_path.startswith('s3://'):
 			self.is_local = False
