@@ -9,6 +9,7 @@ callbacks:
     init_args:
         verbose: True
   - class_path: pytorch_lightning.callbacks.LearningRateMonitor
+  - class_path: callbacks.DeleteTempFilesCallback
   # - class_path: pytorch_lightning.callbacks.EarlyStopping
   #   init_args:
   #       patience: 10

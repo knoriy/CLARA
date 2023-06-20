@@ -43,7 +43,6 @@ class MultilingualTDM(pl.LightningDataModule):
 			dataloader2:Optional[bool]=False,
         ):
 		super().__init__()
-		self.dataloader2 = dataloader2
 
 		exclude = []
 		if exclude_list:
@@ -98,6 +97,7 @@ class MultilingualTDM(pl.LightningDataModule):
 		self.batch_size = batch_size
 		self.num_workers = num_workers
 		self.persistent_workers = persistent_workers
+		self.dataloader2 = dataloader2
 
 		# self.cleaner = EnglishTextNormalizer()
 		self.tokenizer = Tokeniser()

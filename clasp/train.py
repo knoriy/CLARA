@@ -75,6 +75,6 @@ if __name__ == '__main__':
 	torch.set_float32_matmul_precision('medium')
 
 	cli = MyLightningCLI(
-		trainer_class		=Trainer, 
+		trainer_class=Trainer, 
 		save_config_callback=None,
 	)
