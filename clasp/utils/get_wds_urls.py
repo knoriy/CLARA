@@ -110,9 +110,7 @@ def get_tar_path_s3(base_s3_path:str,
 		and all(exclude_name not in url for exclude_name in exclude)] for state in train_valid_test}
 
 	if cache_path:
-		pl_logger.info(f"Creating URL cache: {cache_path}")
-		with open(cache_path, 'w') as f:
-			json.dump(final_urls, f)
+		create_cache(cache_path, final_urls)
 
 	return final_urls
 
