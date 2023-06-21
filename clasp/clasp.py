@@ -19,35 +19,35 @@ from einops import rearrange
 
 
 class CLASP(nn.Module):
-    '''
-    Contrastive Language-Speech Pre-training 
-    '''
-    def __init__(self, hparm, text_encoder:Optional[nn.Module]=None, audio_encoder:Optional[nn.Module]=None) -> None:
-        super().__init__()
-        self.hparm = hparm
+	'''
+	Contrastive Language-Speech Pre-training 
+	'''
+	def __init__(self, hparm, text_encoder:Optional[nn.Module]=None, audio_encoder:Optional[nn.Module]=None) -> None:
+		super().__init__()
+		self.hparm = hparm
 
-        self.text_encoder = text_encoder
-        self.audio_encoder = audio_encoder
-        
-        if self.text_encoder == None:
-            self.text_encoder = SimpleTransformer(
-                in_channels = self.hparm.text_encoder_embedding,
-                out_channels = self.hparm.text_encoder_out_channels,
-                num_layers = self.hparm.text_encoder_layers,
-                nhead = self.hparm.text_encoder_heads,
+		self.text_encoder = text_encoder
+		self.audio_encoder = audio_encoder
+		
+		if self.text_encoder == None:
+			self.text_encoder = SimpleTransformer(
+				in_channels = self.hparm.text_encoder_embedding,
+				out_channels = self.hparm.text_encoder_out_channels,
+				num_layers = self.hparm.text_encoder_layers,
+				nhead = self.hparm.text_encoder_heads,
 				dropout = self.hparm.text_encoder_seq_dropout_prob,
-                batch_first = True,
-            )
-            # self.text_encoder = PerceiverIOEncoder(depth=5, dim=self.hparm.text_encoder_embedding, num_latents=1024)
+				batch_first = True,
+			)
+			# self.text_encoder = PerceiverIOEncoder(depth=5, dim=self.hparm.text_encoder_embedding, num_latents=1024)
 
-        if self.audio_encoder == None:
-            # self.audio_encoder = resnet18(1024)
-            # self.audio_encoder = ResNeXt(5,12,1024, 2, 4)
-            # self.audio_encoder = WhisperAudioEncoder(80, 1024, 1, 1)
-            self.audio_encoder = PerceiverIOEncoder(
-                depth = self.hparm.audio_encoder_depth,
-                dim = self.hparm.audio_encoder_embedding,
-                num_latents = self.hparm.audio_encoder_num_latents,
+		if self.audio_encoder == None:
+			# self.audio_encoder = resnet18(1024)
+			# self.audio_encoder = ResNeXt(5,12,1024, 2, 4)
+			# self.audio_encoder = WhisperAudioEncoder(80, 1024, 1, 1)
+			self.audio_encoder = PerceiverIOEncoder(
+				depth = self.hparm.audio_encoder_depth,
+				dim = self.hparm.audio_encoder_embedding,
+				num_latents = self.hparm.audio_encoder_num_latents,
 				latent_dim = self.hparm.audio_encoder_latent_dim,
 				cross_heads = self.hparm.audio_encoder_cross_heads,
 				latent_heads = self.hparm.audio_encoder_latent_heads,
@@ -55,16 +55,16 @@ class CLASP(nn.Module):
 				latent_dim_head = self.hparm.audio_encoder_latent_dim_head,
 				weight_tie_layers = self.hparm.audio_encoder_weight_tie_layers,
 				seq_dropout_prob = self.hparm.audio_encoder_seq_dropout_prob
-            )
+			)
 
-        # ------------
-        # Text Layers
-        # ------------
-        self.text_embedding = nn.Embedding(self.hparm.vocab_size, self.hparm.text_encoder_embedding)
-        self.text_positional_embedding = nn.Embedding(self.hparm.text_encoder_pos_embedding_size, self.hparm.text_encoder_embedding)
-        self.text_layer_norm = LayerNorm(self.hparm.text_encoder_out_channels)
-        self.text_fc1 = nn.Linear(self.hparm.text_encoder_out_channels, self.hparm.text_encoder_project)
-        self.text_transform = MLPLayers(
+		# ------------
+		# Text Layers
+		# ------------
+		self.text_embedding = nn.Embedding(self.hparm.vocab_size, self.hparm.text_encoder_embedding)
+		self.text_positional_embedding = nn.Embedding(self.hparm.text_encoder_pos_embedding_size, self.hparm.text_encoder_embedding)
+		self.text_layer_norm = LayerNorm(self.hparm.text_encoder_out_channels)
+		self.text_fc1 = nn.Linear(self.hparm.text_encoder_out_channels, self.hparm.text_encoder_project)
+		self.text_transform = MLPLayers(
 			units=[
 				self.hparm.text_encoder_project,
 				self.hparm.output_dim,
@@ -72,24 +72,24 @@ class CLASP(nn.Module):
 			dropout=self.hparm.text_encoder_project_dropout_prob,
 		)
 
-        # ------------
-        # Audio Layers
-        # ------------
-        self.conv1 = nn.Conv1d(
+		# ------------
+		# Audio Layers
+		# ------------
+		self.conv1 = nn.Conv1d(
 			self.hparm.n_mels, 
 			self.hparm.audio_encoder_embedding, 
 			kernel_size=3, 
 			padding=1)
-        self.conv2 = nn.Conv1d(
+		self.conv2 = nn.Conv1d(
 			self.hparm.audio_encoder_embedding, 
 			self.hparm.audio_encoder_embedding, 
 			kernel_size=3, 
 			stride=2, 
 			padding=1)
-        self.audio_positional_embedding = nn.Embedding(self.hparm.audio_encoder_pos_embedding_size, self.hparm.audio_encoder_embedding)
-        self.audio_layer_norm = LayerNorm(self.hparm.audio_encoder_latent_dim)
-        self.audio_fc1 = nn.Linear(self.hparm.audio_encoder_latent_dim, self.hparm.audio_encoder_project)
-        self.audio_transform = MLPLayers(
+		self.audio_positional_embedding = nn.Embedding(self.hparm.audio_encoder_pos_embedding_size, self.hparm.audio_encoder_embedding)
+		self.audio_layer_norm = LayerNorm(self.hparm.audio_encoder_latent_dim)
+		self.audio_fc1 = nn.Linear(self.hparm.audio_encoder_latent_dim, self.hparm.audio_encoder_project)
+		self.audio_transform = MLPLayers(
 			units=[
 				self.hparm.audio_encoder_project,
 				self.hparm.output_dim,
@@ -97,64 +97,64 @@ class CLASP(nn.Module):
 			dropout=self.hparm.audio_encoder_project_dropout_prob,
 		)
 
-        # ------------
-        # Other
-        # ------------
-        self.audio_tempeture = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
-        self.text_tempeture = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
+		# ------------
+		# Other
+		# ------------
+		self.audio_tempeture = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
+		self.text_tempeture = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
 
-    def encode_text(self, text:torch.Tensor):
-        n, device = text.shape[1], text.device
-        x = self.text_embedding(text)
-        pos_emb = self.text_positional_embedding(torch.arange(n, device = device))
-        pos_emb = rearrange(pos_emb, 'n d -> () n d')
-        x = x + pos_emb
-        # x = x.permute(0,2,1) # (batch, seq, dim) -> (batch, dim, seq)
-        x = self.text_encoder(x)
-        # x = x.permute(0,2,1) # (batch, dim, seq) -> (batch, seq, dim)
-        x = self.text_layer_norm(x)
+	def encode_text(self, text:torch.Tensor):
+		n, device = text.shape[1], text.device
+		x = self.text_embedding(text)
+		pos_emb = self.text_positional_embedding(torch.arange(n, device = device))
+		pos_emb = rearrange(pos_emb, 'n d -> () n d')
+		x = x + pos_emb
+		# x = x.permute(0,2,1) # (batch, seq, dim) -> (batch, dim, seq)
+		x = self.text_encoder(x)
+		# x = x.permute(0,2,1) # (batch, dim, seq) -> (batch, seq, dim)
+		x = self.text_layer_norm(x)
 
-        x1 = torch.mean(x, 1)
-        x2, _ = torch.max(x, 1)
-        x = x1 + x2
+		x1 = torch.mean(x, 1)
+		x2, _ = torch.max(x, 1)
+		x = x1 + x2
 
-        x = F.leaky_relu(self.text_fc1(x))
+		x = F.leaky_relu(self.text_fc1(x))
 
-        return x
+		return x
 
-    def encode_audio(self, audio:torch.Tensor):
-        x = F.gelu(self.conv1(audio))
-        x = F.gelu(self.conv2(x))
-        x = x.permute(0, 2, 1)
-        pos_emb = self.audio_positional_embedding(torch.arange(x.shape[1], device = audio.device))
-        pos_emb = rearrange(pos_emb, 'n d -> () n d')
-        x = x + pos_emb
-        x = x.permute(0, 2, 1)
+	def encode_audio(self, audio:torch.Tensor):
+		x = F.gelu(self.conv1(audio))
+		x = F.gelu(self.conv2(x))
+		x = x.permute(0, 2, 1)
+		pos_emb = self.audio_positional_embedding(torch.arange(x.shape[1], device = audio.device))
+		pos_emb = rearrange(pos_emb, 'n d -> () n d')
+		x = x + pos_emb
+		x = x.permute(0, 2, 1)
 
-        x = self.audio_encoder(x)
-        x = self.audio_layer_norm(x)
+		x = self.audio_encoder(x)
+		x = self.audio_layer_norm(x)
 
-        x1 = torch.mean(x, dim=2)
-        x2, _ = torch.max(x, dim=2)
-        x = x1 + x2
+		x1 = torch.mean(x, dim=2)
+		x2, _ = torch.max(x, dim=2)
+		x = x1 + x2
 
-        x = F.leaky_relu(self.audio_fc1(x))
+		x = F.leaky_relu(self.audio_fc1(x))
 
-        return x
+		return x
 
-    def forward(self, text:torch.Tensor, audio:torch.Tensor):
-        text_features = self.encode_text(text)
-        audio_features = self.encode_audio(audio)
+	def forward(self, text:torch.Tensor, audio:torch.Tensor):
+		text_features = self.encode_text(text)
+		audio_features = self.encode_audio(audio)
 
-        # Projection
-        text_features = self.text_transform(text_features)
-        audio_features = self.audio_transform(audio_features)
+		# Projection
+		text_features = self.text_transform(text_features)
+		audio_features = self.audio_transform(audio_features)
 
-        text_features = F.normalize(text_features, dim=-1)
-        audio_features = F.normalize(audio_features, dim=-1)
+		text_features = F.normalize(text_features, dim=-1)
+		audio_features = F.normalize(audio_features, dim=-1)
 
-        return text_features, audio_features, self.text_tempeture.exp(), self.audio_tempeture.exp()
-    
+		return text_features, audio_features, self.text_tempeture.exp(), self.audio_tempeture.exp()
+	
 class PLCLASP(pl.LightningModule):
 	def __init__(	self, 
 					output_dim:int=512, 
