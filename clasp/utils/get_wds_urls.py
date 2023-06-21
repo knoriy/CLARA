@@ -138,12 +138,12 @@ def get_local_paths(base_path:str,
 	return final_urls
 
 def get_lists(path:str):
-    path = pathlib.Path(path)
-    if not path.exists():
-        raise FileNotFoundError(path)
+	path = pathlib.Path(path)
+	if not path.exists():
+		raise FileNotFoundError(path)
 
-    with open(path) as f:
-        return [line.rstrip('\n') for line in f if line.rstrip('\n') and not line.startswith('#')]
+	with open(path) as f:
+		return [line.rstrip('\n') for line in f if line.rstrip('\n') and not line.startswith('#')]
 
 if __name__ == '__main__':
 	urls = get_s3_paths(
