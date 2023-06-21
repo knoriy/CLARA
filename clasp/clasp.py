@@ -35,6 +35,7 @@ class CLASP(nn.Module):
                 out_channels = self.hparm.text_encoder_out_channels,
                 num_layers = self.hparm.text_encoder_layers,
                 nhead = self.hparm.text_encoder_heads,
+				dropout = self.hparm.text_encoder_seq_dropout_prob,
                 batch_first = True,
             )
             # self.text_encoder = PerceiverIOEncoder(depth=5, dim=self.hparm.text_encoder_embedding, num_latents=1024)
@@ -165,6 +166,7 @@ class PLCLASP(pl.LightningModule):
 					text_encoder_out_channels:int=512,
 					text_encoder_project:int=512,
 					text_encoder_project_dropout_prob:float=0.1,
+					text_encoder_seq_dropout_prob:float=0.1,
 					vocab_size:int=50373,
 
 					n_mels:int=80,
