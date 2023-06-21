@@ -31,38 +31,70 @@ class CLASP(nn.Module):
         
         if self.text_encoder == None:
             self.text_encoder = SimpleTransformer(
-                in_channels = 512,
-                out_channels = 512,
-                num_layers = 1,
-                nhead = 4, 
-                batch_first=True,
-                )
+                in_channels = self.hparm.text_encoder_embedding,
+                out_channels = self.hparm.text_encoder_out_channels,
+                num_layers = self.hparm.text_encoder_layers,
+                nhead = self.hparm.text_encoder_heads,
+                batch_first = True,
+            )
             # self.text_encoder = PerceiverIOEncoder(depth=5, dim=self.hparm.text_encoder_embedding, num_latents=1024)
 
         if self.audio_encoder == None:
             # self.audio_encoder = resnet18(1024)
             # self.audio_encoder = ResNeXt(5,12,1024, 2, 4)
             # self.audio_encoder = WhisperAudioEncoder(80, 1024, 1, 1)
-            self.audio_encoder = PerceiverIOEncoder(depth=5, dim=512, num_latents=512)
+            self.audio_encoder = PerceiverIOEncoder(
+                depth = self.hparm.audio_encoder_depth,
+                dim = self.hparm.audio_encoder_embedding,
+                num_latents = self.hparm.audio_encoder_num_latents,
+				latent_dim = self.hparm.audio_encoder_latent_dim,
+				cross_heads = self.hparm.audio_encoder_cross_heads,
+				latent_heads = self.hparm.audio_encoder_latent_heads,
+				cross_dim_head = self.hparm.audio_encoder_cross_dim_head,
+				latent_dim_head = self.hparm.audio_encoder_latent_dim_head,
+				weight_tie_layers = self.hparm.audio_encoder_weight_tie_layers,
+				seq_dropout_prob = self.hparm.audio_encoder_seq_dropout_prob
+            )
 
         # ------------
         # Text Layers
         # ------------
-        self.text_embedding = nn.Embedding(self.hparm.vocab_size, 512)
-        self.text_positional_embedding = nn.Embedding(4096, 512)
-        self.text_layer_norm = LayerNorm(512)
-        self.text_transform = MLPLayers(units=[512,512], dropout=0.1)
-        self.text_fc1 = nn.Linear(512, 512)
+        self.text_embedding = nn.Embedding(self.hparm.vocab_size, self.hparm.text_encoder_embedding)
+        self.text_positional_embedding = nn.Embedding(self.hparm.text_encoder_pos_embedding_size, self.hparm.text_encoder_embedding)
+        self.text_layer_norm = LayerNorm(self.hparm.text_encoder_out_channels)
+        self.text_fc1 = nn.Linear(self.hparm.text_encoder_out_channels, self.hparm.text_encoder_project)
+        self.text_transform = MLPLayers(
+			units=[
+				self.hparm.text_encoder_project,
+				self.hparm.output_dim,
+				], 
+			dropout=self.hparm.text_encoder_project_dropout_prob,
+		)
 
         # ------------
         # Audio Layers
         # ------------
-        self.audio_fc1 = nn.Linear(512, 512)
-        self.audio_transform = MLPLayers(units=[512,512], dropout=0.1)
-        self.audio_layer_norm = LayerNorm(512)
-        self.audio_positional_embedding = nn.Embedding(4096, 512)
-        self.conv1 = nn.Conv1d(80, 512, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv1d(512, 512, kernel_size=3, stride=2, padding=1)
+        self.conv1 = nn.Conv1d(
+			self.hparm.n_mels, 
+			self.hparm.audio_encoder_embedding, 
+			kernel_size=3, 
+			padding=1)
+        self.conv2 = nn.Conv1d(
+			self.hparm.audio_encoder_embedding, 
+			self.hparm.audio_encoder_embedding, 
+			kernel_size=3, 
+			stride=2, 
+			padding=1)
+        self.audio_positional_embedding = nn.Embedding(self.hparm.audio_encoder_pos_embedding_size, self.hparm.audio_encoder_embedding)
+        self.audio_layer_norm = LayerNorm(self.hparm.audio_encoder_latent_dim)
+        self.audio_fc1 = nn.Linear(self.hparm.audio_encoder_latent_dim, self.hparm.audio_encoder_project)
+        self.audio_transform = MLPLayers(
+			units=[
+				self.hparm.audio_encoder_project,
+				self.hparm.output_dim,
+				], 
+			dropout=self.hparm.audio_encoder_project_dropout_prob,
+		)
 
         # ------------
         # Other
@@ -124,21 +156,39 @@ class CLASP(nn.Module):
     
 class PLCLASP(pl.LightningModule):
 	def __init__(	self, 
-					hidden_dim:int=128, 
-					learning_rate:float=1e-3, 
-					learning_rate_patience:int=10, 
-					text_encoder_width:int=1024,
+					output_dim:int=512, 
 					text_encoder_embedding:int=1024,
+					text_encoder_pos_embedding_size:int=1024,
+					text_encoder_width:int=1024,
 					text_encoder_layers:int=1,
 					text_encoder_heads:int=4,
+					text_encoder_out_channels:int=512,
+					text_encoder_project:int=512,
+					text_encoder_project_dropout_prob:float=0.1,
 					vocab_size:int=50373,
+
 					n_mels:int=80,
-					audio_encoder_embedding:int=1024,
-					LR_sheduler_T_max:int=20,
-					LR_sheduler_warmup_steps:int=20,
+					audio_encoder_depth:int=5,
+					audio_encoder_embedding:int=512,
+					audio_encoder_pos_embedding_size:int=4096,
+					audio_encoder_num_latents:int=512,
+					audio_encoder_latent_dim:int=512,
+					audio_encoder_project:int=512,
+					audio_encoder_project_dropout_prob:float=0.1,
+					audio_encoder_cross_heads:int=1,
+					audio_encoder_latent_heads:int=8,
+					audio_encoder_cross_dim_head:int=64,
+					audio_encoder_latent_dim_head:int=64,
+					audio_encoder_weight_tie_layers:bool=False,
+					audio_encoder_seq_dropout_prob:float=0.5,
+
+					learning_rate:float=1e-3, 
+					learning_rate_patience:int=10, 
+					LR_sheduler_T_max:int=40,
+					LR_sheduler_warmup_steps:int=5,
 					LR_sheduler_min_lr:float=0.0,
 					LR_sheduler_decay:float=1.0,
-					lr_interval:Literal["epoch","step"]='step',
+					lr_interval:Literal["epoch","step"]='epoch',
 					):
 
 		super().__init__()
@@ -161,12 +211,11 @@ class PLCLASP(pl.LightningModule):
 		return self.model.text_tempeture.exp(), self.model.audio_tempeture.exp()
 
 	def training_step(self, batch, batch_idx):
-		model_out, loss, acc = self._shared_eval_step(batch, batch_idx)
+		model_out, loss = self._shared_eval_step(batch, batch_idx)
 		
 		self.log('text_temp', model_out[2], sync_dist=True)
 		self.log('audio_temp', model_out[3], sync_dist=True)
 		self.log('train_loss', loss, prog_bar=True, sync_dist=True)
-		self.log('train_acc', acc, prog_bar=True, sync_dist=True)
 
 		return loss
 
@@ -188,9 +237,11 @@ class PLCLASP(pl.LightningModule):
 		model_out = self(texts, mels)
 
 		loss = self.loss_fn(*model_out)
-		# acc = self.acc_fn(*model_out)[0] / mels.size(0)
-		acc = torch.rand(1, requires_grad=True)
 
+		if self.training:
+			return model_out, loss
+
+		acc = self.acc_fn(*model_out)[0] / mels.size(0)
 		return model_out, loss, acc
 
 	def predict_step(self, batch, batch_idx, dataloader_idx=0):
