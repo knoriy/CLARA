@@ -35,7 +35,9 @@ class MultilingualTDM(pl.LightningDataModule):
 			batch_size:Optional[int]=1,
 			num_workers:Optional[int]=0,
 			persistent_workers:Optional[bool]=True,
+			pin_memory:Optional[bool]=True,
 			shuffle:Optional[bool]=True,
+			drop_last:Optional[bool]=False,
 			cache_path:Optional[str]=None,
 			use_cache:Optional[bool]=True,
 			recache:Optional[bool]=False,
@@ -97,6 +99,8 @@ class MultilingualTDM(pl.LightningDataModule):
 		self.batch_size = batch_size
 		self.num_workers = num_workers
 		self.persistent_workers = persistent_workers
+		self.pin_memory = pin_memory
+		self.drop_last = drop_last
 		self.dataloader2 = dataloader2
 
 		# self.cleaner = EnglishTextNormalizer()
@@ -148,7 +152,16 @@ class MultilingualTDM(pl.LightningDataModule):
 		return DataLoader2(dataset, reading_service=reading_service)
 	
 	def _get_dataloader(self, dataset):
-		return DataLoader(dataset, num_workers=self.num_workers, batch_size=self.batch_size, collate_fn=self.collate_fn, pin_memory=True)
+		return DataLoader(
+			dataset = dataset, 
+			num_workers = self.num_workers, 
+			batch_size = self.batch_size, 
+			collate_fn = self.collate_fn, 
+			pin_memory = self.pin_memory, 
+			shuffle = self.shuffle, 
+			persistent_workers = self.persistent_workers,
+			drop_last = self.drop_last
+			)
 
 	def train_dataloader(self):
 		if self.dataloader2:
