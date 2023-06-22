@@ -6,7 +6,7 @@ init_args:
   exclude_list: ./config/exclude_list.txt
   batch_size: 16
   num_workers: 16
-  persistent_workers: true
+  persistent_workers: false
   shuffle: true
   drop_last: false
   pin_memory: true
