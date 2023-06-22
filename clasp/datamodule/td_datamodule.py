@@ -151,14 +151,14 @@ class MultilingualTDM(pl.LightningDataModule):
 		reading_service = SequentialReadingService(*service)
 		return DataLoader2(dataset, reading_service=reading_service)
 	
-	def _get_dataloader(self, dataset):
+	def _get_dataloader(self, dataset, shuffle=None):
 		return DataLoader(
 			dataset = dataset, 
 			num_workers = self.num_workers, 
 			batch_size = self.batch_size, 
 			collate_fn = self.collate_fn, 
 			pin_memory = self.pin_memory, 
-			shuffle = self.shuffle, 
+			shuffle = shuffle, 
 			persistent_workers = self.persistent_workers,
 			drop_last = self.drop_last
 			)
@@ -174,21 +174,21 @@ class MultilingualTDM(pl.LightningDataModule):
 		if self.dataloader2:
 			self.valid_dl =  self._get_dataloader2(self.valid_datapipe)
 		else:
-			self.valid_dl = self._get_dataloader(self.valid_datapipe)
+			self.valid_dl = self._get_dataloader(self.valid_datapipe, shuffle=False)
 		return self.valid_dl
 
 	def test_dataloader(self):
 		if self.dataloader2:
 			self.test_dl =  self._get_dataloader2(self.test_datapipe)
 		else:
-			self.test_dl = self._get_dataloader(self.test_datapipe)
+			self.test_dl = self._get_dataloader(self.test_datapipe, shuffle=False)
 		return self.test_dl
 
 	def predict_dataloader(self):
 		if self.dataloader2:
 			self.valid_dl =  self._get_dataloader2(self.valid_datapipe)
 		else:
-			self.valid_dl = self._get_dataloader(self.valid_datapipe)
+			self.valid_dl = self._get_dataloader(self.valid_datapipe, shuffle=False)
 		return self.valid_dl
 	
 	def tokeniser_encode(self, text:str, lanuage:str='en'):
