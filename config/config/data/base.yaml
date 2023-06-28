@@ -8,7 +8,7 @@ init_args:
   num_workers: 16
   persistent_workers: false
   shuffle: true
-  drop_last: false
+  drop_last: true
   pin_memory: true
   cache_path: null
   use_cache: true
