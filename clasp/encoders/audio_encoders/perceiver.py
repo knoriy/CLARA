@@ -135,7 +135,7 @@ class PerceiverIOEncoder(nn.Module):
     def __init__(
         self,
         *,
-        depth,
+        num_layers,
         dim,
         num_latents = 512,
         latent_dim = 512,
@@ -163,7 +163,7 @@ class PerceiverIOEncoder(nn.Module):
         self.layers = nn.ModuleList([])
         cache_args = {'_cache': weight_tie_layers}
 
-        for i in range(depth):
+        for _ in range(num_layers):
             self.layers.append(nn.ModuleList([
                 get_latent_attn(**cache_args),
                 get_latent_ff(**cache_args)

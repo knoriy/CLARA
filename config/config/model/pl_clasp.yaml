@@ -6,7 +6,7 @@ init_args:
   text_encoder_embedding: 512
   text_encoder_pos_embedding_size: 4096
   text_encoder_width: 512
-  text_encoder_layers: 1
+  text_encoder_layers: 5
   text_encoder_heads: 4
   text_encoder_out_channels: 512
   text_encoder_project: 512
@@ -15,7 +15,7 @@ init_args:
   vocab_size: 50373
   # audio encoder params
   n_mels: 80
-  audio_encoder_depth: 5
+  audio_encoder_layers: 5
   audio_encoder_embedding: 512
   audio_encoder_pos_embedding_size: 4096
   audio_encoder_num_latents: 512
@@ -31,8 +31,8 @@ init_args:
   # LR Scheduler params
   learning_rate: 1e-3
   learning_rate_patience: 10
-  LR_sheduler_T_max: 40
-  LR_sheduler_warmup_steps: 5
+  LR_sheduler_T_max: 5000
+  LR_sheduler_warmup_steps: 1000
   LR_sheduler_min_lr: 1e-4
   LR_sheduler_decay: 0.8
   lr_interval: step

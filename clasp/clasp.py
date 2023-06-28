@@ -38,14 +38,19 @@ class CLASP(nn.Module):
 				dropout = self.hparm.text_encoder_seq_dropout_prob,
 				batch_first = True,
 			)
-			# self.text_encoder = PerceiverIOEncoder(depth=5, dim=self.hparm.text_encoder_embedding, num_latents=1024)
+			# self.text_encoder = PerceiverIOEncoder(
+			# 	num_layers=self.hparm.text_encoder_layers, 
+			# 	dim=self.hparm.text_encoder_embedding, 
+			# 	num_latents=self.hparm.text_encoder_out_channels,
+			# 	seq_dropout_prob=self.hparm.text_encoder_seq_dropout_prob,
+			# 	)
 
 		if self.audio_encoder == None:
 			# self.audio_encoder = resnet18(1024)
 			# self.audio_encoder = ResNeXt(5,12,1024, 2, 4)
 			# self.audio_encoder = WhisperAudioEncoder(80, 1024, 1, 1)
 			self.audio_encoder = PerceiverIOEncoder(
-				depth = self.hparm.audio_encoder_depth,
+				num_layers = self.hparm.audio_encoder_layers,
 				dim = self.hparm.audio_encoder_embedding,
 				num_latents = self.hparm.audio_encoder_num_latents,
 				latent_dim = self.hparm.audio_encoder_latent_dim,
@@ -166,11 +171,11 @@ class PLCLASP(pl.LightningModule):
 					text_encoder_out_channels:int=512,
 					text_encoder_project:int=512,
 					text_encoder_project_dropout_prob:float=0.1,
-					text_encoder_seq_dropout_prob:float=0.1,
+					text_encoder_seq_dropout_prob:float=0.5,
 					vocab_size:int=50373,
 
 					n_mels:int=80,
-					audio_encoder_depth:int=5,
+					audio_encoder_layers:int=5,
 					audio_encoder_embedding:int=512,
 					audio_encoder_pos_embedding_size:int=4096,
 					audio_encoder_num_latents:int=512,
