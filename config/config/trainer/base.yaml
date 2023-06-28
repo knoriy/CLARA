@@ -10,12 +10,12 @@ callbacks:
         verbose: True
   - class_path: pytorch_lightning.callbacks.LearningRateMonitor
   - class_path: callbacks.DeleteTempFilesCallback
-  - class_path: pytorch_lightning.callbacks.EarlyStopping
-    init_args:
-        patience: 5
-        monitor: val_loss
-        mode: min
-        verbose: False
+  # - class_path: pytorch_lightning.callbacks.EarlyStopping
+  #   init_args:
+  #       patience: 5
+  #       monitor: val_loss
+  #       mode: min
+  #       verbose: False
 fast_dev_run: false
 max_epochs: 1000
 max_steps: -1
@@ -26,7 +26,7 @@ limit_predict_batches: null
 overfit_batches: 0.0
 val_check_interval: null
 check_val_every_n_epoch: 1
-log_every_n_steps: 5000
+log_every_n_steps: 1
 accumulate_grad_batches: 5
 gradient_clip_val: 1.0
 # profiler: pytorch_lightning.profilers.AdvancedProfiler
