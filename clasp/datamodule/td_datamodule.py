@@ -26,8 +26,10 @@ from text.whisper.normalizers import EnglishTextNormalizer
 from text.tokeniser import Tokeniser # from text.whisper.tokenizer import get_tokenizer
 from utils import get_s3_paths, get_local_paths, get_lists 
 from .utils import Boto3FileOpenerIterDataPipe as Boto3FileOpener
+from . import BaseTDM
 
-class MultilingualTDM(pl.LightningDataModule):
+
+class MultilingualTDM(BaseTDM):
 	def __init__(self, 
 			root_data_path:str,#'s-laion-audio/webdataset_tar/' or '/fsx/knoriy/processed_datasets/', 
 			dataset_list:str,
@@ -110,7 +112,7 @@ class MultilingualTDM(pl.LightningDataModule):
 		a, t = data
 		return soundfile.read(io.BytesIO(a[1].read())), json.loads(t[1].read().decode('utf-8'))
 	
-	def _create_pipeline(self, data_dir):
+	def create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
 			.shuffle()\
 			# .sharding_filter() # Sharding filter here causes the dataloader to hang when using multiple GPUs
@@ -133,64 +135,6 @@ class MultilingualTDM(pl.LightningDataModule):
 		
 		return datapipe
 
-	def setup(self, stage:Optional[str] = None):
-		if len(self.train_data_dir)>0:
-			self.train_datapipe = self._create_pipeline(self.train_data_dir)
-
-		if len(self.test_data_dir)>0:
-			self.test_datapipe = self._create_pipeline(self.test_data_dir)
-
-		if len(self.valid_data_dir)>0:
-			self.valid_datapipe = self._create_pipeline(self.valid_data_dir)
-
-	def _get_dataloader2(self, dataset):
-		service = [
-			DistributedReadingService(),
-			MultiProcessingReadingService(num_workers=self.num_workers),
-		]
-		reading_service = SequentialReadingService(*service)
-		return DataLoader2(dataset, reading_service=reading_service)
-	
-	def _get_dataloader(self, dataset, shuffle=None):
-		return DataLoader(
-			dataset = dataset, 
-			num_workers = self.num_workers, 
-			batch_size = self.batch_size, 
-			collate_fn = self.collate_fn, 
-			pin_memory = self.pin_memory, 
-			shuffle = shuffle, 
-			persistent_workers = self.persistent_workers,
-			drop_last = self.drop_last
-			)
-
-	def train_dataloader(self):
-		if self.dataloader2:
-			self.train_dl =  self._get_dataloader2(self.train_datapipe)
-		else:
-			self.train_dl = self._get_dataloader(self.train_datapipe)
-		return self.train_dl
-
-	def val_dataloader(self):
-		if self.dataloader2:
-			self.valid_dl =  self._get_dataloader2(self.valid_datapipe)
-		else:
-			self.valid_dl = self._get_dataloader(self.valid_datapipe, shuffle=False)
-		return self.valid_dl
-
-	def test_dataloader(self):
-		if self.dataloader2:
-			self.test_dl =  self._get_dataloader2(self.test_datapipe)
-		else:
-			self.test_dl = self._get_dataloader(self.test_datapipe, shuffle=False)
-		return self.test_dl
-
-	def predict_dataloader(self):
-		if self.dataloader2:
-			self.valid_dl =  self._get_dataloader2(self.valid_datapipe)
-		else:
-			self.valid_dl = self._get_dataloader(self.valid_datapipe, shuffle=False)
-		return self.valid_dl
-	
 	def tokeniser_encode(self, text:str, lanuage:str='en'):
 		return self.tokenizer.encode(text, language=lanuage)
 	
