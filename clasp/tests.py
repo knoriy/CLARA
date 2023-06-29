@@ -70,8 +70,13 @@ def run(model, zeroshot_weights, dataloader, metric_fn:MetricCollection, limit_b
 
 		for i, batch in enumerate(tqdm.tqdm(dataloader, desc='MiniBatch')):
 			labels, mels, _, _ = batch
-			labels = labels.to(device)
+			labels = labels['texts'].to(device)
 			mels = mels.to(device)
+
+			###############
+			# Get Temps
+			###############
+			text_temp, audio_temp = model.get_temps()
 
 			###############
 			# Audio Features
@@ -83,16 +88,11 @@ def run(model, zeroshot_weights, dataloader, metric_fn:MetricCollection, limit_b
 			###############
 			# Text Features
 			###############
-			# text_features = model.encode_text(text)
+			# text_features = model.encode_text(labels)
 			# text_features = F.normalize(text_features, dim=-1)
 			# text_features = model.model.text_transform(text_features)
 
 			# logits_per_audio = (audio_temp * (audio_features @ text_features.T))
-
-			###############
-			# Get Temps
-			###############
-			text_temp, audio_temp = model.get_temps()
 
 			###############
 			# Zeroshot logits
@@ -117,87 +117,116 @@ def run(model, zeroshot_weights, dataloader, metric_fn:MetricCollection, limit_b
 	return avg_metric, labels, predict
 
 if __name__ == '__main__':
+	import argparse
 	from utils.tools import get_key
+	device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+	
+
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--model', type=str, help='Path to model')
+	parser.add_argument('--task', type=str, choices=['gender', 'emotion', 'age', 'sounds'], help='Task to run')
+	parser.add_argument('--dataset_name', type=str, choices=['esc50', 'audioset', 'emns', 'emov-db'], required=False, help='if task is sounds or emotion, specify dataset name')
+	parser.add_argument('--top-k', type=list[int], default=[1], help='Top k metrics to use')
+
+	args = parser.parse_args()
+
 	##############
 	# Model
 	##############
-	model_path = "/fsx/knoriy/code/CLASP/.models/audioset_T_Pio_90M_epoch=34-step=4280.ckpt"
-
-	model = PLCLASP.load_from_checkpoint(model_path).to('cuda')
+	model = PLCLASP.load_from_checkpoint(args.model).to(device)
 
 	##############
 	# DataModule
 	##############
-	# dataset = ESC50TDM(
-	#             test_urls=['s3://s-laion-audio/webdataset_tar/esc50/test/'],
-	#             batch_size = 1024,
-	#             num_workers=12,
-	#         )
+	
+	##########
+	# Sounds
+	##########
 
-	# templates = get_lists("./config/classification/sounds/esc-50/templates.txt")
-	# with open("./config/classification/sounds/esc-50/minor_classes.json") as f:
-	# 	classes = json.load(f)
+	if args.task == 'sounds':
+		if args.dataset_name == 'esc50':
+			dataset = ESC50TDM(
+						test_urls=['s3://s-laion-audio/webdataset_tar/esc50/test/'],
+						batch_size = 1024,
+						num_workers=12,
+					)
+			templates = get_lists("./config/classification/sounds/esc-50/templates.txt")
+			with open("./config/classification/sounds/esc-50/minor_classes.json") as f:
+				classes = json.load(f)
+		elif args.dataset_name == 'audioset':
+			templates = get_lists("./config/classification/sounds/audioset/templates.txt")
+			with open("./config/classification/sounds/audioset/classes.json") as f:
+				classes = json.load(f)
+			dataset = AudioSetTDM(
+						test_urls=['s3://s-laion-audio/webdataset_tar/audioset/eval/'],
+						classes=classes,
+						batch_size = 1024,
+						num_workers=12,
+					)
 
-	# AudioSet not setup yet
-
-	templates = get_lists("./config/classification/sounds/audioset/templates.txt")
-	with open("./config/classification/sounds/audioset/classes.json") as f:
-		classes = json.load(f)
-	dataset = AudioSetTDM(
-	            test_urls=['s3://s-laion-audio/webdataset_tar/audioset/eval/'],
-				classes=classes,
-	            batch_size = 1024,
-	            num_workers=12,
-	        )
-
-	##############
+	##########
 	# Gender
-	##############
-	# dataset = VoxCelebTDM(
-	# 			test_urls=['s3://s-laion/knoriy/VoxCeleb_gender/'],
-	# 			batch_size =8,
-	# 			num_workers=12,
-	# 		)
-	# templates = get_lists("./config/classification/gender/templates.txt")
-	# with open("./config/classification/gender/classes.json") as f:
-	# 	classes = json.load(f)
+	##########
+	if args.task == 'gender':
+		dataset = VoxCelebTDM(
+					test_urls=['s3://s-laion/knoriy/VoxCeleb_gender/'],
+					batch_size =8,
+					num_workers=12,
+				)
+		templates = get_lists("./config/classification/gender/templates.txt")
+		with open("./config/classification/gender/classes.json") as f:
+			classes = json.load(f)
 
-	##############
+	##########
 	# Emotion
-	##############
-	# dataset = EMNSTDM(
-	# 			classes = './config/classification/emotion/emns/classes.json', 
-	# 			test_urls=['/fsx/knoriy/raw_datasets/EMNS/metadata.csv'],
-	# 			batch_size = 8,
-	# 			num_workers=12,
-	# 		)
+	##########
+	if args.task == 'emotion':
+		if args.dataset_name == 'emns':
+			dataset = EMNSTDM(
+						classes = './config/classification/emotion/emns/classes.json', 
+						test_urls=['/fsx/knoriy/raw_datasets/EMNS/metadata.csv'],
+						batch_size = 8,
+						num_workers=12,
+					)
 
-	# templates = get_lists("./config/classification/emotion/emns/templates.txt")
-	# with open("./config/classification/emotion/emns/classes.json") as f:
-	# 	classes = json.load(f)
+			templates = get_lists("./config/classification/emotion/emns/templates.txt")
+			with open("./config/classification/emotion/emns/classes.json") as f:
+				classes = json.load(f)
+		elif args.dataset_name == 'emov-db':
+			dataset = EmovDBTDM(
+				test_urls=['/admin/home-knoriy/DELETEME/EmoV_DB/train/'],
+				batch_size =8,
+				num_workers=12,
+			)
 
-	# dataset = EmovDBTDM(
-	# 	test_urls=['s3://s-laion-audio/webdataset_tar/EmoV_DB/test/'],
-	# 	batch_size =8,
-	# 	num_workers=12,
-	# )
+			templates = get_lists("./config/classification/emotion/emov-db/templates.txt")
+			with open("./config/classification/emotion/emov-db/classes.json") as f:
+				classes = json.load(f)
+		elif args.dataset_name == 'crema-d':
+			Warning("CREMA-D is not supported yet")
+			dataset = CremaDTDM(
+				test_urls=['s3://s-laion-audio/webdataset_tar/CREMA-D/test/'],
+				batch_size =8,
+				num_workers=12,
+			)
 
-	# templates = get_lists("./config/classification/emotion/emov-db/templates.txt")
-	# with open("./config/classification/emotion/emov-db/classes.json") as f:
-	# 	classes = json.load(f)
+			templates = get_lists("./config/classification/emotion/crema-d/templates.txt")
+			with open("./config/classification/emotion/crema-d/classes.json") as f:
+				classes = json.load(f)
 
-	##############
+	##########
 	# age
-	##############
-	# dataset = CommonVoiceTDM(
-	# 			test_urls=['s3://s-laion-audio/webdataset_tar/common_voice/test/'],
-	# 			batch_size = 8,
-	# 			num_workers=12,
-	# 		)
+	##########
+	if args.task == 'age':
+		dataset = CommonVoiceTDM(
+					test_urls=['s3://s-laion-audio/webdataset_tar/common_voice/test/'],
+					batch_size = 8,
+					num_workers=12,
+				)
 
-	# templates = get_lists("./config/classification/age/common_voice/templates.txt")
-	# with open("./config/classification/age/common_voice/classes.json") as f:
-	# 	classes = json.load(f)
+		templates = get_lists("./config/classification/age/common_voice/templates.txt")
+		with open("./config/classification/age/common_voice/classes.json") as f:
+			classes = json.load(f)
 
 	##############
 	# Metric
@@ -222,7 +251,7 @@ if __name__ == '__main__':
 	tops, labels, predicts = run(model, zeroshot_weights, dataset.test_dataloader(), metric)
 
 	pprint(tops)
-	# print(labels)
-	# print(predicts)
+	print(labels)
+	print(predicts)
 
 	pprint([(get_key(classes, label.item()), get_key(classes, predict.item())) for label, predict in zip(labels, predicts)])
