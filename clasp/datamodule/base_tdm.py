@@ -20,7 +20,7 @@ class BaseTDM(pl.LightningDataModule, ABC):
 			predict_urls:Optional[list]=None,
 			batch_size:Optional[int]=1,
 			num_workers:Optional[int]=0,
-			persistent_workers:Optional[bool]=True,
+			persistent_workers:Optional[bool]=False,
 			shuffle:Optional[bool]=True,
 			dataloader2:Optional[bool]=False,
 			pin_memory:Optional[bool]=True,
