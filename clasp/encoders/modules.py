@@ -3,6 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+from torch import Tensor
+
 import math
 
 from typing import Tuple, Union, Callable, Optional
@@ -59,10 +61,38 @@ class LayerNorm(nn.LayerNorm):
         return x.to(orig_type)
 
 class TransformerEncoder(nn.Module):
-    def __init__(self, in_channels: int, out_channels:int, num_layers: int, nhead: int, batch_first:bool=False):
+    def __init__(self, 
+                 in_channels: int, 
+                 out_channels:int, 
+                 num_layers: int, 
+                 nhead: int, 
+                 dim_feedforward:int=1024,
+                 dropout:float=0.1, 
+                 activation:Union[str, Callable[[Tensor], Tensor]] = F.relu, 
+                 layer_norm_eps:float=1e-5,
+                 batch_first:bool=False, 
+                 norm_first: bool = False,
+                 norm:nn.Module = None,
+            ):
         super().__init__()
-        encoder_layer = nn.TransformerEncoderLayer(d_model=in_channels, nhead=nhead, batch_first=batch_first)
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
+        if norm is None:
+            norm = LayerNorm(in_channels)
+
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model = in_channels, 
+            nhead = nhead,
+            dim_feedforward = dim_feedforward,
+            dropout = dropout, 
+            activation = activation, 
+            layer_norm_eps = layer_norm_eps, 
+            batch_first = batch_first, 
+            norm_first = norm_first, 
+        )
+        self.transformer_encoder = nn.TransformerEncoder(
+            encoder_layer = encoder_layer, 
+            num_layers = num_layers, 
+            norm = norm,
+        )
         self.project = nn.Linear(in_channels, out_channels)
 
     def forward(self, x: torch.Tensor):

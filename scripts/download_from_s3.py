@@ -1,5 +1,5 @@
 import sys
-sys.path.append('/fsx/knoriy/code/CLASP/clasp')
+sys.path.append("/fsx/knoriy/CLASP/clasp/")
 
 
 import torchdata
@@ -12,8 +12,8 @@ from datamodule.utils import filepath_fn
 
 
 def main():
-    dataset_names = get_lists('/fsx/knoriy/code/CLASP/config/dataset_list.txt')
-    exclude_names = get_lists('/fsx/knoriy/code/CLASP/config/exclude_list.txt')
+    dataset_names = get_lists('/fsx/knoriy/CLASP/config/dataset_list.txt')
+    exclude_names = get_lists('/fsx/knoriy/CLASP/config/exclude_list.txt')
     root_data_path = 's3://s-laion-audio/webdataset_tar/'
 
 
@@ -33,10 +33,10 @@ def main():
     datapipe = torchdata.datapipes.iter.IterableWrapper(updated_urls)\
         .sharding_filter()\
         .on_disk_cache(filepath_fn=filepath_fn)\
-        .open_files_by_boto3(mode='rb')\
+        .open_files_by_fsspec(mode='rb')\
         .end_caching(filepath_fn=filepath_fn)\
         
-    dl = DataLoader(datapipe, num_workers=48, persistent_workers=True)
+    dl = DataLoader(datapipe, num_workers=12, persistent_workers=True)
     
     for _ in tqdm.tqdm(dl, total=len(updated_urls), desc='Downloading'):
         pass

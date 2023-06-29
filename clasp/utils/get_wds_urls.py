@@ -110,9 +110,7 @@ def get_tar_path_s3(base_s3_path:str,
 		and all(exclude_name not in url for exclude_name in exclude)] for state in train_valid_test}
 
 	if cache_path:
-		pl_logger.info(f"Creating URL cache: {cache_path}")
-		with open(cache_path, 'w') as f:
-			json.dump(final_urls, f)
+		create_cache(cache_path, final_urls)
 
 	return final_urls
 
@@ -140,12 +138,12 @@ def get_local_paths(base_path:str,
 	return final_urls
 
 def get_lists(path:str):
-    path = pathlib.Path(path)
-    if not path.exists():
-        raise FileNotFoundError(path)
+	path = pathlib.Path(path)
+	if not path.exists():
+		raise FileNotFoundError(path)
 
-    with open(path) as f:
-        return [line.rstrip('\n') for line in f if line.rstrip('\n') and not line.startswith('#')]
+	with open(path) as f:
+		return [line.rstrip('\n') for line in f if line.rstrip('\n') and not line.startswith('#')]
 
 if __name__ == '__main__':
 	urls = get_s3_paths(
