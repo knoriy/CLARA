@@ -22,6 +22,9 @@ class BaseTDM(pl.LightningDataModule, ABC):
 			num_workers:Optional[int]=0,
 			persistent_workers:Optional[bool]=True,
 			shuffle:Optional[bool]=True,
+			dataloader2:Optional[bool]=False,
+			pin_memory:Optional[bool]=True,
+			drop_last:Optional[bool]=False,
 			exclude_urls:Optional[list]=[],
 		):
 		super().__init__()
@@ -37,6 +40,9 @@ class BaseTDM(pl.LightningDataModule, ABC):
 		self.batch_size = batch_size
 		self.num_workers = num_workers
 		self.persistent_workers = persistent_workers
+		self.pin_memory = pin_memory
+		self.drop_last = drop_last
+		self.dataloader2 = dataloader2
 
 	@abstractmethod
 	def to_sampels(self, data):
@@ -57,44 +63,61 @@ class BaseTDM(pl.LightningDataModule, ABC):
 
 	def setup(self, stage:Optional[str] = None):
 		if self.train_data_dir and len(self.train_data_dir)>0:
-			self.train = self.create_pipeline(self.train_data_dir)
+			self.train_datapipe = self.create_pipeline(self.train_data_dir)
 
 		if self.test_data_dir and len(self.test_data_dir)>0:
-			self.test = self.create_pipeline(self.test_data_dir)
+			self.test_datapipe = self.create_pipeline(self.test_data_dir)
 
 		if self.valid_data_dir and len(self.valid_data_dir)>0:
-			self.valid = self.create_pipeline(self.valid_data_dir)
+			self.valid_datapipe = self.create_pipeline(self.valid_data_dir)
 
 		if self.predict_data_dir and len(self.predict_data_dir)>0:
-			self.predict = self.create_pipeline(self.predict_data_dir)
+			self.predict_datapipe = self.create_pipeline(self.predict_data_dir)
 
-	def _dataloader2(self, dataset):
+	def _get_dataloader2(self, dataset):
 		service = [
 			DistributedReadingService(),
 			MultiProcessingReadingService(num_workers=self.num_workers),
 		]
 		reading_service = SequentialReadingService(*service)
 		return DataLoader2(dataset, reading_service=reading_service)
-
-	def _dataloader(self, dataset):
-		return DataLoader(dataset, num_workers=self.num_workers, batch_size=self.batch_size, collate_fn=self.collate_fn)
+	
+	def _get_dataloader(self, dataset, shuffle=None):
+		return DataLoader(
+			dataset = dataset, 
+			num_workers = self.num_workers, 
+			batch_size = self.batch_size, 
+			collate_fn = self.collate_fn, 
+			pin_memory = self.pin_memory, 
+			shuffle = shuffle, 
+			persistent_workers = self.persistent_workers,
+			drop_last = self.drop_last
+			)
 
 	def train_dataloader(self):
-		if not self.train_data_dir:
-			raise MisconfigurationException('train_urls not set.')
-		return self._dataloader(self.train)
+		if self.dataloader2:
+			self.train_dl =  self._get_dataloader2(self.train_datapipe)
+		else:
+			self.train_dl = self._get_dataloader(self.train_datapipe)
+		return self.train_dl
 
 	def val_dataloader(self):
-		if not self.valid_data_dir:
-			raise MisconfigurationException('valid_urls not set.')
-		return self._dataloader(self.valid)
+		if self.dataloader2:
+			self.valid_dl =  self._get_dataloader2(self.valid_datapipe)
+		else:
+			self.valid_dl = self._get_dataloader(self.valid_datapipe, shuffle=False)
+		return self.valid_dl
 
 	def test_dataloader(self):
-		if not self.test_data_dir:
-			raise MisconfigurationException('test_urls not set.')
-		return self._dataloader(self.test)
+		if self.dataloader2:
+			self.test_dl =  self._get_dataloader2(self.test_datapipe)
+		else:
+			self.test_dl = self._get_dataloader(self.test_datapipe, shuffle=False)
+		return self.test_dl
 
 	def predict_dataloader(self):
-		if not self.predict_data_dir:
-			raise MisconfigurationException('predict_urls not set.')
-		return self._dataloader(self.predict)
+		if self.dataloader2:
+			self.valid_dl =  self._get_dataloader2(self.valid_datapipe)
+		else:
+			self.valid_dl = self._get_dataloader(self.valid_datapipe, shuffle=False)
+		return self.valid_dl
