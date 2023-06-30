@@ -34,19 +34,13 @@ class MultilingualTDM(BaseTDM):
 			root_data_path:str,#'s-laion-audio/webdataset_tar/' or '/fsx/knoriy/processed_datasets/', 
 			dataset_list:str,
 			exclude_list:Optional[str]=None,
-			batch_size:Optional[int]=1,
-			num_workers:Optional[int]=0,
-			persistent_workers:Optional[bool]=True,
-			pin_memory:Optional[bool]=True,
-			shuffle:Optional[bool]=True,
-			drop_last:Optional[bool]=False,
 			cache_path:Optional[str]=None,
 			use_cache:Optional[bool]=True,
 			recache:Optional[bool]=False,
 			train_valid_test:Optional[list]=['train', 'valid', 'test'],
-			dataloader2:Optional[bool]=False,
+			*args,**kwargs,
         ):
-		super().__init__()
+		super().__init__(*args,**kwargs)
 
 		exclude = []
 		if exclude_list:
@@ -96,14 +90,6 @@ class MultilingualTDM(BaseTDM):
 		self.train_data_dir = self.urls.get('train', None)
 		self.test_data_dir = self.urls.get('test', None)
 		self.valid_data_dir = self.urls.get('valid', None)
-
-		self.shuffle = shuffle
-		self.batch_size = batch_size
-		self.num_workers = num_workers
-		self.persistent_workers = persistent_workers
-		self.pin_memory = pin_memory
-		self.drop_last = drop_last
-		self.dataloader2 = dataloader2
 
 		# self.cleaner = EnglishTextNormalizer()
 		self.tokenizer = Tokeniser()
