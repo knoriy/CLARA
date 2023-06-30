@@ -1,5 +1,5 @@
 class_path: clasp.LinearProbeCLASP
 init_args:
-  in_features: 1024
+  in_features: 512
   num_classes: 8
-  checkpoint_path: ./logs/CLASP/kp0bwbfe/checkpoints/epoch=99-step=14700.ckpt
+  checkpoint_path: ./logs/CLASP/EmoV_DB_77acc_99epoch/checkpoints/epoch=99-step=3000.ckpt
