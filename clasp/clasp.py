@@ -262,12 +262,15 @@ class LinearProbeCLASP(pl.LightningModule):
 	def __init__(self, 
 		in_features:int, 
 		num_classes:int, 
+		task:str,
 		checkpoint_path:str, 
 		learning_rate:float=1e-3, 
-		LR_sheduler_T_max:int=20,
-		LR_sheduler_warmup_steps:int=20,
+		learning_rate_patience:int=10, 
+		LR_sheduler_T_max:int=40,
+		LR_sheduler_warmup_steps:int=5,
 		LR_sheduler_min_lr:float=0.0,
 		LR_sheduler_decay:float=1.0,
+		lr_interval:Literal["epoch","step"]='epoch',
 		*args, **kwargs
 	) -> None:
 		
@@ -277,7 +280,7 @@ class LinearProbeCLASP(pl.LightningModule):
 		self.feature_extractor = PLCLASP.load_from_checkpoint(checkpoint_path)
 		self.feature_extractor.freeze()
 
-		self.classifier = MLPLayers([1024, 512, 128, num_classes])
+		self.classifier = MLPLayers([self.feature_extractor._hparams.output_dim, 512, 128, num_classes])
 
 	def forward(self, x:torch.Tensor) -> torch.Tensor:
 		x = self.feature_extractor.encode_audio(x)
@@ -302,7 +305,8 @@ class LinearProbeCLASP(pl.LightningModule):
 		self.log_dict(metrics)
 
 	def _shared_eval_step(self, batch, batch_idx):
-		labels, mels = batch
+		labels, mels, _, _ = batch
+		labels = labels[self.hparams.task]
 		y_hat = self(mels)
 
 		loss = F.cross_entropy(y_hat, labels)
