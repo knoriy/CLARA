@@ -263,7 +263,8 @@ class LinearProbeCLASP(pl.LightningModule):
 		in_features:int, 
 		num_classes:int, 
 		task:str,
-		checkpoint_path:str, 
+		clasp_checkpoint_path:str, 
+		clasp_map_location:str,
 		learning_rate:float=1e-3, 
 		learning_rate_patience:int=10, 
 		LR_sheduler_T_max:int=40,
@@ -277,7 +278,7 @@ class LinearProbeCLASP(pl.LightningModule):
 		super().__init__(*args, **kwargs)
 		self.save_hyperparameters()
 
-		self.feature_extractor = PLCLASP.load_from_checkpoint(checkpoint_path)
+		self.feature_extractor = PLCLASP.load_from_checkpoint(clasp_checkpoint_path, map_location=clasp_map_location)
 		self.feature_extractor.freeze()
 
 		self.classifier = MLPLayers([self.feature_extractor._hparams.output_dim, 512, 128, num_classes])
