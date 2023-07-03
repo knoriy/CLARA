@@ -1,5 +1,15 @@
 class_path: clasp.LinearProbeCLASP
 init_args:
   in_features: 512
-  num_classes: 8
+  num_classes: 5
   checkpoint_path: ./logs/CLASP/EmoV_DB_77acc_99epoch/checkpoints/epoch=99-step=3000.ckpt
+  task: emotion
+
+  # LR Scheduler params
+  learning_rate: 1e-4
+  learning_rate_patience: 10
+  LR_sheduler_T_max: 5000
+  LR_sheduler_warmup_steps: 1000
+  LR_sheduler_min_lr: 1e-6
+  LR_sheduler_decay: 0.8
+  lr_interval: step
