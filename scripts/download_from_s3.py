@@ -16,14 +16,14 @@ from datamodule.utils import Boto3FileOpenerIterDataPipe as Boto3FileOpener
 from datamodule.utils import filepath_fn
 
 from torchdata.datapipes.iter.util.cacheholder import CacheState, _get_list_filename, _hash_check, _promise_filename
-from torchdata.datapipes.iter.util.cacheholder import OnDiskCacheHolderIterDataPipe as OnDiskCacheHolder
+from torchdata.datapipes.iter.util.cacheholder import OnDiskCacheHolderIterDataPipe
 try:
     import portalocker
 except ImportError:
     portalocker = None
 
 
-class OnDiskCacheHolderIterDataPipe(OnDiskCacheHolder):
+class MOnDiskCacheHolderIterDataPipe(OnDiskCacheHolderIterDataPipe):
     @staticmethod
     def _cache_check_fn(data, filepath_fn, hash_dict, hash_type, extra_check_fn, cache_uuid):
         filepath = data if filepath_fn is None else filepath_fn(data)
@@ -91,7 +91,7 @@ def main():
     datapipe = torchdata.datapipes.iter.IterableWrapper(updated_urls)\
         .sharding_filter()\
 
-    datapipe = OnDiskCacheHolderIterDataPipe(datapipe, filepath_fn=filepath_fn)\
+    datapipe = MOnDiskCacheHolderIterDataPipe(datapipe, filepath_fn=filepath_fn)\
         .open_files_by_boto3(mode='rb')\
         .end_caching(filepath_fn=filepath_fn)\
         
