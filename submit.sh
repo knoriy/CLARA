@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --partition=g40x
-#SBATCH --job-name=clsp
+#SBATCH --job-name=laion
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --gpus-per-node=1
+#SBATCH --ntasks-per-node=8
+#SBATCH --gpus-per-node=8
 #SBATCH --cpus-per-task=12
 #SBATCH --account laion
 #SBATCH --output=logs/outs/%x_%j.out
