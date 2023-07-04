@@ -322,3 +322,19 @@ def get_key(src, val):
             return key
 
     return "key doesn't exist"
+
+def calculate_average(data):
+	num_items = len(data)
+	if num_items == 0:
+		return None
+
+	keys = data[0].keys()
+
+	avgs = {}
+	for key in keys:
+		sum_key = 0
+		for d in data:
+			sum_key += d[key]
+		avgs[f"avg_{key}"] = sum_key / num_items
+
+	return avgs
