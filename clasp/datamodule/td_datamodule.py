@@ -24,8 +24,9 @@ pl_logger = logging.getLogger('pytorch_lightning')
 
 from text.whisper.normalizers import EnglishTextNormalizer
 from text.tokeniser import Tokeniser # from text.whisper.tokenizer import get_tokenizer
-from utils import get_s3_paths, get_local_paths, get_lists 
+from utils import get_s3_paths, get_local_paths, get_lists
 from .utils import Boto3FileOpenerIterDataPipe as Boto3FileOpener
+from .utils import get_log_melspec
 from . import BaseTDM
 
 
@@ -132,10 +133,7 @@ class MultilingualTDM(BaseTDM):
 		texts = []
 
 		for (a, t) in data:
-			mel = librosa.feature.melspectrogram(y=a[0], sr=a[1], fmin=0, fmax=8000, n_mels=80, n_fft=1024, win_length=1024, hop_length=512)
-			mel = librosa.power_to_db(mel, ref=np.max)
-			mel = (mel+40)/40
-			mels.append(torch.tensor(mel, dtype=torch.float32).T)
+			mels.append(get_log_melspec(a[0], a[1]))
 
 			texts.append(
 				torch.tensor(
