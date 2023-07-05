@@ -21,7 +21,7 @@ import logging
 pl_logger = logging.getLogger('pytorch_lightning')
 
 _EMOTION_DICT = {"angry": 0,"disgusted": 1,"amused": 2,"sleepy": 3,"neutral": 4}
-_GENDER_DICT = {"male": 0,"male": 0, "female": 1, "females": 1}
+_GENDER_DICT = {"male": 0,"males": 0, "female": 1, "females": 1}
 
 class EmovDBTDM(BaseTDM):
 	def __init__(self,
