@@ -264,7 +264,7 @@ class LinearProbeCLASP(pl.LightningModule):
 		num_classes:int, 
 		task:str,
 		clasp_checkpoint_path:str, 
-		clasp_map_location:str,
+		clasp_map_location:str="cuda",
 		learning_rate:float=1e-3, 
 		learning_rate_patience:int=10, 
 		LR_sheduler_T_max:int=40,
