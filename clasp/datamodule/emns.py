@@ -112,7 +112,7 @@ class EMNSTDM(BaseTDM):
 			.batch(2) \
 			.shuffle(buffer_size=100)\
 			.map(self.to_sampels) \
-			# .map(self.to_keys)\
+			.map(self.to_keys)\
 
 		if self.dataloader2:
 			datapipe = datapipe.batch(self.batch_size) \
