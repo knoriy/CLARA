@@ -99,20 +99,7 @@ def run(model, zeroshot_weights, dataloader, metric_fn:MetricCollection, limit_b
 
 	return avg_metric, labels, predict
 
-if __name__ == '__main__':
-	import argparse
-	from utils.tools import get_key
-	device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-	
-
-	parser = argparse.ArgumentParser()
-	parser.add_argument('--model', type=str, help='Path to model')
-	parser.add_argument('--task', type=str, choices=['gender', 'emotion', 'age', 'sounds'], help='Task to run')
-	parser.add_argument('--dataset_name', type=str, choices=['esc50', 'audioset', 'emns', 'emov-db'], required=False, help='if task is sounds or emotion, specify dataset name')
-	parser.add_argument('--top-k', type=list[int], default=[1], help='Top k metrics to use')
-
-	args = parser.parse_args()
-
+def main(args):
 	##############
 	# Model
 	##############
@@ -232,6 +219,24 @@ if __name__ == '__main__':
 
 	zeroshot_weights, all_texts = zeroshot_classifier(model, classes, templates)
 	tops, labels, predicts = run(model, zeroshot_weights, dataset.test_dataloader(), metric)
+
+	return tops, labels, predicts, classes
+
+if __name__ == '__main__':
+	import argparse
+	from utils.tools import get_key
+	device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+	
+
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--model', type=str, help='Path to model')
+	parser.add_argument('--task', type=str, choices=['gender', 'emotion', 'age', 'sounds'], help='Task to run')
+	parser.add_argument('--dataset_name', type=str, choices=['esc50', 'audioset', 'emns', 'emov-db'], required=False, help='if task is sounds or emotion, specify dataset name')
+	parser.add_argument('--top-k', type=list[int], default=[1], help='Top k metrics to use')
+
+	args = parser.parse_args()
+
+	tops, labels, predicts, classes = main(args)
 
 	pprint(tops)
 	print(labels)
