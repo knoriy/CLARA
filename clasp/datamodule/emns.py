@@ -20,7 +20,7 @@ from .utils import Boto3FileOpenerIterDataPipe as Boto3FileOpener
 import logging
 pl_logger = logging.getLogger('pytorch_lightning')
 
-_EMOTION_DICT = {"angry": 0,"disgusted": 1,"fearful": 2,"happy": 3,"neutral": 4, "sad": 5}
+_EMOTION_DICT = {"happy": 0,"sad": 1,"angry": 2,"excited": 3,"sarcastic": 4,"neutral": 5,"disgust": 6,"surprised": 7}
 _GENDER_DICT = {"male": 0,"males": 0, "Male": 0, "female": 1, "females": 1, "Female": 1}
 
 class EMNSTDM(BaseTDM):
