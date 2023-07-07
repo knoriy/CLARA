@@ -204,7 +204,7 @@ def main(args):
 	num_classes = len(classes)
 	metric = MetricCollection({})
 
-	for top_k in [1, 2, 3, 5, 10]:
+	for top_k in args.top_k:
 		if top_k > num_classes:
 			break
 		metric.add_metrics({
@@ -231,7 +231,7 @@ if __name__ == '__main__':
 	parser.add_argument('--model', type=str, help='Path to model')
 	parser.add_argument('--task', type=str, choices=['gender', 'emotion', 'age', 'sounds'], help='Task to run')
 	parser.add_argument('--dataset_name', type=str, choices=['esc50', 'audioset', 'emns', 'emov-db'], required=False, help='if task is sounds or emotion, specify dataset name')
-	parser.add_argument('--top-k', type=list[int], default=[1], help='Top k metrics to use')
+	parser.add_argument('--top_k', type=list[int], default=[1,2,3,5,10], help='Top k metrics to use')
 
 	args = parser.parse_args()
 
