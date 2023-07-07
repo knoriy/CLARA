@@ -265,6 +265,7 @@ class LinearProbeCLASP(pl.LightningModule):
 		task:str,
 		clasp_checkpoint_path:str, 
 		clasp_map_location:str="cuda",
+		dropout:float=0.1,
 		learning_rate:float=1e-3, 
 		learning_rate_patience:int=10, 
 		LR_sheduler_T_max:int=40,
@@ -281,7 +282,7 @@ class LinearProbeCLASP(pl.LightningModule):
 		self.feature_extractor = PLCLASP.load_from_checkpoint(clasp_checkpoint_path, map_location=clasp_map_location)
 		self.feature_extractor.freeze()
 
-		self.classifier = MLPLayers([self.feature_extractor._hparams.output_dim, 512, 128, num_classes])
+		self.classifier = MLPLayers([self.feature_extractor._hparams.output_dim, num_classes], dropout=dropout)
 
 	def forward(self, x:torch.Tensor) -> torch.Tensor:
 		x = self.feature_extractor.encode_audio(x)
