@@ -13,8 +13,6 @@ from datamodule import *
 from text.tokeniser import Tokeniser
 from utils import get_lists, calculate_average
 
-import matplotlib.pyplot as plt
-
 ##############
 # Non Critical imports
 ##############
@@ -92,12 +90,7 @@ def run(model, zeroshot_weights, dataloader, metric_fn:MetricCollection, limit_b
 
 		avg_metric = calculate_average(metrics)
 
-		predict = torch.argmax(logits_per_audio, dim=-1)
-		# print("Labels", labels)
-		plt.imshow(logits_per_audio.detach().cpu().numpy())
-		# # print(logits_per_audio.detach().cpu().numpy())
-
-	return avg_metric, labels, predict
+	return avg_metric
 
 def main(args):
 	##############
@@ -235,10 +228,6 @@ if __name__ == '__main__':
 
 	args = parser.parse_args()
 
-	tops, labels, predicts, classes = main(args)
+	tops = main(args)
 
 	pprint(tops)
-	print(labels)
-	print(predicts)
-
-	pprint([(get_key(classes, label.item()), get_key(classes, predict.item())) for label, predict in zip(labels, predicts)])
