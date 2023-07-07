@@ -204,7 +204,6 @@ def main(args):
 	num_classes = len(classes)
 	metric = MetricCollection({})
 
-	recall = []
 	for top_k in [1, 2, 3, 5, 10]:
 		if top_k > num_classes:
 			break
