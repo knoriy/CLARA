@@ -282,7 +282,7 @@ class LinearProbeCLASP(pl.LightningModule):
 		self.feature_extractor = PLCLASP.load_from_checkpoint(clasp_checkpoint_path, map_location=clasp_map_location)
 		self.feature_extractor.freeze()
 
-		self.classifier = MLPLayers([self.feature_extractor._hparams.output_dim, num_classes], dropout=dropout)
+		self.classifier = MLPLayers([self.feature_extractor._hparams.output_dim, 512, 128, num_classes], dropout=dropout)
 
 	def forward(self, x:torch.Tensor) -> torch.Tensor:
 		x = self.feature_extractor.encode_audio(x)
