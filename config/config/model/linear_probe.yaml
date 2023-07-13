@@ -1,10 +1,10 @@
 class_path: clasp.LinearProbeCLASP
 init_args:
   in_features: 512
-  num_classes: 2
+  num_classes: 5
   dropout: 0.1
   clasp_checkpoint_path: ./logs/CLASP/Emotion_datasets_76acc_42epoch_60M/checkpoints/epoch=41-step=3402.ckpt
-  task: gender
+  task: emotion
 
   # LR Scheduler params
   learning_rate: 1e-4
