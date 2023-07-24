@@ -1,12 +1,14 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+
 import tqdm
 import json
 import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.nn import functional as F
 
-from torchmetrics import MetricCollection, Recall
-
-from text.tokeniser import Tokeniser
+from torchmetrics import MetricCollection, Recall, Accuracy
 
 from clasp import PLCLASP
 from datamodule import *
@@ -41,7 +43,7 @@ def zeroshot_classifier(model, classnames, templates, language='en'):
 		zeroshot_weights = torch.stack(zeroshot_weights).to(device)
 	return zeroshot_weights, all_texts
 
-def run(model, zeroshot_weights, dataloader, metric_fn:MetricCollection, limit_batches=-1):
+def run(model, zeroshot_weights, dataloader, metric_fn:MetricCollection, task:str, limit_batches=-1):
 	device = model.device
 	model.eval()
 	with torch.no_grad():
@@ -51,7 +53,7 @@ def run(model, zeroshot_weights, dataloader, metric_fn:MetricCollection, limit_b
 
 		for i, batch in enumerate(tqdm.tqdm(dataloader, desc='MiniBatch')):
 			labels, mels, _, _ = batch
-			labels = labels['texts'].to(device)
+			labels = labels[task].to(device)
 			mels = mels.to(device)
 
 			###############
@@ -101,7 +103,7 @@ def main(args):
 	##############
 	# DataModule
 	##############
-	
+
 	##########
 	# Sounds
 	##########
@@ -110,21 +112,21 @@ def main(args):
 		if args.dataset_name == 'esc50':
 			dataset = ESC50TDM(
 						test_urls=['s3://s-laion-audio/webdataset_tar/esc50/test/'],
-						batch_size = 1024,
-						num_workers=12,
+						batch_size = args.batch_size,
+						num_workers = args.num_workers,
 					)
-			templates = get_lists("./config/classification/sounds/esc-50/templates.txt")
-			with open("./config/classification/sounds/esc-50/minor_classes.json") as f:
+			templates = get_lists(os.path.join(args.root_cfg_path , "classification/sounds/esc-50/templates.txt"))
+			with open(os.path.join(args.root_cfg_path , "classification/sounds/esc-50/minor_classes.json")) as f:
 				classes = json.load(f)
 		elif args.dataset_name == 'audioset':
-			templates = get_lists("./config/classification/sounds/audioset/templates.txt")
-			with open("./config/classification/sounds/audioset/classes.json") as f:
+			templates = get_lists(os.path.join(args.root_cfg_path , "classification/sounds/audioset/templates.txt"))
+			with open(os.path.join(args.root_cfg_path , "classification/sounds/audioset/classes.json")) as f:
 				classes = json.load(f)
 			dataset = AudioSetTDM(
-						test_urls=['s3://s-laion-audio/webdataset_tar/audioset/eval/'],
+						root_data_path='s3://laion-west-audio/webdataset_tar/',
 						classes=classes,
-						batch_size = 1024,
-						num_workers=12,
+						batch_size = args.batch_size,
+						num_workers = args.num_workers,
 					)
 
 	##########
@@ -133,48 +135,50 @@ def main(args):
 	if args.task == 'gender':
 		dataset = VoxCelebTDM(
 					test_urls=['s3://s-laion/knoriy/VoxCeleb_gender/'],
-					batch_size =8,
-					num_workers=12,
+					batch_size = args.batch_size,
+					num_workers = args.num_workers,
 				)
-		templates = get_lists("./config/classification/gender/templates.txt")
-		with open("./config/classification/gender/classes.json") as f:
+		templates = get_lists(os.path.join(args.root_cfg_path , "classification/gender/templates.txt"))
+		with open(os.path.join(args.root_cfg_path , "classification/gender/classes.json")) as f:
 			classes = json.load(f)
 
 	##########
 	# Emotion
 	##########
 	if args.task == 'emotion':
+		templates_path = os.path.join(args.root_cfg_path , f"classification/{args.task}/{args.dataset_name}/templates.txt")
+		classes_path = os.path.join(args.root_cfg_path , f"classification/{args.task}/{args.dataset_name}/classes.json")
+
 		if args.dataset_name == 'emns':
 			dataset = EMNSTDM(
-						classes = './config/classification/emotion/emns/classes.json', 
-						test_urls=['/fsx/knoriy/raw_datasets/EMNS/metadata.csv'],
-						batch_size = 8,
-						num_workers=12,
+						root_data_path='s3://laion-west-audio/webdataset_tar/',
+						batch_size = args.batch_size,
+						num_workers = args.num_workers,
 					)
 
-			templates = get_lists("./config/classification/emotion/emns/templates.txt")
-			with open("./config/classification/emotion/emns/classes.json") as f:
+			templates = get_lists(templates_path)
+			with open(classes_path) as f:
 				classes = json.load(f)
 		elif args.dataset_name == 'emov-db':
 			dataset = EmovDBTDM(
-				test_urls=['/admin/home-knoriy/DELETEME/EmoV_DB/train/'],
-				batch_size =8,
-				num_workers=12,
+				root_data_path='s3://laion-west-audio/webdataset_tar/',
+				batch_size = args.batch_size,
+				num_workers = args.num_workers,
 			)
 
-			templates = get_lists("./config/classification/emotion/emov-db/templates.txt")
-			with open("./config/classification/emotion/emov-db/classes.json") as f:
+			templates = get_lists(templates_path)
+			with open(classes_path) as f:
 				classes = json.load(f)
 		elif args.dataset_name == 'crema-d':
 			Warning("CREMA-D is not supported yet")
 			dataset = CremaDTDM(
-				test_urls=['s3://s-laion-audio/webdataset_tar/CREMA-D/test/'],
-				batch_size =8,
-				num_workers=12,
+				root_data_path='s3://laion-west-audio/webdataset_tar/',
+				batch_size = args.batch_size,
+				num_workers = args.num_workers,
 			)
 
-			templates = get_lists("./config/classification/emotion/crema-d/templates.txt")
-			with open("./config/classification/emotion/crema-d/classes.json") as f:
+			templates = get_lists(templates_path)
+			with open(classes_path) as f:
 				classes = json.load(f)
 
 	##########
@@ -183,12 +187,12 @@ def main(args):
 	if args.task == 'age':
 		dataset = CommonVoiceTDM(
 					test_urls=['s3://s-laion-audio/webdataset_tar/common_voice/test/'],
-					batch_size = 8,
-					num_workers=12,
+					batch_size = args.batch_size,
+					num_workers = args.num_workers,
 				)
 
-		templates = get_lists("./config/classification/age/common_voice/templates.txt")
-		with open("./config/classification/age/common_voice/classes.json") as f:
+		templates = get_lists(os.path.join(args.root_cfg_path , "classification/age/common_voice/templates.txt"))
+		with open(os.path.join(args.root_cfg_path , "classification/age/common_voice/classes.json")) as f:
 			classes = json.load(f)
 
 	##############
@@ -202,6 +206,7 @@ def main(args):
 			break
 		metric.add_metrics({
 			f"rec@{top_k}":Recall(task='multiclass', num_classes=num_classes, top_k=top_k),
+			f"acc@{top_k}":Accuracy(task='multiclass', num_classes=num_classes, top_k=top_k),
 			})
 
 	##############
@@ -210,9 +215,9 @@ def main(args):
 	dataset.setup()
 
 	zeroshot_weights, all_texts = zeroshot_classifier(model, classes, templates)
-	tops, labels, predicts = run(model, zeroshot_weights, dataset.test_dataloader(), metric)
+	tops = run(model, zeroshot_weights, dataset.test_dataloader(), metric, args.task)
 
-	return tops, labels, predicts, classes
+	return tops
 
 if __name__ == '__main__':
 	import argparse
@@ -223,8 +228,11 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--model', type=str, help='Path to model')
 	parser.add_argument('--task', type=str, choices=['gender', 'emotion', 'age', 'sounds'], help='Task to run')
-	parser.add_argument('--dataset_name', type=str, choices=['esc50', 'audioset', 'emns', 'emov-db'], required=False, help='if task is sounds or emotion, specify dataset name')
-	parser.add_argument('--top_k', type=list[int], default=[1,2,3,5,10], help='Top k metrics to use')
+	parser.add_argument('--root_cfg_path', type=str, help='root path to config files')
+	parser.add_argument('--dataset_name', type=str, choices=['esc50', 'audioset', 'emns', 'emov-db', 'crema-d'], required=False, help='if task is sounds or emotion, specify dataset name')
+	parser.add_argument('--top_k', type=int, default=[1,2,3,5,10], help='Top k metrics to use')
+	parser.add_argument('--batch_size', type=int, default=8, help='Dataloader batch size')
+	parser.add_argument('--num_workers', type=int, default=12, help='Dataloader number of workers')
 
 	args = parser.parse_args()
 
