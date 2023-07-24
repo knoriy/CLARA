@@ -45,7 +45,7 @@ class BaseTDM(pl.LightningDataModule, ABC):
 		self.dataloader2 = dataloader2
 
 	@abstractmethod
-	def to_sampels(self, data):
+	def to_samples(self, data):
 		pass
 	
 	@abstractmethod
