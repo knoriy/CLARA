@@ -130,13 +130,7 @@ if __name__ == '__main__':
 	with open("../config/classification/emotion/crema-d/classes.json") as f:
 		classes = json.load(f)
 
-
-	templates = ['{}']
-
-
-	from torchmetrics.retrieval import RetrievalMAP
-
-	metric_fn = RetrievalMAP(top_k=2)
+	from torchmetrics.retrieval import RetrievalMAP, RetrievalRecall
 
 	num_classes = len(classes)
 	metric = MetricCollection({})
@@ -146,6 +140,7 @@ if __name__ == '__main__':
 			break
 		metric.add_metrics({
 			f"mAP@{top_k}":RetrievalMAP(top_k=top_k),
+			f"rec@{top_k}":RetrievalRecall(top_k=top_k),
 			})
 
 	# zeroshot_weights, all_texts = zeroshot_classifier(model, classes, templates)
