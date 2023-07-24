@@ -15,7 +15,7 @@ class ESC50TDM(BaseTDM):
 		super().__init__(*args, **kwargs)
 		self.classes = classes
 
-	def to_sampels(self, data):
+	def to_samples(self, data):
 		return soundfile.read(io.BytesIO(data[0][1].read())), torch.tensor(self.classes.get(json.load(data[1][1])['tag'][0]))
 
 	def create_pipeline(self, data_dir):
@@ -26,7 +26,7 @@ class ESC50TDM(BaseTDM):
 			.open_files_by_fsspec(mode='rb')\
 			.load_from_tar()\
 			.groupby(group_by_filename, group_size=2, guaranteed_group_size=2)\
-			.map(self.to_sampels) \
+			.map(self.to_samples) \
 			# .batch(self.batch_size) \
 			# .map(self.collate_fn)
 		

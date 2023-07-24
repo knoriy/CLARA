@@ -16,7 +16,7 @@ class TensoredTDM(MultilingualTDM):
 		self.connection_timeout = connection_timeout
 		self.read_timeout = read_timeout
 
-	def to_sampels(self, data):
+	def to_samples(self, data):
 		a, t = data
 		return torch.load(io.BytesIO(a[1].read())), torch.load(io.BytesIO(t[1].read()))
 	
@@ -29,7 +29,7 @@ class TensoredTDM(MultilingualTDM):
 			.load_from_tar() \
 			.groupby(group_by_filename, group_size=2, guaranteed_group_size=2)\
 			.shuffle(buffer_size=100)\
-			.map(self.to_sampels) \
+			.map(self.to_samples) \
 			# .batch(self.batch_size) \
 			# .map(self.collate_fn)
 		

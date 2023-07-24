@@ -95,7 +95,7 @@ class MultilingualTDM(BaseTDM):
 		# self.cleaner = EnglishTextNormalizer()
 		self.tokenizer = Tokeniser()
 
-	def to_sampels(self, data):
+	def to_samples(self, data):
 		a, t = data
 		return soundfile.read(io.BytesIO(a[1].read())), json.loads(t[1].read().decode('utf-8'))
 	
@@ -113,7 +113,7 @@ class MultilingualTDM(BaseTDM):
 			.batch(2) \
 			.sharding_filter()\
 			.shuffle(buffer_size=100)\
-			.map(self.to_sampels) \
+			.map(self.to_samples) \
 		
 		if self.dataloader2:
 			datapipe = datapipe.batch(self.batch_size) \

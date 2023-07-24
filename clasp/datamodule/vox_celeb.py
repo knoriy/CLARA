@@ -20,7 +20,7 @@ def map_gender_to_int(genders):
 	return list(map(gender_to_int, genders))
 
 class VoxCelebTDM(BaseTDM):
-	def to_sampels(self, data):
+	def to_samples(self, data):
 		return soundfile.read(io.BytesIO(data[1].read())), data[0].split("/")[-2]
 
 	def create_pipeline(self, data_dir):
@@ -30,7 +30,7 @@ class VoxCelebTDM(BaseTDM):
 			.sharding_filter()\
 			.open_files_by_fsspec(mode='rb')\
 			.load_from_tar()\
-			.map(self.to_sampels) \
+			.map(self.to_samples) \
 			# .batch(self.batch_size) \
 			# .map(self.collate_fn)
 		

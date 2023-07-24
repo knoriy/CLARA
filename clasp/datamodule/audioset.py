@@ -78,7 +78,7 @@ class AudioSetTDM(BaseTDM):
 			\n\tTest: {len(self.urls.get('test', None))}"
 		)
 
-	def to_sampels(self, data):
+	def to_samples(self, data):
 		a, t = data
 		return soundfile.read(io.BytesIO(a[1].read())), json.loads(t[1].read().decode('utf-8'))
 	
@@ -108,7 +108,7 @@ class AudioSetTDM(BaseTDM):
 		datapipe = datapipe.load_from_tar() \
 			.batch(2) \
 			.shuffle(buffer_size=100)\
-			.map(self.to_sampels) \
+			.map(self.to_samples) \
 			.map(self.to_keys)\
 
 		if self.dataloader2:

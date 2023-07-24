@@ -22,7 +22,7 @@ class CommonVoiceTDM(BaseTDM):
 		super().__init__(*args, **kwargs)
 		self.tokeniser = Tokeniser()
 
-	def to_sampels(self, data):
+	def to_samples(self, data):
 		a, t = data
 		audio, meta = soundfile.read(io.BytesIO(a[1].read())), json.loads(t[1].read().decode('utf-8'))
 
@@ -57,7 +57,7 @@ class CommonVoiceTDM(BaseTDM):
 			.open_files_by_fsspec(mode='rb')\
 			.load_from_tar()\
 			.groupby(group_by_filename, group_size=2, guaranteed_group_size=2)\
-			.map(self.to_sampels)\
+			.map(self.to_samples)\
 			.filter(self.filter_fn)\
 			.map(self.to_keys)\
 			# .batch(self.batch_size) \
