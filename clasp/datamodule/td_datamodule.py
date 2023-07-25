@@ -83,9 +83,9 @@ class MultilingualTDM(BaseTDM):
 				)
 
 		pl_logger.info(f"Urls found: \
-			\n\tTrain: {len(self.urls.get('train', None))} \
-			\n\tValid: {len(self.urls.get('valid', None))} \
-			\n\tTest: {len(self.urls.get('test', None))}"
+			\n\tTrain: {len(self.urls.get(train_valid_test[0], []))} \
+			\n\tValid: {len(self.urls.get(train_valid_test[1], []))} \
+			\n\tTest: {len(self.urls.get (train_valid_test[2], []))}"
 		)
 		
 		self.train_data_dir = self.urls.get(train_valid_test[0], None)
