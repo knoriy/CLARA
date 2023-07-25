@@ -29,7 +29,7 @@ class AudioSetTDM(BaseTDM):
 			cache_path:Optional[str]=None,
 			use_cache:Optional[bool]=True,
 			recache:Optional[bool]=False,
-			train_valid_test:Optional[list]=['train', 'valid', 'test'],
+			train_valid_test:Optional[list]=['unbalanced_train', 'eval', 'test'],
 			*args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self.tokeniser = Tokeniser()
@@ -68,14 +68,14 @@ class AudioSetTDM(BaseTDM):
 				recache				= recache
 				)
 
-		self.train_data_dir = self.urls.get('train', None)
-		self.test_data_dir = self.urls.get('test', None)
-		self.valid_data_dir = self.urls.get('valid', None)
+		self.train_data_dir = self.urls.get(train_valid_test[0], None)
+		self.test_data_dir = self.urls.get(train_valid_test[2], None)
+		self.valid_data_dir = self.urls.get(train_valid_test[1], None)
 
 		pl_logger.info(f"Urls found: \
-			\n\tTrain: {len(self.urls.get('train', None))} \
-			\n\tValid: {len(self.urls.get('valid', None))} \
-			\n\tTest: {len(self.urls.get('test', None))}"
+			\n\tTrain: {len(self.urls.get(train_valid_test[0], []))} \
+			\n\tValid: {len(self.urls.get(train_valid_test[1], []))} \
+			\n\tTest: {len(self.urls.get(train_valid_test[2], []))}"
 		)
 
 	def to_samples(self, data):
