@@ -8,4 +8,5 @@ from .emns import EMNSTDM
 from .common_voice import CommonVoiceTDM
 from .emov_db import EmovDBTDM
 from .audioset import AudioSetTDM
+from .audiocap import AudioCapTDM
 from .crema_d import CremaDTDM
