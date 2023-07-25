@@ -88,9 +88,9 @@ class MultilingualTDM(BaseTDM):
 			\n\tTest: {len(self.urls.get('test', None))}"
 		)
 		
-		self.train_data_dir = self.urls.get('train', None)
-		self.test_data_dir = self.urls.get('test', None)
-		self.valid_data_dir = self.urls.get('valid', None)
+		self.train_data_dir = self.urls.get(train_valid_test[0], None)
+		self.valid_data_dir = self.urls.get(train_valid_test[1], None)
+		self.test_data_dir = self.urls.get(train_valid_test[2], None)
 
 		# self.cleaner = EnglishTextNormalizer()
 		self.tokenizer = Tokeniser()
