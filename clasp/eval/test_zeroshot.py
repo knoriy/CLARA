@@ -8,7 +8,8 @@ import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.nn import functional as F
 
-from torchmetrics import MetricCollection, Recall, Accuracy
+from torchmetrics import MetricCollection, Recall, Accuracy, Precision
+from torchmetrics.detection.mean_ap import MeanAveragePrecision
 
 from clasp import PLCLASP
 from datamodule import *
@@ -98,7 +99,7 @@ def main(args):
 	##############
 	# Model
 	##############
-	model = PLCLASP.load_from_checkpoint(args.model).to(device)
+	model = PLCLASP.load_from_checkpoint(args.model_path).to(device)
 
 	##############
 	# DataModule
@@ -207,6 +208,7 @@ def main(args):
 		metric.add_metrics({
 			f"rec@{top_k}":Recall(task='multiclass', num_classes=num_classes, top_k=top_k),
 			f"acc@{top_k}":Accuracy(task='multiclass', num_classes=num_classes, top_k=top_k),
+			f"pre@{top_k}":Precision(task='multiclass', num_classes=num_classes, top_k=top_k),
 			})
 
 	##############
@@ -226,7 +228,7 @@ if __name__ == '__main__':
 	
 
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--model', type=str, help='Path to model')
+	parser.add_argument('--model_path', type=str, help='Path to model')
 	parser.add_argument('--task', type=str, choices=['gender', 'emotion', 'age', 'sounds'], help='Task to run')
 	parser.add_argument('--root_cfg_path', type=str, help='root path to config files')
 	parser.add_argument('--dataset_name', type=str, choices=['esc50', 'audioset', 'emns', 'emov-db', 'crema-d'], required=False, help='if task is sounds or emotion, specify dataset name')
