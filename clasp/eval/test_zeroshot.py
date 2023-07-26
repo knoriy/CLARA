@@ -181,6 +181,16 @@ def main(args):
 			templates = get_lists(templates_path)
 			with open(classes_path) as f:
 				classes = json.load(f)
+		elif args.dataset_name == 'ravdess':
+			dataset = RavdessTDM(
+						root_data_path='s3://laion-west-audio/webdataset_tar/',
+						batch_size = args.batch_size,
+						num_workers = args.num_workers,
+					)
+
+			templates = get_lists(templates_path)
+			with open(classes_path) as f:
+				classes = json.load(f)
 
 	##########
 	# age

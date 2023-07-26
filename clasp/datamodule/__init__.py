@@ -10,3 +10,4 @@ from .emov_db import EmovDBTDM
 from .audioset import AudioSetTDM
 from .audiocap import AudioCapTDM
 from .crema_d import CremaDTDM
+from .ravdess import RavdessTDM
