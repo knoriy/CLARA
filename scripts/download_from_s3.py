@@ -2,7 +2,7 @@ import os
 import sys
 sys.path.append("/fsx/knoriy/CLASP/clasp/")
 from typing import Any, Callable, Deque, Dict, Iterator, List, Optional, Tuple, TypeVar
-
+import yaml
 
 import torchdata
 from torchdata.datapipes import functional_datapipe
@@ -69,16 +69,18 @@ class MOnDiskCacheHolderIterDataPipe(OnDiskCacheHolderIterDataPipe):
 
         return int(result)
 
-def main():
-    dataset_names = get_lists('/fsx/knoriy/CLASP/config/dataset_list.txt')
-    exclude_names = get_lists('/fsx/knoriy/CLASP/config/exclude_list.txt')
+def main(args):
+    with open('/fsx/knoriy/CLASP/config/config/data/base.yaml') as file:
+        config = yaml.full_load(file)['init_args']
+    dataset_names = get_lists(config['dataset_list'])
+    exclude_names = get_lists(config['exclude_list'])
     root_data_path = 's3://laion-west-audio/webdataset_tar/'
 
 
     root_data_path = root_data_path.replace('s3://', '')
     urls = get_s3_paths(
         base_path			= root_data_path,
-        train_valid_test	= {"train", "valid"},
+        train_valid_test	= config['train_valid_test'],
         dataset_names		= dataset_names, 
         exclude				= exclude_names,
         recache				= True
@@ -95,10 +97,16 @@ def main():
         .open_files_by_boto3(mode='rb')\
         .end_caching(filepath_fn=filepath_fn)\
         
-    dl = DataLoader(datapipe, num_workers=12, persistent_workers=True)
+    dl = DataLoader(datapipe)
     
     for _ in tqdm.tqdm(dl, total=len(updated_urls), desc='Downloading'):
         pass
 
 if __name__ == '__main__':
-    main()
+    import argparse
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--data', type=str, help='Path to data config file')
+
+    args = parser.parse_args()
+    main(args)
