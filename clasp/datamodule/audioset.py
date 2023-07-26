@@ -121,7 +121,7 @@ class AudioSetTDM(BaseTDM):
 	def collate_fn(self, batch):
 		audios, labels = zip(*batch)
 		# WARMING: ONLY USING THE FIRST LABEL
-		classes = [torch.tensor(l['labels'][0]) for l in labels]
+		classes = torch.tensor([l['labels'][0] for l in labels])
 		texts = [torch.tensor(self.tokeniser.encode(", ".join(l["text"]))) for l in labels]
 
 		mels = [get_log_melspec(a[0], a[1]) for a in audios]
@@ -136,7 +136,7 @@ class AudioSetTDM(BaseTDM):
 
 		new_labels = {
 			"texts": texts,
-			"classes": classes,
+			"sounds": classes,
 			}
 
 		return new_labels, mels, text_lengths, mel_lengths
