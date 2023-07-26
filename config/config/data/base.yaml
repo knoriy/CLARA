@@ -11,5 +11,6 @@ init_args:
   drop_last: true
   pin_memory: true
   cache_path: null
-  use_cache: true
+  use_cache: False
   recache: true
+  train_valid_test: ['train','eval','test']
