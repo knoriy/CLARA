@@ -129,6 +129,7 @@ class RavdessTDM(BaseTDM):
 		texts = [torch.tensor(self.tokeniser.encode(", ".join(l["text"]))) for l in labels]
 		genders = torch.tensor([label['gender'] for label in labels])
 		emotion = torch.tensor([label['emotion'] for label in labels])
+		emotion_intensity = torch.tensor([label['emotion_intensity'] for label in labels])
 
 		mels = [get_log_melspec(a[0], a[1]) for a in audios]
 		mel_lengths = [mel.shape[0] for mel in mels]
@@ -144,6 +145,7 @@ class RavdessTDM(BaseTDM):
 			"texts": texts,
 			"gender": genders,
 			"emotion": emotion,
+			"emotion_intensity": emotion_intensity,
 			}
 
 		return new_labels, mels, text_lengths, mel_lengths
