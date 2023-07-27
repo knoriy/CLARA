@@ -73,7 +73,7 @@ class MOnDiskCacheHolderIterDataPipe(OnDiskCacheHolderIterDataPipe):
         return int(result)
 
 def download_s3_folder(root_s3_path, dataset_name, save_dir):
-    command = f"aws s3 cp {os.path.join(root_s3_path, dataset_name, '')} {save_dir} --recursive"
+    command = f"aws s3 sync {os.path.join(root_s3_path, dataset_name, '')} {save_dir}"
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     _, stderr = process.communicate()
     if process.returncode != 0:
