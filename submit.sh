@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --partition=g40x
-#SBATCH --job-name=laion
+#SBATCH --job-name=clsp60M
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --gpus-per-node=1
+#SBATCH --ntasks-per-node=8
+#SBATCH --gpus-per-node=8
 #SBATCH --cpus-per-task=12
 #SBATCH --account laion
 #SBATCH --output=logs/outs/%x_%j.out
@@ -27,11 +27,11 @@ srun /admin/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/CLASP/clasp
     --config $BASE_CONF_PATH \
     --trainer $TRAINER_BASE_CONF_PATH \
     --trainer $TRAINER_CONF_PATH \
-    --model $model_CONF_PATH \
+    --model $MODEL_CONF_PATH \
     --data $DATA_CONF_PATH \
     --trainer.num_nodes $SLURM_JOB_NUM_NODES \
     --data.num_workers 6 \
-    --data.batch_size 16 \
+    --data.batch_size 816 \
     --trainer.logger.name $LOGGER_NAME \
     --trainer.max_epochs 120 \
 
