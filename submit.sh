@@ -15,7 +15,7 @@ hostname # for debugging, logs the hostname to the output file
 
 LOGGER_NAME=balanced_audioset
 
-MODEL_CONF_PATH=./config/config/model/pl_clasp.yaml
+MODEL_CONF_PATH=./config/config/model/pl_clasp_60M.yaml
 BASE_CONF_PATH=./config/config/base.yaml
 TRAINER_BASE_CONF_PATH=./config/config/trainer/base.yaml
 TRAINER_CONF_PATH=./config/config/trainer/slurm.yaml
