@@ -24,7 +24,6 @@ pl_logger = logging.getLogger('pytorch_lightning')
 class AudioCapTDM(BaseTDM):
 	def __init__(self, 
 	      	root_data_path:str,
-			classes:str, 
 			exclude_list:Optional[str]=None,
 			cache_path:Optional[str]=None,
 			use_cache:Optional[bool]=True,
@@ -33,7 +32,6 @@ class AudioCapTDM(BaseTDM):
 			*args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self.tokeniser = Tokeniser()
-		self.classes = classes
 
 		exclude = []
 		if exclude_list:
@@ -78,6 +76,15 @@ class AudioCapTDM(BaseTDM):
 			\n\tTest: {len(self.urls.get('test', None))}"
 		)
 
+		self.tokenizer = Tokeniser()
+
+	def tokeniser_encode(self, text:str, lanuage:str='en'):
+		return self.tokenizer.encode(text, language=lanuage)
+	
+	def tokeniser_decode(self, tensor:torch.Tensor):
+		return self.tokenizer.decode(tensor)
+
+
 	def to_samples(self, data):
 		a, t = data
 		return soundfile.read(io.BytesIO(a[1].read())), json.loads(t[1].read().decode('utf-8'))
@@ -104,26 +111,29 @@ class AudioCapTDM(BaseTDM):
 
 		return datapipe
 
-	def collate_fn(self, batch):
-		audios, labels = zip(*batch)
-		# WARMING: ONLY USING THE FIRST LABEL
-		classes = [torch.tensor(l['labels'][0]) for l in labels] 
-		texts = [torch.tensor(self.tokeniser.encode(", ".join(l["text"]))) for l in labels]
+	def collate_fn(self, data):
+		mels = []
+		texts = []
 
-		mels = [get_log_melspec(a[0], a[1]) for a in audios]
+		for (a, t) in data:
+			mels.append(get_log_melspec(a[0], a[1]))
+
+			texts.append(
+				torch.tensor(
+					self.tokeniser_encode(
+						', '.join(t['text']) if isinstance(t['text'], list) else t['text'], \
+							'en' if 'original_data' not in t.keys() else t["original_data"]["language"] if "language" in t["original_data"].keys() else 'en'
+					)
+				) 
+			)
 
 		mel_lengths = [mel.shape[0] for mel in mels]
 		mel_lengths = torch.tensor(mel_lengths)
-		text_lengths = [text.size(0) for text in texts]
+		text_lengths = [text.shape[0] for text in texts]
 		text_lengths = torch.tensor(text_lengths)
 
-		mels = pad_sequence(mels).permute(1,2,0).contiguous()
 		texts = pad_sequence(texts).T.contiguous()
+		mels = pad_sequence(mels).permute(1,2,0).contiguous()
 
-		new_labels = {
-			"texts": texts,
-			"classes": classes,
-			}
-
-		return new_labels, mels, text_lengths, mel_lengths
+		return texts, mels, text_lengths, mel_lengths
 	
