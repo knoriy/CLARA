@@ -11,7 +11,7 @@ import json
 from datamodule import *
 from utils import calculate_average, get_lists
 
-from torchmetrics import MetricCollection, Recall
+from torchmetrics import MetricCollection, Recall, Accuracy
 import tqdm
 
 def run(model, dataloader, metric_fn:MetricCollection, limit_batches=-1, task='emotion'):
@@ -125,6 +125,15 @@ def main(args):
 
 			with open("./config/classification/emotion/crema-d/classes.json") as f:
 				classes = json.load(f)
+		elif args.dataset_name == 'ravdess':
+			dataset = RavdessTDM(
+						root_data_path='s3://laion-west-audio/webdataset_tar/',
+						batch_size = 8,
+						num_workers = 12,
+					)
+
+			with open("./config/classification/emotion/ravdess/classes.json") as f:
+				classes = json.load(f)
 
 	##########
 	# age
@@ -150,6 +159,7 @@ def main(args):
 			break
 		metric.add_metrics({
 			f"rec@{top_k}":Recall(task='multiclass', num_classes=num_classes, top_k=top_k),
+			f"acc@{top_k}":Accuracy(task='multiclass', num_classes=num_classes, top_k=top_k),
 			})
 
 	##############
@@ -171,7 +181,7 @@ if __name__ == '__main__':
 	parser.add_argument('--model_path', type=str, help='Path to model with linear probe head')
 	parser.add_argument('--clasp_path', type=str, help='Path to pretrained CLASP model')
 	parser.add_argument('--task', type=str, choices=['gender', 'emotion', 'age', 'sounds'], help='Task to run')
-	parser.add_argument('--dataset_name', type=str, choices=['esc50', 'audioset', 'emns', 'emov-db', 'crema-d'], required=False, help='if task is sounds or emotion, specify dataset name')
+	parser.add_argument('--dataset_name', type=str, choices=['esc50', 'audioset', 'emns', 'emov-db', 'crema-d', 'ravdess'], required=False, help='if task is sounds or emotion, specify dataset name')
 	parser.add_argument('--top_k', type=list[int], default=[1,2,3,5,10], help='Top k metrics to use')
 	parser.add_argument('--device', type=str, choices=['cpu', 'cuda'], default='cpu', help='device to use for inference')
 
