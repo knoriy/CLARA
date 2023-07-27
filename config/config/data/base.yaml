@@ -13,4 +13,4 @@ init_args:
   cache_path: null
   use_cache: False
   recache: true
-  train_valid_test: ['train','eval','test']
+  train_valid_test: ['train','valid','test']
