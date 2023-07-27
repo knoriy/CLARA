@@ -5,12 +5,14 @@ import pytorch_lightning as pl
 from pytorch_lightning.core.datamodule import LightningDataModule
 from pytorch_lightning.cli import LightningCLI
 from pytorch_lightning.utilities.exceptions import MisconfigurationException
+from torchmetrics import MetricCollection, Recall
 
 from typing import Dict, Set, Optional
 
 pl_logger = logging.getLogger('pytorch_lightning')
 
-from eval.zeroshot import zeroshot_eval
+from eval.test_zeroshot import run as zeroshot_run
+from eval.test_zeroshot import zeroshot_classifier
 from utils import get_lists
 
 class Trainer(pl.Trainer):
@@ -20,7 +22,9 @@ class Trainer(pl.Trainer):
 		self.zeroshot_classes = zeroshot_classes
 
 	def zeroshot(self, 
-		model, 
+		model,
+		task:str,
+		top_k:list[int] = [1, 3, 5, 10],
 		dataloaders:Optional[LightningDataModule] = None, 
 		datamodule: Optional[LightningDataModule] = None,
 		ckpt_path: Optional[str] = None,
@@ -51,9 +55,21 @@ class Trainer(pl.Trainer):
 			classes = json.load(f)
 
 		pl_logger.info(f"Zeroshot evaluation with {len(classes)} classes and {len(templates)} templates")
-		
-		acc1, acc5 = zeroshot_eval(model, classes, templates, datamodule.test_dataloader())
-		pl_logger.info(f"zeroshot accuracy@1: {acc1:.3f}, accuracy@5: {acc5:.3f}")
+
+		metric = MetricCollection({})
+
+		num_classes = len(classes)
+
+		for tk in top_k:
+			if tk > num_classes:
+				break
+			metric.add_metrics({
+				f"rec@{tk}":Recall(task=task, num_classes=num_classes, top_k=tk),
+				})
+
+		zeroshot_weights = zeroshot_classifier(model, classes, templates)
+		tops = zeroshot_run(model, zeroshot_weights, datamodule.test_dataloader(), metric_fn=None)
+		pl_logger.info(f"zeroshot: {tops}")
 
 class MyLightningCLI(LightningCLI):
 
