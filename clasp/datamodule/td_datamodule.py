@@ -112,7 +112,7 @@ class MultilingualTDM(BaseTDM):
 		datapipe = datapipe.load_from_tar() \
 			.batch(2) \
 			.sharding_filter()\
-			.shuffle(buffer_size=100)\
+			.shuffle()\
 			.map(self.to_samples) \
 		
 		if self.dataloader2:
