@@ -11,7 +11,15 @@
 #SBATCH --signal=SIGTERM@90
 
 module load openmpi
-srun hostname # for debugging, logs the hostname to the output file
+srun --exclusive --ntasks=$SLURM_NNODES --nodes=$SLURM_NNODES hostname # for debugging, logs the hostname to the output file
+
+cleanup_function()
+{
+    srun --exclusive --ntasks=$SLURM_NNODES --nodes=$SLURM_NNODES echo "function your_cleanup_function called at $(date)"
+    srun --exclusive --ntasks=$SLURM_NNODES --nodes=$SLURM_NNODES sh ./scripts/clean_tmp_files.sh
+}
+
+trap 'cleanup_function' USR1 TERM
 
 LOGGER_NAME=CLASP_100M
 
@@ -21,9 +29,9 @@ TRAINER_BASE_CONF_PATH=./config/config/trainer/base.yaml
 TRAINER_CONF_PATH=./config/config/trainer/slurm.yaml
 DATA_CONF_PATH=./config/config/data/base.yaml
 
-srun /admin/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/CLASP/scripts/download_from_s3.py --data $DATA_CONF_PATH --backend awscli
+srun --exclusive --ntasks=$SLURM_NNODES --nodes=$SLURM_NNODES /admin/home-knoriy/miniconda3/envs/clasp/bin/python ./scripts/download_from_s3.py --data $DATA_CONF_PATH --backend awscli
 
-srun /admin/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/CLASP/clasp/train.py fit\
+srun /admin/home-knoriy/miniconda3/envs/clasp/bin/python ./clasp/train.py fit\
     --config $BASE_CONF_PATH \
     --trainer $TRAINER_BASE_CONF_PATH \
     --trainer $TRAINER_CONF_PATH \
@@ -35,4 +43,4 @@ srun /admin/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/CLASP/clasp
     --trainer.logger.name $LOGGER_NAME \
     --trainer.max_epochs 120 \
 
-# srun sh /fsx/knoriy/CLASP/scripts/clean_tmp_files.sh
+cleanup_function
