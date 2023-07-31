@@ -14,7 +14,8 @@ from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from clasp import PLCLASP
 from datamodule import *
 from text.tokeniser import Tokeniser
-from utils import get_lists, calculate_average
+from utils import calculate_average
+from eval.util import get_dataset
 
 ##############
 # Non Critical imports
@@ -105,106 +106,13 @@ def main(args):
 	# DataModule
 	##############
 
-	##########
-	# Sounds
-	##########
-
-	if args.task == 'sounds':
-		if args.dataset_name == 'esc50':
-			dataset = ESC50TDM(
-						test_urls=['s3://s-laion-audio/webdataset_tar/esc50/test/'],
-						batch_size = args.batch_size,
-						num_workers = args.num_workers,
-					)
-			templates = get_lists(os.path.join(args.root_cfg_path , "classification/sounds/esc-50/templates.txt"))
-			with open(os.path.join(args.root_cfg_path , "classification/sounds/esc-50/minor_classes.json")) as f:
-				classes = json.load(f)
-		elif args.dataset_name == 'audioset':
-			templates = get_lists(os.path.join(args.root_cfg_path , "classification/sounds/audioset/templates.txt"))
-			with open(os.path.join(args.root_cfg_path , "classification/sounds/audioset/classes.json")) as f:
-				classes = json.load(f)
-			dataset = AudioSetTDM(
-						root_data_path='s3://laion-west-audio/webdataset_tar/',
-						classes=classes,
-						batch_size = args.batch_size,
-						num_workers = args.num_workers,
-					)
-
-	##########
-	# Gender
-	##########
-	if args.task == 'gender':
-		dataset = VoxCelebTDM(
-					test_urls=['s3://s-laion/knoriy/VoxCeleb_gender/'],
-					batch_size = args.batch_size,
-					num_workers = args.num_workers,
-				)
-		templates = get_lists(os.path.join(args.root_cfg_path , "classification/gender/templates.txt"))
-		with open(os.path.join(args.root_cfg_path , "classification/gender/classes.json")) as f:
-			classes = json.load(f)
-
-	##########
-	# Emotion
-	##########
-	if args.task == 'emotion':
-		templates_path = os.path.join(args.root_cfg_path , f"classification/{args.task}/{args.dataset_name}/templates.txt")
-		classes_path = os.path.join(args.root_cfg_path , f"classification/{args.task}/{args.dataset_name}/classes.json")
-
-		if args.dataset_name == 'emns':
-			dataset = EMNSTDM(
-						root_data_path='s3://laion-west-audio/webdataset_tar/',
-						batch_size = args.batch_size,
-						num_workers = args.num_workers,
-					)
-
-			templates = get_lists(templates_path)
-			with open(classes_path) as f:
-				classes = json.load(f)
-		elif args.dataset_name == 'emov-db':
-			dataset = EmovDBTDM(
-				root_data_path='s3://laion-west-audio/webdataset_tar/',
-				batch_size = args.batch_size,
-				num_workers = args.num_workers,
-			)
-
-			templates = get_lists(templates_path)
-			with open(classes_path) as f:
-				classes = json.load(f)
-		elif args.dataset_name == 'crema-d':
-			Warning("CREMA-D is not supported yet")
-			dataset = CremaDTDM(
-				root_data_path='s3://laion-west-audio/webdataset_tar/',
-				batch_size = args.batch_size,
-				num_workers = args.num_workers,
-			)
-
-			templates = get_lists(templates_path)
-			with open(classes_path) as f:
-				classes = json.load(f)
-		elif args.dataset_name == 'ravdess':
-			dataset = RavdessTDM(
-						root_data_path='s3://laion-west-audio/webdataset_tar/',
-						batch_size = args.batch_size,
-						num_workers = args.num_workers,
-					)
-
-			templates = get_lists(templates_path)
-			with open(classes_path) as f:
-				classes = json.load(f)
-
-	##########
-	# age
-	##########
-	if args.task == 'age':
-		dataset = CommonVoiceTDM(
-					test_urls=['s3://s-laion-audio/webdataset_tar/common_voice/test/'],
-					batch_size = args.batch_size,
-					num_workers = args.num_workers,
-				)
-
-		templates = get_lists(os.path.join(args.root_cfg_path , "classification/age/common_voice/templates.txt"))
-		with open(os.path.join(args.root_cfg_path , "classification/age/common_voice/classes.json")) as f:
-			classes = json.load(f)
+	dataset, templates, classes = get_dataset(
+		task = args.task, 
+		dataset_name = args.dataset_name, 
+		root_cfg_path = args.root_cfg_path, 
+		batch_size = args.batch_size, 
+		num_workers = args.num_workers
+	)
 
 	##############
 	# Metric
