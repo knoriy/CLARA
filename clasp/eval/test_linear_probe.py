@@ -4,15 +4,13 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.
 
 import torch
 import tqdm
+import json
 from clasp import LinearProbeCLASP
 
-import json
-
-from datamodule import *
-from utils import calculate_average, get_lists
+from utils import calculate_average
+from eval.util import get_dataset
 
 from torchmetrics import MetricCollection, Recall, Accuracy
-import tqdm
 
 def run(model, dataloader, metric_fn:MetricCollection, limit_batches=-1, task='emotion'):
 	device = model.device
@@ -58,95 +56,13 @@ def main(args):
 	# DataModule
 	##############
 	
-	##########
-	# Sounds
-	##########
-
-	if args.task == 'sounds':
-		if args.dataset_name == 'esc50':
-			dataset = ESC50TDM(
-						test_urls=['s3://s-laion-audio/webdataset_tar/esc50/test/'],
-						batch_size = 1024,
-						num_workers=12,
-					)
-			with open("./config/classification/sounds/esc-50/minor_classes.json") as f:
-				classes = json.load(f)
-		elif args.dataset_name == 'audioset':
-			with open("./config/classification/sounds/audioset/classes.json") as f:
-				classes = json.load(f)
-			dataset = AudioSetTDM(
-						test_urls=['s3://s-laion-audio/webdataset_tar/audioset/eval/'],
-						classes=classes,
-						batch_size = 1024,
-						num_workers=12,
-					)
-
-	##########
-	# Gender
-	##########
-	if args.task == 'gender':
-		dataset = VoxCelebTDM(
-					test_urls=['s3://s-laion/knoriy/VoxCeleb_gender/'],
-					batch_size =8,
-					num_workers=12,
-				)
-		with open("./config/classification/gender/classes.json") as f:
-			classes = json.load(f)
-
-	##########
-	# Emotion
-	##########
-	if args.task == 'emotion':
-		if args.dataset_name == 'emns':
-			dataset = EMNSTDM(
-    					root_data_path='s3://laion-west-audio/webdataset_tar/',
-						batch_size = 8,
-						num_workers=12,
-					)
-
-			with open("./config/classification/emotion/emns/classes.json") as f:
-				classes = json.load(f)
-		elif args.dataset_name == 'emov-db':
-			dataset = EmovDBTDM(
-    			root_data_path='s3://laion-west-audio/webdataset_tar/',
-				batch_size =8,
-				num_workers=12,
-			)
-
-			with open("./config/classification/emotion/emov-db/classes.json") as f:
-				classes = json.load(f)
-		elif args.dataset_name == 'crema-d':
-			Warning("CREMA-D is not supported yet")
-			dataset = CremaDTDM(
-    			root_data_path='s3://laion-west-audio/webdataset_tar/',
-				batch_size =8,
-				num_workers=12,
-			)
-
-			with open("./config/classification/emotion/crema-d/classes.json") as f:
-				classes = json.load(f)
-		elif args.dataset_name == 'ravdess':
-			dataset = RavdessTDM(
-						root_data_path='s3://laion-west-audio/webdataset_tar/',
-						batch_size = 8,
-						num_workers = 12,
-					)
-
-			with open("./config/classification/emotion/ravdess/classes.json") as f:
-				classes = json.load(f)
-
-	##########
-	# age
-	##########
-	if args.task == 'age':
-		dataset = CommonVoiceTDM(
-					test_urls=['s3://s-laion-audio/webdataset_tar/common_voice/test/'],
-					batch_size = 8,
-					num_workers=12,
-				)
-
-		with open("./config/classification/age/common_voice/classes.json") as f:
-			classes = json.load(f)
+	dataset, templates, classes = get_dataset(
+		task = args.task, 
+		dataset_name = args.dataset_name, 
+		root_cfg_path = args.root_cfg_path, 
+		batch_size = args.batch_size, 
+		num_workers = args.num_workers
+	)
 
 	##############
 	# Metric
@@ -180,9 +96,12 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--model_path', type=str, help='Path to model with linear probe head')
 	parser.add_argument('--clasp_path', type=str, help='Path to pretrained CLASP model')
+	parser.add_argument('--root_cfg_path', type=str, default='./config/', help='root path to config files')
 	parser.add_argument('--task', type=str, choices=['gender', 'emotion', 'age', 'sounds'], help='Task to run')
 	parser.add_argument('--dataset_name', type=str, choices=['esc50', 'audioset', 'emns', 'emov-db', 'crema-d', 'ravdess'], required=False, help='if task is sounds or emotion, specify dataset name')
 	parser.add_argument('--top_k', type=list[int], default=[1,2,3,5,10], help='Top k metrics to use')
+	parser.add_argument('--batch_size', type=int, default=8, help='Dataloader batch size')
+	parser.add_argument('--num_workers', type=int, default=12, help='Dataloader number of workers')
 	parser.add_argument('--device', type=str, choices=['cpu', 'cuda'], default='cpu', help='device to use for inference')
 
 	args = parser.parse_args()

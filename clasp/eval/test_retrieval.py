@@ -3,15 +3,13 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
 import tqdm
-import json
 import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.nn import functional as F
 
-from torchmetrics import MetricCollection, Recall
+from torchmetrics import MetricCollection
 
 from clasp import PLCLASP
-from datamodule import *
 from text.tokeniser import Tokeniser
 from eval.util import get_dataset
 
