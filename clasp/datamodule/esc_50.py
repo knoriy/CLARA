@@ -85,7 +85,7 @@ class ESC50TDM(BaseTDM):
 	def to_keys(self, data):
 		audio, labels  = data
 
-		classes = [self.classes.get(l) for l in labels["original_data"]["class_names"]]
+		classes = self.classes.get(labels["original_data"]["category"])
 
 		new_labels = {
 			"text": labels["text"],
@@ -121,7 +121,7 @@ class ESC50TDM(BaseTDM):
 	def collate_fn(self, batch):
 		audios, labels = zip(*batch)
 		# WARMING: ONLY USING THE FIRST LABEL
-		classes = torch.tensor([l['labels'][0] for l in labels])
+		classes = torch.tensor([l['labels'] for l in labels])
 		texts = [torch.tensor(self.tokeniser.encode(", ".join(l["text"]))) for l in labels]
 
 		mels = [get_log_melspec(a[0], a[1]) for a in audios]

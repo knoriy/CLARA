@@ -14,14 +14,15 @@ def get_dataset(task, dataset_name, root_cfg_path, batch_size=1, num_workers=0):
 
 	if task == 'sounds':
 		if dataset_name == 'esc50':
-			dataset = ESC50TDM(
-						test_urls=['s3://s-laion-audio/webdataset_tar/esc50/test/'],
-						batch_size = batch_size,
-						num_workers = num_workers,
-					)
 			templates = get_lists(os.path.join(root_cfg_path , "classification/sounds/esc-50/templates.txt"))
 			with open(os.path.join(root_cfg_path , "classification/sounds/esc-50/minor_classes.json")) as f:
 				classes = json.load(f)
+			dataset = ESC50TDM(
+						root_data_path='s3://laion-west-audio/webdataset_tar/',
+						classes=classes,
+						batch_size = batch_size,
+						num_workers = num_workers,
+					)
 		elif dataset_name == 'audioset':
 			templates = get_lists(os.path.join(root_cfg_path , "classification/sounds/audioset/templates.txt"))
 			with open(os.path.join(root_cfg_path , "classification/sounds/audioset/classes.json")) as f:
