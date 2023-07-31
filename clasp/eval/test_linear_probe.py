@@ -4,13 +4,13 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.
 
 import torch
 import tqdm
-import json
-from clasp import LinearProbeCLASP
 
+from torchmetrics import MetricCollection, Recall, Accuracy
+
+from clasp import LinearProbeCLASP
 from utils import calculate_average
 from eval.util import get_dataset
 
-from torchmetrics import MetricCollection, Recall, Accuracy
 
 def run(model, dataloader, metric_fn:MetricCollection, limit_batches=-1, task='emotion'):
 	device = model.device
