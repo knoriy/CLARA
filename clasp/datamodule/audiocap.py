@@ -26,7 +26,7 @@ class AudioCapTDM(BaseTDM):
 	      	root_data_path:str,
 			exclude_list:Optional[str]=None,
 			cache_path:Optional[str]=None,
-			use_cache:Optional[bool]=True,
+			use_cache:Optional[bool]=False,
 			recache:Optional[bool]=False,
 			train_valid_test:Optional[list]=['train', 'valid', 'test'],
 			*args, **kwargs):

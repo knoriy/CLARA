@@ -27,9 +27,9 @@ class AudioSetTDM(BaseTDM):
 			classes:str, 
 			exclude_list:Optional[str]=None,
 			cache_path:Optional[str]=None,
-			use_cache:Optional[bool]=True,
+			use_cache:Optional[bool]=False,
 			recache:Optional[bool]=False,
-			train_valid_test:Optional[list]=['unbalanced_train', 'eval', 'test'],
+			train_valid_test:Optional[list]=['unbalanced_train', 'valid', 'test'],
 			*args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self.tokeniser = Tokeniser()
