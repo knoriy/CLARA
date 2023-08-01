@@ -1,3 +1,5 @@
+audioset/balanced_train/
+
 epidemic_sound_effects/train/1.tar
 Tunebot/train/15.tar
 Tunebot/train/8.tar
