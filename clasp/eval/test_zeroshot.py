@@ -7,8 +7,7 @@ import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.nn import functional as F
 
-from torchmetrics import MetricCollection, Recall, Accuracy, Precision
-from torchmetrics.detection.mean_ap import MeanAveragePrecision
+from torchmetrics import MetricCollection, Recall, Accuracy, Precision, AveragePrecision
 
 from clasp import PLCLASP
 from text.tokeniser import Tokeniser
@@ -127,6 +126,8 @@ def main(args):
 			f"pre@{top_k}":Precision(task='multiclass', num_classes=num_classes, top_k=top_k),
 			})
 
+	metric.add_metrics({f"AP":AveragePrecision(task='multiclass', num_classes=num_classes)})
+
 	##############
 	# Run
 	##############
@@ -146,9 +147,9 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--model_path', type=str, help='Path to model')
 	parser.add_argument('--task', type=str, choices=['gender', 'emotion', 'age', 'sounds'], help='Task to run')
-	parser.add_argument('--root_cfg_path', type=str, help='root path to config files')
-	parser.add_argument('--dataset_name', type=str, choices=['esc50', 'audioset', 'emns', 'emov-db', 'crema-d', 'ravdess'], required=False, help='if task is sounds or emotion, specify dataset name')
-	parser.add_argument('--top_k', type=int, default=[1,2,3,5,10], help='Top k metrics to use')
+	parser.add_argument('--dataset_name', type=str, choices=['esc50', 'audioset', 'emns', 'emov-db', 'crema-d', 'ravdess'], required=True, help='if task is sounds or emotion, specify dataset name')
+	parser.add_argument('--root_cfg_path', type=str, default='./config/', help='root path to config files')
+	parser.add_argument('--top_k', type=int, default=[1,5,10], help='Top k metrics to use')
 	parser.add_argument('--batch_size', type=int, default=8, help='Dataloader batch size')
 	parser.add_argument('--num_workers', type=int, default=12, help='Dataloader number of workers')
 
