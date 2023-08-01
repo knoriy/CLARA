@@ -77,7 +77,7 @@ _SOUNDS_DICT = {
 class ESC50TDM(BaseTDM):
 	def __init__(self, 
 	      	root_data_path:str,
-			classes:str=None, 
+			classes:dict=None, 
 			exclude_list:Optional[str]=None,
 			cache_path:Optional[str]=None,
 			use_cache:Optional[bool]=False,

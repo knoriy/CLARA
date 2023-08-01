@@ -33,6 +33,15 @@ def get_dataset(task, dataset_name, root_cfg_path, batch_size=1, num_workers=0):
 						batch_size = batch_size,
 						num_workers = num_workers,
 					)
+		elif dataset_name == 'us8k':
+			templates = get_lists(os.path.join(root_cfg_path , "classification/sounds/audioset/templates.txt"))
+			with open(os.path.join(root_cfg_path , "classification/sounds/audioset/classes.json")) as f:
+				classes = json.load(f)
+			dataset = Urbansound8KTDM(
+						root_data_path='s3://laion-west-audio/webdataset_tar/',
+						batch_size = batch_size,
+						num_workers = num_workers,
+					)
 
 	##########
 	# Gender

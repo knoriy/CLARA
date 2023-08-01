@@ -21,19 +21,34 @@ from utils import get_s3_paths, get_local_paths, get_lists
 import logging
 pl_logger = logging.getLogger('pytorch_lightning')
 
+_SOUNDS_DICT = {
+	"air conditioner": 0,
+	"car horn": 1,
+	"children playing": 2,
+	"dog bark": 3,
+	"drilling": 4,
+	"engine idling": 5,
+	"gun shot": 6,
+	"jackhammer": 7,
+	"siren": 8,
+	"street music": 9
+}
+
 class Urbansound8KTDM(BaseTDM):
 	def __init__(self, 
-	      	root_data_path:str,
-			classes:str, 
+		  	root_data_path:str,
+			classes:dict=None, 
 			exclude_list:Optional[str]=None,
 			cache_path:Optional[str]=None,
 			use_cache:Optional[bool]=False,
 			recache:Optional[bool]=False,
-			train_valid_test:Optional[list]=['unbalanced_train', 'valid', 'test'],
+			train_valid_test:Optional[list]=['train', 'valid', 'test'],
 			*args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self.tokeniser = Tokeniser()
 		self.classes = classes
+		if not self.classes:
+			self.classes = _SOUNDS_DICT
 
 		exclude = []
 		if exclude_list:
@@ -85,7 +100,7 @@ class Urbansound8KTDM(BaseTDM):
 	def to_keys(self, data):
 		audio, labels  = data
 
-		classes = [self.classes.get(l) for l in labels["original_data"]["class_names"]]
+		classes = [self.classes.get(labels["tag"][0])]
 
 		new_labels = {
 			"text": labels["text"],
