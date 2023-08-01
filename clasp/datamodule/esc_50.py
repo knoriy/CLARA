@@ -21,10 +21,63 @@ from utils import get_s3_paths, get_local_paths, get_lists
 import logging
 pl_logger = logging.getLogger('pytorch_lightning')
 
+_SOUNDS_DICT = {
+    "dog": 0,
+    "rooster": 1,
+    "pig": 2,
+    "cow": 3,
+    "frog": 4,
+    "cat": 5,
+    "hen": 6,
+    "insects": 7,
+    "sheep": 8,
+    "crow": 9,
+    "rain": 10,
+    "sea waves": 11,
+    "crackling fire": 12,
+    "crickets": 13,
+    "chirping birds": 14,
+    "water drops": 15,
+    "wind": 16,
+    "pouring water": 17,
+    "toilet flush": 18,
+    "thunderstorm": 19,
+    "crying baby": 20,
+    "sneezing": 21,
+    "clapping": 22,
+    "breathing": 23,
+    "coughing": 24,
+    "footsteps": 25,
+    "laughing": 26,
+    "brushing teeth": 27,
+    "snoring": 28,
+    "drinking sipping": 29,
+    "door wood knock": 30,
+    "mouse click": 31,
+    "keyboard typing": 32,
+    "door wood creaks": 33,
+    "can opening": 34,
+    "washing machine": 35,
+    "vacuum cleaner": 36,
+    "clock alarm": 37,
+    "clock tick": 38,
+    "glass breaking": 39,
+    "helicopter": 40,
+    "chainsaw": 41,
+    "siren": 42,
+    "car horn": 43,
+    "engine": 44,
+    "train": 45,
+    "church bells": 46,
+    "airplane": 47,
+    "fireworks": 48,
+    "hand saw": 49
+}
+
 class ESC50TDM(BaseTDM):
 	def __init__(self, 
 	      	root_data_path:str,
-			classes:str, 
+			classes:str=None, 
 			exclude_list:Optional[str]=None,
 			cache_path:Optional[str]=None,
 			use_cache:Optional[bool]=False,
@@ -34,6 +87,8 @@ class ESC50TDM(BaseTDM):
 		super().__init__(*args, **kwargs)
 		self.tokeniser = Tokeniser()
 		self.classes = classes
+		if not self.classes:
+			self.classes = _SOUNDS_DICT
 
 		exclude = []
 		if exclude_list:
