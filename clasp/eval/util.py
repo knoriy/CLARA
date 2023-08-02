@@ -34,11 +34,21 @@ def get_dataset(task, dataset_name, root_cfg_path, batch_size=1, num_workers=0):
 						num_workers = num_workers,
 					)
 		elif dataset_name == 'us8k':
-			templates = get_lists(os.path.join(root_cfg_path , "classification/sounds/audioset/templates.txt"))
-			with open(os.path.join(root_cfg_path , "classification/sounds/audioset/classes.json")) as f:
+			templates = get_lists(os.path.join(root_cfg_path , "classification/sounds/us8k/templates.txt"))
+			with open(os.path.join(root_cfg_path , "classification/sounds/us8k/classes.json")) as f:
 				classes = json.load(f)
 			dataset = Urbansound8KTDM(
 						root_data_path='s3://laion-west-audio/webdataset_tar/',
+						batch_size = batch_size,
+						num_workers = num_workers,
+					)
+		elif dataset_name == 'fsd50k':
+			templates = get_lists(os.path.join(root_cfg_path , "classification/sounds/fsd50k/templates.txt"))
+			with open(os.path.join(root_cfg_path , "classification/sounds/fsd50k/classes.json")) as f:
+				classes = json.load(f)
+			dataset = FSD50KTDM(
+						root_data_path='s3://laion-west-audio/webdataset_tar/',
+						classes=classes,
 						batch_size = batch_size,
 						num_workers = num_workers,
 					)

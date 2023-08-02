@@ -12,3 +12,4 @@ from .audiocap import AudioCapTDM
 from .crema_d import CremaDTDM
 from .ravdess import RavdessTDM
 from .us8k import Urbansound8KTDM
+from .fsd50k import FSD50KTDM
