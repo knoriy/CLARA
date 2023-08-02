@@ -107,7 +107,7 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--model_path', type=str, help='Path to model with linear probe head')
 	parser.add_argument('--task', type=str, choices=['texts', 'gender', 'emotion', 'age', 'sounds'], help='Task to run')
-	parser.add_argument('--dataset_name', type=str, required=False, help='if task is sounds or emotion, specify dataset name')
+	parser.add_argument('--dataset_name', type=str, required=True, help='if task is sounds or emotion, specify dataset name')
 	parser.add_argument('--batch_size', type=int, default=8, help='Dataloader batch size')
 	parser.add_argument('--num_workers', type=int, default=12, help='Dataloader number of workers')
 	parser.add_argument('--root_cfg_path', type=str, default='./config/', help='root path to config files')
