@@ -1,0 +1,13 @@
+class_path: datamodule.Urbansound8KTDM
+init_args:
+  root_data_path: s3://laion-west-audio/webdataset_tar/
+  exclude_list: ./config/exclude_list.txt
+  batch_size: 16
+  num_workers: 6
+  persistent_workers: false
+  shuffle: true
+  drop_last: true
+  pin_memory: true
+  cache_path: null
+  use_cache: true
+  recache: true
