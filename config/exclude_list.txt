@@ -58,18 +58,18 @@ common_voice/test/4.tar
 common_voice/test/36.tar
 common_voice/test/80.tar
 
-FSD50K/train/0.tar
-FSD50K/train/2.tar
-FSD50K/train/7.tar
-FSD50K/train/24.tar
-FSD50K/train/28.tar
-FSD50K/train/33.tar
-FSD50K/train/36.tar
-FSD50K/train/42.tar
-FSD50K/train/45.tar
-FSD50K/train/52.tar
-FSD50K/train/60.tar
-FSD50K/valid/0.tar
+fsd50k_200_class_label/train/0.tar
+fsd50k_200_class_label/train/2.tar
+fsd50k_200_class_label/train/7.tar
+fsd50k_200_class_label/train/24.tar
+fsd50k_200_class_label/train/28.tar
+fsd50k_200_class_label/train/33.tar
+fsd50k_200_class_label/train/36.tar
+fsd50k_200_class_label/train/42.tar
+fsd50k_200_class_label/train/45.tar
+fsd50k_200_class_label/train/52.tar
+fsd50k_200_class_label/train/60.tar
+fsd50k_200_class_label/valid/0.tar
 
 # Long audio files
 #	Long audio: 33.88s, URL: pipe:aws s3 --cli-connect-timeout 0 cp s3://s-laion-audio/webdataset_tar/common_voice/train/1079.tar -, file: 58486
