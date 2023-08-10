@@ -113,8 +113,11 @@ class ToHFHub(BaseTDM):
 
 		destination_dir = os.path.join(self.save_path, *path.split('/')[4:])
 		self.mkdir_p(sftp, os.path.dirname(destination_dir))
-
-		sftp.putfo(content_stream, destination_dir)
+		try:
+			sftp.stat(destination_dir) 
+			print(f"{destination_dir} already exists on remote") 
+		except FileNotFoundError: 
+			sftp.putfo(content_stream, destination_dir)
 		sftp.close()
 		return path
 	
@@ -123,7 +126,6 @@ class ToHFHub(BaseTDM):
 	
 	def create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
-			.shuffle()\
 			.sharding_filter() # Sharding filter here causes the dataloader to hang when using multiple GPUs
 		
 		if self.is_local:
