@@ -1,5 +1,5 @@
 import sys
-sys.path.append('/fsx/knoriy/code/CLASP/clasp')
+sys.path.append('/fsx/knoriy/CLASP/clasp')
 import argparse
 
 import webdataset as wds
@@ -87,7 +87,7 @@ def test_datasets(
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--dataset_names', nargs='+', type=str, required=True)
-	parser.add_argument('--base_s3_path', type=str, default='s-laion-audio/webdataset_tar/')
+	parser.add_argument('--base_s3_path', type=str, default='laion-west-audio/webdataset_tar/')
 
 	args = parser.parse_args()
 
