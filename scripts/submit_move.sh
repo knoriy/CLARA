@@ -10,13 +10,24 @@
 #SBATCH --signal=SIGUSR1@90
 #SBATCH --signal=SIGTERM@90
 
-module load openmpi
-LOGGER_NAME=CLASP_100M_sounds
+SOURCE_DIR="s3://laion-west/documentaries/"
+TARGET_DIR="/data/"
+USERNAME="knoriy"
+HOST="65.109.157.234"
 
-MODEL_CONF_PATH=./config/config/model/pl_clasp_100M.yaml
-BASE_CONF_PATH=./config/config/base.yaml
-TRAINER_BASE_CONF_PATH=./config/config/trainer/base.yaml
-TRAINER_CONF_PATH=./config/config/trainer/slurm.yaml
-DATA_CONF_PATH=./config/config/data/base.yaml
+for file in $(aws s3 ls $SOURCE_DIR --recursive | awk '{print $4}'); do
 
-srun /admin/home-knoriy/miniconda3/envs/hf/bin/python ./scripts/move_to_server.py
+  # Get S3 file path
+  KEY=$(echo $file | sed 's/^.*[[:space:]]//') 
+  FILEPATH=${KEY#${SOURCE_DIR}}
+
+  # Remove file name to get just directory path
+  DIRPATH=$(dirname "$FILEPATH")
+
+  # Create target directory
+  ssh $USERNAME@$HOST "mkdir -p $TARGET_DIR$DIRPATH"
+
+
+  aws s3 cp s3://laion-west/$file - | ssh $USERNAME@$HOST "cat > $TARGET_DIR$file"
+  echo s3://laion-west/$file
+done
