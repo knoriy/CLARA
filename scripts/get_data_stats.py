@@ -7,6 +7,7 @@ import logging
 import torchdata
 import json
 import soundfile
+import tarfile
 
 from typing import Optional
 from torchdata.datapipes.iter import FSSpecFileOpener
@@ -130,6 +131,16 @@ class GetStatsTDM(BaseTDM):
 		else: 
 			return True
 	
+	def filter_corrupt_tar(self, f):
+		_, stream = f
+		try:
+			tar = tarfile.open(mode='r|', fileobj=stream)
+			# read a file to test if valid
+			tar.extractfile(tar.getmembers()[0])
+			return True 
+		except tarfile.ReadError:
+			return False
+	
 	def create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
 			.sharding_filter() # Sharding filter here causes the dataloader to hang when using multiple GPUs
@@ -139,7 +150,8 @@ class GetStatsTDM(BaseTDM):
 		else:
 			datapipe = Boto3FileOpener(datapipe, mode='rb')
 
-		datapipe = datapipe.load_from_tar() \
+		datapipe = datapipe.filter(self.filter_corrupt_tar)\
+			.load_from_tar() \
 			.batch(2) \
 			.map(self.to_samples) \
 			.filter(self.filter_fn)\
@@ -199,6 +211,7 @@ class LangStatsTDM(GetStatsTDM):
 if __name__ == '__main__':
 	import tempfile
 	import argparse
+	import tqdm
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--dataset_name', type=str, required=True)
@@ -223,7 +236,7 @@ if __name__ == '__main__':
 				root_data_path='s3://laion-west-audio/webdataset_tar/', 
 				dataset_list=f.name,
 				# exclude_list='/fsx/knoriy/CLASP/config/exclude_list.txt',
-				batch_size = 64,
+				batch_size = 512,
 				num_workers=12,
 			)
 
@@ -237,8 +250,9 @@ if __name__ == '__main__':
 	for dl in [dataset.train_dataloader]:
 		print(dl.__name__)
 		try:
+			p_bar = tqdm.tqdm(dl())
 			if args.lang:
-				for i, val in enumerate(dl()):
+				for i, val in enumerate(p_bar):
 					for key in val.keys():
 						if key not in total_stats:
 							total_stats[key] = {'time':0, 'male':0, 'female':0, 'unknown':0}
@@ -247,12 +261,16 @@ if __name__ == '__main__':
 						total_stats[key]['male'] += val[key]['male']
 						total_stats[key]['female'] += val[key]['female']
 						total_stats[key]['unknown'] += val[key]['unknown']
+						p_bar.set_description(f"Lang: {key}")
+					p_bar.update()
 			else:
-				for i, val in enumerate(dl()):
+				for i, val in enumerate(p_bar):
 					total_stats['time'] += val['time']
 					total_stats['male'] += val['male']
 					total_stats['female'] += val['female']
 					total_stats['unknown'] += val['unknown']
+					p_bar.set_description(f"Lang: {key}")
+					p_bar.update()
 		except AttributeError:
 			pass
 
