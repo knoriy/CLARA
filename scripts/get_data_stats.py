@@ -15,6 +15,7 @@ from torchdata.datapipes.iter import FSSpecFileOpener
 from datamodule.td_datamodule import BaseTDM
 from utils import get_s3_paths, get_local_paths, get_lists
 from datamodule.utils import Boto3FileOpenerIterDataPipe as Boto3FileOpener
+from datamodule.utils import group_by_filename
 
 pl_logger = logging.getLogger('pytorch_lightning')
 
@@ -30,6 +31,7 @@ class GetStatsTDM(BaseTDM):
 			*args,**kwargs,
 		):
 		super().__init__(*args,**kwargs)
+		self.use_cache = use_cache
 
 		exclude = []
 		if exclude_list:
@@ -87,7 +89,6 @@ class GetStatsTDM(BaseTDM):
 		except:
 			return None
 
-
 	def get_stat(self, data):
 		audio, text = data
 		keys = ['gender', 'actor']
@@ -130,17 +131,26 @@ class GetStatsTDM(BaseTDM):
 			return False
 		else: 
 			return True
-	
-	def filter_corrupt_tar(self, f):
-		_, stream = f
+
+	def filter_must_have_flac_and_json(self, data):
 		try:
-			tar = tarfile.open(mode='r|', fileobj=stream)
-			# read a file to test if valid
-			tar.extractfile(tar.getmembers()[0])
-			return True 
-		except tarfile.ReadError:
+			_, _ = data
+			return True
+		except ValueError:
 			return False
+
 	
+	def _log_tar(self, data):
+		# log to file
+		with open('/fsx/knoriy/CLASP/logs/get_data_stats.txt', 'a') as f:
+			f.write(f"{data[0].replace('s3://laion-west-audio/webdataset_tar/', '')}\n")
+		return data
+
+	def _log_sample(self, data):
+		a, t = data
+		with open('/fsx/knoriy/CLASP/logs/get_data_stats.txt', 'a') as f:
+			f.write(f"{a[0]}\n")
+		return data
 	def create_pipeline(self, data_dir):
 		datapipe = torchdata.datapipes.iter.IterableWrapper(data_dir)\
 			.sharding_filter() # Sharding filter here causes the dataloader to hang when using multiple GPUs
@@ -149,10 +159,9 @@ class GetStatsTDM(BaseTDM):
 			datapipe = FSSpecFileOpener(datapipe, mode='rb')
 		else:
 			datapipe = Boto3FileOpener(datapipe, mode='rb')
-
-		datapipe = datapipe.filter(self.filter_corrupt_tar)\
-			.load_from_tar() \
-			.batch(2) \
+		datapipe = datapipe.load_from_tar() \
+			.groupby(group_by_filename, group_size=2, guaranteed_group_size=2, drop_remaining=True)\
+			.filter(self.filter_must_have_flac_and_json) \
 			.map(self.to_samples) \
 			.filter(self.filter_fn)\
 			.map(self.get_stat) \
@@ -228,6 +237,7 @@ if __name__ == '__main__':
 				root_data_path='s3://laion-west-audio/webdataset_tar/', 
 				dataset_list=f.name,
 				exclude_list='/fsx/knoriy/CLASP/config/exclude_list.txt',
+				# exclude_list='/fsx/knoriy/CLASP/logs/get_data_stats.txt',
 				batch_size = 64,
 				num_workers=12,
 			)
@@ -236,7 +246,7 @@ if __name__ == '__main__':
 				root_data_path='s3://laion-west-audio/webdataset_tar/', 
 				dataset_list=f.name,
 				# exclude_list='/fsx/knoriy/CLASP/config/exclude_list.txt',
-				batch_size = 512,
+				batch_size = 64,
 				num_workers=12,
 			)
 
@@ -247,7 +257,7 @@ if __name__ == '__main__':
 	else:
 		total_stats = {'time':0, 'male':0, 'female':0, 'unknown':0}
 
-	for dl in [dataset.train_dataloader, dataset.val_dataloader, dataset.test_dataloader]:
+	for dl in [dataset.train_dataloader]: #, dataset.val_dataloader, dataset.test_dataloader]:
 		print(dl.__name__)
 		try:
 			p_bar = tqdm.tqdm(dl())
@@ -279,4 +289,9 @@ if __name__ == '__main__':
 			total_stats[key]['time'] = ((total_stats[key]['time']/60)/60)
 	else:
 		total_stats['time'] = ((total_stats['time']/60)/60)
-	print(f"Total Stats: {total_stats}")
+	
+	if args.lang:
+		for lang in total_stats.keys():
+			print(f"Total Stats: {lang}, {total_stats[lang]['time']:.1f}  {total_stats[lang]['male']:,}  {total_stats[lang]['female']:,}  {total_stats[lang]['unknown']:,}")
+	else:
+		print(f"Total Stats: {total_stats}")
