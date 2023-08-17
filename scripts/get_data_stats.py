@@ -257,7 +257,7 @@ if __name__ == '__main__':
 	else:
 		total_stats = {'time':0, 'male':0, 'female':0, 'unknown':0}
 
-	for dl in [dataset.train_dataloader]: #, dataset.val_dataloader, dataset.test_dataloader]:
+	for dl in [dataset.train_dataloader, dataset.val_dataloader, dataset.test_dataloader]:
 		print(dl.__name__)
 		try:
 			p_bar = tqdm.tqdm(dl())
