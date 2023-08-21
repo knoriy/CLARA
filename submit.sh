@@ -11,7 +11,7 @@
 #SBATCH --signal=SIGTERM@90
 
 module load openmpi
-srun --exclusive --ntasks=$SLURM_NNODES --nodes=$SLURM_NNODES hostname # for debugging, logs the hostname to the output file
+srun --exclusive --ntasks=$SLURM_NNODES --nodes=$SLURM_NNODES echo $(hostname) >> ./logs/outs/hostnames.txt # for debugging, logs the hostname to the output file
 
 cleanup_function()
 {
