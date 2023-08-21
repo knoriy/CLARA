@@ -89,7 +89,7 @@ def run(model, zeroshot_weights, dataloader, metric_fn:MetricCollection, limit_b
 			# Get metrics
 			###############
 			targets = torch.eye(logits_per_audio.size(0)).to(device)
-			indexes = torch.range(i*batch_size, (i*batch_size-1)+batch_size, dtype=torch.int64).repeat(batch_size, 1).T
+			indexes = torch.arange(i*batch_size, (i*batch_size-1)+batch_size, dtype=torch.int64).repeat(batch_size, 1).T
 
 			metric_fn.update(logits_per_audio, targets, indexes)
 		
