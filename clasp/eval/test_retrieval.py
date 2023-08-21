@@ -106,7 +106,7 @@ if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--model_path', type=str, help='Path to model with linear probe head')
-	parser.add_argument('--task', type=str, choices=['texts', 'gender', 'emotion', 'age', 'sounds'], help='Task to run')
+	parser.add_argument('--task', type=str, choices=['texts', 'gender', 'emotion', 'age', 'sounds', 'speech'], help='Task to run')
 	parser.add_argument('--dataset_name', type=str, required=True, help='if task is sounds or emotion, specify dataset name')
 	parser.add_argument('--batch_size', type=int, default=8, help='Dataloader batch size')
 	parser.add_argument('--num_workers', type=int, default=12, help='Dataloader number of workers')
@@ -131,12 +131,12 @@ if __name__ == '__main__':
 
 	from torchmetrics.retrieval import RetrievalMAP, RetrievalRecall
 
-	num_classes = len(classes)
+	# num_classes = len(classes)
 	metric = MetricCollection({})
 
 	for top_k in [1,5,10]:
-		if top_k > num_classes:
-			break
+		# if top_k > num_classes:
+		# 	break
 		metric.add_metrics({
 			f"mAP@{top_k}":RetrievalMAP(top_k=top_k),
 			f"rec@{top_k}":RetrievalRecall(top_k=top_k),

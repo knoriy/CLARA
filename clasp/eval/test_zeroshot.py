@@ -144,7 +144,7 @@ if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--model_path', type=str, help='Path to model')
-	parser.add_argument('--task', type=str, choices=['gender', 'emotion', 'age', 'sounds'], help='Task to run')
+	parser.add_argument('--task', type=str, choices=['texts', 'gender', 'emotion', 'age', 'sounds', 'speech'], help='Task to run')
 	parser.add_argument('--dataset_name', type=str, required=True, help='if task is sounds or emotion, specify dataset name')
 	parser.add_argument('--root_cfg_path', type=str, default='./config/', help='root path to config files')
 	parser.add_argument('--top_k', type=int, default=[1,5,10], help='Top k metrics to use')
