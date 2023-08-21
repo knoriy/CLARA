@@ -114,6 +114,17 @@ def get_dataset(task, dataset_name, root_cfg_path, root_data_path='s3://laion-we
 			templates = get_lists(templates_path)
 			with open(classes_path) as f:
 				classes = json.load(f)
+	
+	elif task == 'speech':
+		if dataset_name == 'mswc':
+			dataset = MSWCTDM(
+					root_data_path=root_data_path,
+					exclude_list=os.path.join(root_cfg_path , "exclude_list.txt"),
+					batch_size = batch_size,
+					num_workers = num_workers,
+			)
+			templates = None
+			classes = None
 
 	##########
 	# age
