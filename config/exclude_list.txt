@@ -90,6 +90,35 @@ common_voice/train/1301.tar
 common_voice/train/1655.tar
 common_voice/train/1683.tar
 
+
+common_voice_11_0/en/train/401.tar
+common_voice_11_0/en/train/103.tar
+common_voice_11_0/en/train/328.tar
+common_voice_11_0/en/train/390.tar
+common_voice_11_0/en/train/203.tar
+common_voice_11_0/en/train/193.tar
+common_voice_11_0/en/train/294.tar
+common_voice_11_0/en/train/282.tar
+common_voice_11_0/en/train/351.tar
+common_voice_11_0/en/train/231.tar
+common_voice_11_0/en/train/34.tar
+common_voice_11_0/en/train/393.tar
+common_voice_11_0/en/train/408.tar
+common_voice_11_0/en/train/364.tar
+common_voice_11_0/en/train/409.tar
+common_voice_11_0/en/train/365.tar
+common_voice_11_0/en/train/450.tar
+common_voice_11_0/en/train/53.tar
+common_voice_11_0/en/train/94.tar
+common_voice_11_0/en/train/287.tar
+common_voice_11_0/en/train/444.tar
+common_voice_11_0/en/train/99.tar
+common_voice_11_0/en/train/988.tar
+common_voice_11_0/en/train/990.tar
+common_voice_11_0/en/train/997.tar
+common_voice_11_0/en/train/13.tar
+common_voice_11_0/en/train/101.tar
+
 # zero length
 midi50k/train/36.tar
 midi50k/test/0.tar
