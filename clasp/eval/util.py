@@ -59,14 +59,17 @@ def get_dataset(task, dataset_name, root_cfg_path, root_data_path='s3://laion-we
 	# Gender
 	##########
 	elif task == 'gender':
-		dataset = VoxCelebTDM(
-					test_urls=['s3://s-laion/knoriy/VoxCeleb_gender/'],
-					batch_size = batch_size,
-					num_workers = num_workers,
-				)
-		templates = get_lists(os.path.join(root_cfg_path , "classification/gender/templates.txt"))
-		with open(os.path.join(root_cfg_path , "classification/gender/classes.json")) as f:
-			classes = json.load(f)
+		# waning that gender is no longer supported
+		Warning("Due to changes gender is no longer supported.")
+		sys.exit("task: gender is no longer supported. Exiting.")
+		# dataset = VoxCelebTDM(
+		# 			test_urls=['s3://laion-west/knoriy/VoxCeleb_gender/'],
+		# 			batch_size = batch_size,
+		# 			num_workers = num_workers,
+		# 		)
+		# templates = get_lists(os.path.join(root_cfg_path , "classification/gender/templates.txt"))
+		# with open(os.path.join(root_cfg_path , "classification/gender/classes.json")) as f:
+		# 	classes = json.load(f)
 
 	##########
 	# Emotion
