@@ -2,24 +2,25 @@
 # Speech #
 ##########
 
-CMU_Arctic
+# Emotion #
+EMNS
 EmoV_DB
 CREMA-D
-
-cambridge_dictionary
-#ravdess
+# ravdess
 ravdess_updated
 
+cambridge_dictionary
 # LJSpeech
 LJSpeech_updated
 librispeech_asr
-LibriSpeech
+# LibriSpeech
+CMU_Arctic
 
-common_voice
-# mswc
+# common_voice
+mswc
 
-#YT_dataset
-#YT_DATASET
+# #YT_dataset
+# #YT_DATASET
 
 #########################
 # Contains human voices #
@@ -29,22 +30,32 @@ VGGSound
 VocalSketch
 fine_grained_vocal_imitation_set
 
-#######
-# SFX #
-#######
+######################
+# SFX                #
+######################
 
-# audioset
-# audiocaps
+audioset
+audioset_unbalanced_train_t5
+audioset_balanced_train_t5
+audioset_valid_t5
+audioset/test
+
+audiocaps
 # esc50_no_overlap
-# Knocking_sounds
+Knocking_sounds
 
+esc50
 # ESC50_1
 # ESC50_2
 # ESC50_3
 # ESC50_4
 # ESC50_5
-# Urbansound8K
+Urbansound8K
 
-# Tunebot
-# MACS
+# FSD50K
+# fsd50k_class_label
+fsd50k_200_class_label
+
+Tunebot
+MACS
 # midi50k
