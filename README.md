@@ -7,10 +7,28 @@
 
 </div>
 
-## Description
+## Overview
 **CLARA** is designed for multilingual audio representation through a contrastive learning approach. Our aim is to develop a shared representation for various languages and acoustic scenarios. We leverage a rich multilingual audio-text dataset, augmented for diversity. With CLARA, we focus on building a comprehensive model for speech, targeting emotion detection, sound categorisation, and cross-modal retrieval in both zero-shot and few-shot settings. The results demonstrate its potential for universal speech representation that is adaptable to new languages and tasks, minimising reliance on labelled data and enhancing cross-lingual adaptability.
 
 **Note**: This project is in active development. Contributions are encouraged and welcomed.
+
+## Models
+We provide our model for all to use, ready to download from Huggingface. Additionally, we provide models fine-tuned on specific datasets, ensuring optimised performance for specialized tasks. Below, you'll find an organised listing of our base models and their fine-tuned counterparts, complete with download links for each.
+
+| Size     | Parameters | Model Download                                                              |
+|----------|------------|-----------------------------------------------------------------------------|
+| small    | # M        | [x]()                                                                       |
+| medium   | 109 M      | [✓](https://huggingface.co/knoriy/CLARA/resolve/main/clara-medium.ckpt)     |
+| large    | # M        | [x]()                                                                       |
+
+### Finetuned model of varous datasets
+| FineTuned | Base Model | Model Download                                                     |
+|-----------|------------|--------------------------------------------------------------------|
+| AudioSet  | medium     | [x]()                                                              |
+| Crema-D   | medium     | [x]()                                                              |
+| MSWC      | medium     | [x]()                                                              |
+
+If you've fine-tuned CLARA on your dataset and wish to feature it here, please contact us.
 
 ## Installation
 Clone the repository:
