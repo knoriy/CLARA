@@ -8,15 +8,11 @@
 </div>
 
 ## Description
-**CLARA** is a model for multilingual speech and audio representation learning using a contrastive approach. The goal is to learn shared representations that generalise across different languages and acoustic conditions. We train our model on a large corpus of diverse multilingual audio data paired with text descriptions. Data augmentation techniques are used to expand the dataset. 
+CLARA is designed for multilingual audio representation through a contrastive learning approach. Our aim is to develop a shared representation for various languages and acoustic scenarios. We leverage a rich multilingual audio-text dataset, augmented for diversity. With CLARA, we focus on building a comprehensive model for speech, targeting emotion detection, sound categorisation, and cross-modal retrieval in both zero-shot and few-shot settings. The results demonstrate its potential for universal speech representation that is adaptable to new languages and tasks, minimising reliance on labelled data and enhancing cross-lingual adaptability.
 
-With CLARA, we're striving to shape a core model that encapsulates the intricacies of human speech. This is specifically catered to applications such as emotion detection, sound categorisation, and audio and text retrival tasks in both zero-shot and few-shot environments.
+Note: This project is in active development. Contributions are encouraged and welcomed.
 
-Our result have shown promissing result for acquiring a universal speech representations that transfer well to new languages and tasks. Key benefits include reducing dependence on labelled data and improving cross-lingual generalisation.
-
-**Note**: This project is under active development; therefore, we can not guarantee the code base to be perfect or bug-free. Any contribution is welcomed and greatly appreciated.
-
-## Insallation
+## Installation
 Clone the repository:
 ```bash
 # clone CLARA   
@@ -38,7 +34,7 @@ Build and run the container (Nvidia Docker required for GPU):
 docker build --no-cache ./environments/ -t knoriy/clara
 docker run -it --rm --gpus=all -v $(pwd):/workspace --name clara knoriy/clara
 ```
-By default the container start a juypter note book, to start container in interactive shell mode use:
+By default the container starts a juypter notebook, to start the container in interactive mode, use:
 
 ```bash
 docker run -it --rm --gpus=all -v $(pwd):/workspace --name clara knoriy/clara bash
@@ -57,7 +53,7 @@ pip install git+https://github.com/knoriy/CLARA.git
 
 CLARA is built upon [pytorch-lightning (PL)](https://lightning.ai/docs/pytorch/stable/). For guidance, please refer to the PL CLI documentation.
 
-For a list of all parametes, pleaseyou can use the following command:
+For a list of all parameters, you can use the following command:
 
 ``` bash
 python clara/train.py fit --help
@@ -70,7 +66,7 @@ python clara/train.py fit \
     --data path/to/data_config.yml
 ```
 
-We provide some default config files for training CLARA `--data.root_data_path` should be used to direct to tar sharded dataset, this follow the format of [webdataset](https://webdataset.github.io/webdataset/creating/). We currently support localy stored data and those stored on aws S3.
+We provide some default config files for training CLARA `--data.root_data_path` should be used to direct to tar sharded dataset, this follows the format of [webdataset](https://webdataset.github.io/webdataset/creating/). We currently support locally stored data and those stored on aws S3.
 
 ``` bash
 python clara/train.py fit \
@@ -89,7 +85,7 @@ python clara/train.py fit \
 ``` bash
 
 ```
-### Retrival
+### Retrieval
 ``` bash
 
 ```
