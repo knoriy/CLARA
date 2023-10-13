@@ -1,4 +1,4 @@
-class_path: clasp.PLCLASP
+class_path: clara.PLCLARA
 init_args:
   # Model params
   output_dim: 512

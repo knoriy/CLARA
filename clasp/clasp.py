@@ -18,7 +18,7 @@ from einops import rearrange
 
 
 
-class CLASP(nn.Module):
+class CLARA(nn.Module):
 	'''
 	Contrastive Language-Speech Pre-training 
 	'''
@@ -160,7 +160,7 @@ class CLASP(nn.Module):
 
 		return text_features, audio_features, self.text_tempeture.exp(), self.audio_tempeture.exp()
 	
-class PLCLASP(pl.LightningModule):
+class PLCLARA(pl.LightningModule):
 	def __init__(	self, 
 					output_dim:int=512, 
 					text_encoder_embedding:int=1024,
@@ -201,7 +201,7 @@ class PLCLASP(pl.LightningModule):
 		super().__init__()
 		self.save_hyperparameters()
 
-		self.model = CLASP(self.hparams)
+		self.model = CLARA(self.hparams)
 		self.loss_fn = CLAPLoss(cache_labels=True)
 		self.acc_fn = Accuracy(cache_labels=True)
 
@@ -258,13 +258,13 @@ class PLCLASP(pl.LightningModule):
 	def configure_optimizers(self):
 		return get_optimiser(self)
 
-class LinearProbeCLASP(pl.LightningModule):
+class LinearProbeCLARA(pl.LightningModule):
 	def __init__(self, 
 		in_features:int, 
 		num_classes:int, 
 		task:str,
-		clasp_checkpoint_path:str, 
-		clasp_map_location:str="cuda",
+		clara_checkpoint_path:str, 
+		clara_map_location:str="cuda",
 		dropout:float=0.1,
 		learning_rate:float=1e-3, 
 		learning_rate_patience:int=10, 
@@ -279,7 +279,7 @@ class LinearProbeCLASP(pl.LightningModule):
 		super().__init__(*args, **kwargs)
 		self.save_hyperparameters()
 
-		self.feature_extractor = PLCLASP.load_from_checkpoint(clasp_checkpoint_path, map_location=clasp_map_location)
+		self.feature_extractor = PLCLARA.load_from_checkpoint(clara_checkpoint_path, map_location=clara_map_location)
 		self.feature_extractor.freeze()
 
 		self.classifier = MLPLayers([self.feature_extractor._hparams.output_dim, 512, 128, num_classes], dropout=dropout)

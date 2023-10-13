@@ -1,9 +1,9 @@
-class_path: clasp.LinearProbeCLASP
+class_path: clara.LinearProbeCLARA
 init_args:
   in_features: 512
   num_classes: 5
   dropout: 0.6
-  clasp_checkpoint_path: ./logs/CLASP/Emotion_datasets_76acc_42epoch_60M/checkpoints/epoch=41-step=3402.ckpt
+  clara_checkpoint_path: ./logs/CLARA/Emotion_datasets_76acc_42epoch_60M/checkpoints/epoch=41-step=3402.ckpt
   task: emotion
 
   # LR Scheduler params

@@ -5,7 +5,7 @@ logger:
     init_args:
       name: resnext
       save_dir: logs
-      project: clasp_linear_probe
+      project: clara_linear_probe
 callbacks:
   - class_path: pytorch_lightning.callbacks.ModelCheckpoint
     init_args:

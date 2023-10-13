@@ -5,9 +5,9 @@ import torch.nn.functional as F
 import logging
 pl_logger = logging.getLogger('pytorch_lightning')
 
-class CLAPLoss(nn.Module):
+class CLARALoss(nn.Module):
     '''
-    CLAPLoss is adopted from the mlfoundations' open_clip: https://github.com/mlfoundations/open_clip
+    CLARALoss is adopted from the mlfoundations' open_clip: https://github.com/mlfoundations/open_clip
     '''
     def __init__(self, cache_labels:bool = False) -> None:
         super().__init__()

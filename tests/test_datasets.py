@@ -1,5 +1,5 @@
 import sys
-sys.path.append('/fsx/knoriy/CLASP/clasp')
+sys.path.append('/fsx/knoriy/CLARA/clara')
 import argparse
 
 import webdataset as wds

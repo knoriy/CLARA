@@ -3,7 +3,7 @@ logger:
   - class_path: pytorch_lightning.loggers.WandbLogger
     init_args:
       save_dir: logs
-      project: CLASP
+      project: CLARA
 callbacks:
   - class_path: pytorch_lightning.callbacks.ModelCheckpoint
     init_args:
@@ -30,4 +30,4 @@ log_every_n_steps: 1
 accumulate_grad_batches: 5
 gradient_clip_val: 1.0
 # profiler: pytorch_lightning.profilers.AdvancedProfiler
-# default_root_dir: s3://s-laion/knoriy/clasp/checkpoints/
+# default_root_dir: s3://s-laion/knoriy/clara/checkpoints/

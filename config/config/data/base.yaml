@@ -1,6 +1,6 @@
 class_path: datamodule.MultilingualTDM
 init_args:
-  root_data_path: /tmp/CLASP/laion-west-audio/webdataset_tar/
+  root_data_path: /tmp/CLARA/laion-west-audio/webdataset_tar/
   # root_data_path: s3://laion-west-audio/webdataset_tar/
   dataset_list: ./config/dataset_list.txt
   exclude_list: ./config/exclude_list.txt

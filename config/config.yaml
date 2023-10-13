@@ -14,7 +14,7 @@ trainer:
       init_args:
         name: resnext-full-dataset
         save_dir: logs
-        project: CLASP
+        project: CLARA
   callbacks:
     - class_path: pytorch_lightning.callbacks.ModelCheckpoint
       init_args:
@@ -62,7 +62,7 @@ trainer:
   reload_dataloaders_every_n_epochs: 0
   default_root_dir: null
 model:
-  class_path: clasp.PLCLASP
+  class_path: clara.PLCLARA
   init_args:
     hidden_dim: 128
     text_encoder_width: 1024
