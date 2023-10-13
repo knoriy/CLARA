@@ -9,7 +9,7 @@ from torch.nn import functional as F
 
 from torchmetrics import MetricCollection, Recall, Accuracy, Precision, AveragePrecision
 
-from clasp import PLCLASP
+from clara import PLCLARA
 from text.tokeniser import Tokeniser
 from utils import calculate_average
 from eval.util import get_dataset
@@ -97,7 +97,7 @@ def main(args):
 	##############
 	# Model
 	##############
-	model = PLCLASP.load_from_checkpoint(args.model_path).to(device)
+	model = PLCLARA.load_from_checkpoint(args.model_path).to(device)
 
 	##############
 	# DataModule

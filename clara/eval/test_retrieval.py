@@ -9,7 +9,7 @@ from torch.nn import functional as F
 
 from torchmetrics import MetricCollection
 
-from clasp import PLCLASP
+from clara import PLCLARA
 from text.tokeniser import Tokeniser
 from eval.util import get_dataset
 
@@ -115,7 +115,7 @@ if __name__ == '__main__':
 
 	args = parser.parse_args()
 
-	model = PLCLASP.load_from_checkpoint(args.model_path, map_location=device)
+	model = PLCLARA.load_from_checkpoint(args.model_path, map_location=device)
 
 	##############
 	# DataModule

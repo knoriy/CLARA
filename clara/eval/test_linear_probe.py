@@ -7,7 +7,7 @@ import tqdm
 
 from torchmetrics import MetricCollection, Recall, Accuracy
 
-from clasp import LinearProbeCLASP
+from clara import LinearProbeCLARA
 from utils import calculate_average
 from eval.util import get_dataset
 
@@ -50,7 +50,7 @@ def main(args):
 	##############
 	# Model
 	##############
-	model = LinearProbeCLASP.load_from_checkpoint(args.model_path, clasp_map_location=args.device, clasp_checkpoint_path=args.clasp_path, map_location=args.device)
+	model = LinearProbeCLARA.load_from_checkpoint(args.model_path, clara_map_location=args.device, clara_checkpoint_path=args.clara_path, map_location=args.device)
 
 	##############
 	# DataModule
@@ -95,7 +95,7 @@ if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--model_path', type=str, help='Path to model with linear probe head')
-	parser.add_argument('--clasp_path', type=str, help='Path to pretrained CLASP model')
+	parser.add_argument('--clara_path', type=str, help='Path to pretrained CLARA model')
 	parser.add_argument('--root_cfg_path', type=str, default='./config/', help='root path to config files')
 	parser.add_argument('--task', type=str, choices=['texts', 'gender', 'emotion', 'age', 'sounds', 'speech'], help='Task to run')
 	parser.add_argument('--dataset_name', type=str, required=True, help='if task is sounds or emotion, specify dataset name')

@@ -10,7 +10,7 @@ from typing import Tuple, Union, Callable, Optional, Literal
 from encoders.text_encoders import SimpleTransformer 
 from encoders.audio_encoders import *
 from encoders.modules import PositionalEncoding, LayerNorm, MLPLayers
-from loss import CLAPLoss, CLIPLoss
+from loss import CLARALoss, CLIPLoss
 
 from scheduler import CosineAnnealingWarmupRestarts
 from utils.accuracy import Accuracy, accuracy
@@ -202,7 +202,7 @@ class PLCLARA(pl.LightningModule):
 		self.save_hyperparameters()
 
 		self.model = CLARA(self.hparams)
-		self.loss_fn = CLAPLoss(cache_labels=True)
+		self.loss_fn = CLARALoss(cache_labels=True)
 		self.acc_fn = Accuracy(cache_labels=True)
 
 	def forward(self, texts:Optional[torch.Tensor], mels:Optional[torch.Tensor]):
