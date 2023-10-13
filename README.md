@@ -99,13 +99,49 @@ python clara/train.py fit \
     --trainer.logger.name clara_100M_FT_RAV \
 ```
 ## Eval
+### Supported Tasks and Datasets
+
+This project facilitates various audio classification tasks, namely:
+
+- `Emotion`
+- `Gender`
+- `Sounds`
+- `Speech`
+
+Currently, we extend support to the following datasets for each task:
+
+#### Sounds Classification:
+- ESC50
+- AudioSet
+- US8K
+- FSD50K
+
+#### Emotion Classification:
+- EMNS
+- EmoV-DB
+- CREMA-D
+- RAVDESS
+
+#### Speech Classification:
+- MSWC
+
+Utilise these datasets to perform nuanced audio classification across various domains, enhancing your model's understanding and predictive capabilities.
+
 ### Zeroshot
 ``` bash
-
+python clara/eval/test_zeroshot.py \
+--model_path path/to/checkpoint.ckpt \
+--task emotion \
+--dataset_name ravdess \
+--root_cfg_path ./config/
 ```
 ### Retrieval
 ``` bash
-
+python clara/eval/test_retrieval.py \
+--model_path path/to/checkpoint.ckpt \
+--task sounds \
+--dataset_name audioset \
+--root_cfg_path ./config/
 ```
 
 ## Citation
