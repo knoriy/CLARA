@@ -18,6 +18,9 @@ setup(
         'inflect',
         'torchaudio',
         'transformers',
+        'einops',
+        'matplotlib',
         ],
     packages=find_packages(),
+    python_requires='>=3.10'
 )

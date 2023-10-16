@@ -1,12 +1,6 @@
-import os
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import io
 import json
-import librosa
 import soundfile
-import numpy as np
 
 from typing import Optional
 
@@ -22,9 +16,9 @@ from torch.utils.data import DataLoader
 import logging
 pl_logger = logging.getLogger('pytorch_lightning')
 
-from text.whisper.normalizers import EnglishTextNormalizer
-from text.tokeniser import Tokeniser # from text.whisper.tokenizer import get_tokenizer
-from utils import get_s3_paths, get_local_paths, get_lists
+from ..text.whisper.normalizers import EnglishTextNormalizer
+from ..text.tokeniser import Tokeniser # from text.whisper.tokenizer import get_tokenizer
+from ..utils import get_s3_paths, get_local_paths, get_lists
 from .utils import Boto3FileOpenerIterDataPipe as Boto3FileOpener
 from .utils import get_log_melspec
 from . import BaseTDM
