@@ -18,7 +18,7 @@ pl_logger = logging.getLogger('pytorch_lightning')
 
 from .text.whisper.normalizers import EnglishTextNormalizer
 from .text.tokeniser import Tokeniser # from text.whisper.tokenizer import get_tokenizer
-from ..utils import get_s3_paths, get_local_paths, get_lists
+from .utils import get_s3_paths, get_local_paths, get_lists
 from .utils import Boto3FileOpenerIterDataPipe as Boto3FileOpener
 from .utils import get_log_melspec
 from . import BaseTDM
