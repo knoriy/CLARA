@@ -1,1 +1,1 @@
-from .clasp import CLASP, PLCLASP, LinearProbeCLASP
+from .clara import CLARA, PLCLARA, LinearProbeCLARA
