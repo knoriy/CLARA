@@ -67,6 +67,14 @@ This CLARA is setup as a package which means you can now easily import any file 
 pip install git+https://github.com/knoriy/CLARA.git
 ```
 
+from local
+
+``` bash
+git clone https://github.com/knoriy/CLARA.git
+cd CLARA
+pip install .
+```
+
 ## Train model
 
 CLARA is built upon [pytorch-lightning (PL)](https://lightning.ai/docs/pytorch/stable/). For guidance, please refer to the PL CLI documentation.

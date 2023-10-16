@@ -1,5 +1,4 @@
 import io
-import warnings
 import torch
 from torch.nn.utils.rnn import pad_sequence
 

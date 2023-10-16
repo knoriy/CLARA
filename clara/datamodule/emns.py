@@ -10,10 +10,10 @@ from torchdata.datapipes.iter import FSSpecFileOpener
 from torch.nn.utils.rnn import pad_sequence
 
 # from .base_tdm import BaseTDM
-from datamodule.base_tdm import BaseTDM
-from text.tokeniser import Tokeniser # from text.whisper.tokenizer import get_tokenizer
+from .base_tdm import BaseTDM
+from .text.tokeniser import Tokeniser # from text.whisper.tokenizer import get_tokenizer
 
-from utils import get_s3_paths, get_local_paths, get_lists 
+from .utils import get_s3_paths, get_local_paths, get_lists 
 from .utils import get_log_melspec, group_by_filename
 from .utils import Boto3FileOpenerIterDataPipe as Boto3FileOpener
 

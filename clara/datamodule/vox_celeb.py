@@ -4,8 +4,8 @@ import torch
 import torchdata
 from torch.nn.utils.rnn import pad_sequence
 
-from datamodule.base_tdm import BaseTDM
-from datamodule.utils import get_log_melspec
+from .base_tdm import BaseTDM
+from .utils import get_log_melspec
 
 
 def gender_to_int(gender):
