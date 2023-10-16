@@ -19,6 +19,7 @@ setup(
         'torchaudio',
         'transformers',
         'einops',
+        'more_itertools',
         'matplotlib',
         ],
     packages=find_packages(),
