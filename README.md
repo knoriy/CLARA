@@ -67,12 +67,26 @@ This CLARA is setup as a package which means you can now easily import any file 
 pip install git+https://github.com/knoriy/CLARA.git
 ```
 
-from local
+from source
 
 ``` bash
 git clone https://github.com/knoriy/CLARA.git
 cd CLARA
 pip install .
+```
+
+## Use Case
+
+``` python
+import clara
+
+model = clara.load_from_checkpoint("path/to/checkpoint.ckpt")
+
+mels = torch.randn(1, 80, 1000)
+texts = torch.randint(0, 100, (1, 100))
+
+model.encode_audio(mels)
+model.encode_text(texts)
 ```
 
 ## Train model
