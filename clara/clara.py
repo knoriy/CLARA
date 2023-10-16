@@ -7,13 +7,13 @@ import pytorch_lightning as pl
 import numpy as np
 
 from typing import Tuple, Union, Callable, Optional, Literal
-from encoders.text_encoders import SimpleTransformer 
-from encoders.audio_encoders import *
-from encoders.modules import PositionalEncoding, LayerNorm, MLPLayers
-from loss import CLARALoss, CLIPLoss
+from .encoders.text_encoders import SimpleTransformer 
+from .encoders.audio_encoders import *
+from .encoders.modules import PositionalEncoding, LayerNorm, MLPLayers
+from .loss import CLARALoss, CLIPLoss
 
-from scheduler import CosineAnnealingWarmupRestarts
-from utils.accuracy import Accuracy, accuracy
+from .scheduler import CosineAnnealingWarmupRestarts
+from .utils.accuracy import Accuracy, accuracy
 from einops import rearrange
 
 
