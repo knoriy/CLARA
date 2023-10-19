@@ -146,22 +146,6 @@ python clara/eval/test_retrieval.py \
 
 ## Citation
 
-
-@misc{noriy_clara:_2023,
-	title = {{CLARA}: {Multilingual} {Contrastive} {Learning} for {Audio} {Representation} {Acquisition}},
-	shorttitle = {{CLARA}},
-	url = {http://arxiv.org/abs/2310.11830},
-	doi = {10.48550/arXiv.2310.11830},
-	abstract = {This paper proposes a novel framework for multilingual speech and sound representation learning using contrastive learning. The lack of sizeable labelled datasets hinders speech-processing research across languages. Recent advances in contrastive learning provide self-supervised techniques to learn from unlabelled data. Motivated by reducing data dependence and improving generalisation across diverse languages and conditions, we develop a multilingual contrastive framework. This framework enables models to acquire shared representations across languages, facilitating cross-lingual transfer with limited target language data. Additionally, capturing emotional cues within speech is challenging due to subjective perceptual assessments. By learning expressive representations from diverse, multilingual data in a self-supervised manner, our approach aims to develop speech representations that encode emotive dimensions. Our method trains encoders on a large corpus of multi-lingual audio data. Data augmentation techniques are employed to expand the dataset. The contrastive learning approach trains the model to maximise agreement between positive pairs and minimise agreement between negative pairs. Extensive experiments demonstrate state-of-the-art performance of the proposed model on emotion recognition, audio classification, and retrieval benchmarks under zero-shot and few-shot conditions. This provides an effective approach for acquiring shared and generalised speech representations across languages and acoustic conditions while encoding latent emotional dimensions.},
-	urldate = {2023-10-19},
-	publisher = {arXiv},
-	author = {Noriy, Kari A. and Yang, Xiaosong and Budka, Marcin and Zhang, Jian Jun},
-	month = oct,
-	year = {2023},
-	note = {arXiv:2310.11830 [cs, eess]},
-	keywords = {Computer Science - Sound, Computer Science - Machine Learning, Computer Science - Multimedia, Electrical Engineering and Systems Science - Audio and Speech Processing},
-}
-
 ```bibtex
 @article{noriy_clara:_2023,
   title = {{CLARA}: {Multilingual} {Contrastive} {Learning} for {Audio} {Representation} {Acquisition}},
