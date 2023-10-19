@@ -2,7 +2,7 @@
 
 # CLARA: Multilingual Contrastive Learning for Audio Representation Acquisition
 
-[![Arxiv](http://img.shields.io/badge/Journal-2023-B31B1B.svg)](https://arxiv.org/abs/2310.11830)
+[![Arxiv](http://img.shields.io/badge/Arxiv-2023-B31B1B.svg)](https://arxiv.org/abs/2310.11830)
 ![CI testing](https://github.com/knoriy/CLARA/workflows/CI%20testing/badge.svg?branch=master&event=push)
 
 </div>
