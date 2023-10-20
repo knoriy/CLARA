@@ -151,7 +151,7 @@ python clara/eval/test_retrieval.py \
   title = {{CLARA}: {Multilingual} {Contrastive} {Learning} for {Audio} {Representation} {Acquisition}},
   shorttitle = {{CLARA}},
   author = {Noriy, Kari A. and Yang, Xiaosong and Budka, Marcin and Zhang, Jian Jun},
-  note = {arXiv:2310.11830 [cs, eess]}
+  note = {arXiv:2310.11830 [cs, eess]},
   url = {http://arxiv.org/abs/2310.11830},
   doi = {10.48550/arXiv.2310.11830},
   year = {2023}
