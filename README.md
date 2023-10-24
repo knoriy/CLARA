@@ -1,115 +1,159 @@
 <div align="center">
 
-# CLASP - Contrastive Language-Speech Pretraining
+# CLARA: Multilingual Contrastive Learning for Audio Representation Acquisition
 
-[![Paper](http://img.shields.io/badge/paper-arxiv.1001.2234-B31B1B.svg)](https://www.nature.com/articles/nature14539)
-[![Conference](http://img.shields.io/badge/NeurIPS-2019-4b44ce.svg)](https://papers.nips.cc/book/advances-in-neural-information-processing-systems-31-2018)
-[![Conference](http://img.shields.io/badge/ICLR-2019-4b44ce.svg)](https://papers.nips.cc/book/advances-in-neural-information-processing-systems-31-2018)
-[![Conference](http://img.shields.io/badge/AnyConference-year-4b44ce.svg)](https://papers.nips.cc/book/advances-in-neural-information-processing-systems-31-2018)  
-<!--
-ARXIV   
-[![Paper](http://img.shields.io/badge/arxiv-math.co:1480.1111-B31B1B.svg)](https://www.nature.com/articles/nature14539)
--->
-![CI testing](https://github.com/knoriy/CLASP/workflows/CI%20testing/badge.svg?branch=master&event=push)
+[![Arxiv](http://img.shields.io/badge/Arxiv-2023-B31B1B.svg)](https://arxiv.org/abs/2310.11830)
+![CI testing](https://github.com/knoriy/CLARA/workflows/CI%20testing/badge.svg?branch=master&event=push)
 
-<!--  
-Conference   
--->
 </div>
 
-## Description
+## Overview
+**CLARA** is designed for multilingual audio representation through a contrastive learning approach. Our aim is to develop a shared representation for various languages and acoustic scenarios. We leverage a rich multilingual audio-text dataset, augmented for diversity. With CLARA, we focus on building a comprehensive model for speech, targeting emotion detection, sound categorisation, and cross-modal retrieval in both zero-shot and few-shot settings. The results demonstrate its potential for universal speech representation that is adaptable to new languages and tasks, minimising reliance on labelled data and enhancing cross-lingual adaptability.
 
-Note: This project is under active development; therefore, we can not guarantee the code base to be perfect or bug-free. Any contribution is welcomed and greatly appreciated.
+**Note**: This project is in active development. Contributions are encouraged and welcomed.
 
-CLASP is a multilingual neural network designed to identify audio features from natural language. CLASP follows the work CLIP and SimCLR. CLASP can be applied in many text and audio classification tasks, such as language, emotion, instrument and sound.
+## Models
+We provide our model for all to use, ready to download from Huggingface. Additionally, we provide models fine-tuned on specific datasets, ensuring optimised performance for specialized tasks. Below, you'll find an organised listing of our base models and their fine-tuned counterparts, complete with download links for each.
 
-## How to run
+| Size     | Parameters | Model Download                                                              |
+|----------|------------|-----------------------------------------------------------------------------|
+| small    | # M        | [x]()                                                                       |
+| medium   | 109 M      | [✓](https://huggingface.co/knoriy/CLARA/resolve/main/clara-medium.ckpt)     |
+| large    | # M        | [x]()                                                                       |
 
-First, install dependencies
+### Finetuned model of varous datasets
+| FineTuned | Base Model | Model Download                                                     |
+|-----------|------------|--------------------------------------------------------------------|
+| AudioSet  | medium     | [x]()                                                              |
+| Crema-D   | medium     | [x]()                                                              |
+| MSWC      | medium     | [x]()                                                              |
 
+If you've fine-tuned CLARA on your dataset and wish to feature it here, please contact us.
+
+## Installation
+Clone the repository:
 ```bash
-# clone clasp   
-git clone https://github.com/knoriy/CLASP.git
-cd CLASP
+# clone CLARA   
+git clone https://github.com/knoriy/CLARA.git
+cd CLARA
+```
 
-# create conda env
+### Conda
+Create a conda environment:
+
+``` bash
+# Create conda env
 conda env create -f environments/env.yaml
-
-# or
-
-# docker container: Nvidia Docker is required to use with GPU
-docker build --no-cache ./environments/ -t knoriy/clasp
-docker run -it --rm --gpus=all -v $(pwd):/workspace --name clasp knoriy/clasp
-
 ```
 
-By default the container start a juypter note book, to start container in interactive shell mode use:
+### Docker
+Build and run the container (Nvidia Docker required for GPU):
+``` bash
+docker build --no-cache ./environments/ -t knoriy/clara
+docker run -it --rm --gpus=all -v $(pwd):/workspace --name clara knoriy/clara
+```
+By default the container starts a juypter notebook, to start the container in interactive mode, use:
 
 ```bash
-docker run -it --rm --gpus=all -v $(pwd):/workspace --name clasp knoriy/clasp bash
+docker run -it --rm --gpus=all -v $(pwd):/workspace --name clara knoriy/clara bash
 ```
-
-## train model
-
-```bash
-
-# run module
-python clasp/train.py --max_epochs 2 --accelerator gpu --devices 1
-# for distributed add or see here https://pytorch-lightning.readthedocs.io/en/stable/extensions/strategy.html#selecting-a-built-in-strategy 
---strategy ddp
-# predict set mode to predict and provide checkpoint
---mode predict --checkpoint path/to/my/model.pt
-# Test dataset for error or bugs
-python tests/test_datasets.py
-## Or
-srun --comment clap --output=%x_%j.out /fsx/home-knoriy/miniconda3/envs/clasp/bin/python /fsx/knoriy/code/CLASP/tests/test_datasets.py
-# overfit to single batch 
---overfit_batches 1
-```
-
-## zeroshot
-```bash
-python clasp/train.py --accelerator gpu --devices 1 --mode eval-zeroshot --dataset_list /fsx/knoriy/code/CLASP/config/test_list.txt --checkpoint CHKP_PATH
-```
-
-## Tensorboard
-
-```bash
-tensorboard dev upload --logdir lightning_logs --verbose 0
-```
-
-## Install CLASP via pip
+### Pip
 
 Note: This has not been fully tested. If you find any issue please open an issue, with code to replicate the problem.
 
-This CLASP is setup as a package which means you can now easily import any file into any other file, like so:
+This CLARA is setup as a package which means you can now easily import any file into any other file, like so:
 
-```python
-from clasp.datamodules import WebdatasetDataModule
-from clasp.clasp import CLASP
-from pytorch_lightning import Trainer
-
-# model
-model = CLASP(...)
-
-# data
-dataset = WebdatasetDataModule(...)
-
-# train
-trainer = Trainer()
-trainer.fit(model, datamodule=dataset)
-
-# test using the best model!
-trainer.test(ckpt_path='best', datamodule=dataset)
+``` bash
+pip install git+https://github.com/knoriy/CLARA.git
 ```
 
-### Citation
+## Train model
+
+CLARA is built upon [pytorch-lightning (PL)](https://lightning.ai/docs/pytorch/stable/). For guidance, please refer to the PL CLI documentation.
+
+For a list of all parameters, you can use the following command:
+
+``` bash
+python clara/train.py fit --help
+```
+To fit and train the model on your own data,
+``` bash
+python clara/train.py fit \
+    --trainer path/to/trainer_config.yml \
+    --model path/to/model_config.yml \
+    --data path/to/data_config.yml
+```
+
+We provide some default config files for training CLARA `--data.root_data_path` should be used to direct to tar sharded dataset, this follows the format of [webdataset](https://webdataset.github.io/webdataset/creating/). We currently support locally stored data and those stored on aws S3.
+
+``` bash
+python clara/train.py fit \
+    --config ./config/config/base.yaml \
+    --trainer ./config/config/trainer/base.yaml \
+    --model ./config/config/model/pl_clara_100M.yaml \
+    --data ./config/config/data/base.yaml \
+    --data.root_data_path path/to/dataset/ \
+    --data.num_workers 6 \
+    --data.batch_size 6 \
+    --data.dataset_list ./config/dataset_list.txt \
+    --trainer.logger.name clara_100M_FT_RAV \
+```
+## Eval
+### Supported Tasks and Datasets
+
+This project facilitates various audio classification tasks, namely:
+
+- `Emotion`
+- `Gender`
+- `Sounds`
+- `Speech`
+
+Currently, we extend support to the following datasets for each task:
+
+#### Sounds Classification:
+- ESC50
+- AudioSet
+- US8K
+- FSD50K
+
+#### Emotion Classification:
+- EMNS
+- EmoV-DB
+- CREMA-D
+- RAVDESS
+
+#### Speech Classification:
+- MSWC
+
+Utilise these datasets to perform nuanced audio classification across various domains, enhancing your model's understanding and predictive capabilities.
+
+### Zeroshot
+``` bash
+python clara/eval/test_zeroshot.py \
+--model_path path/to/checkpoint.ckpt \
+--task emotion \
+--dataset_name ravdess \
+--root_cfg_path ./config/
+```
+### Retrieval
+``` bash
+python clara/eval/test_retrieval.py \
+--model_path path/to/checkpoint.ckpt \
+--task sounds \
+--dataset_name audioset \
+--root_cfg_path ./config/
+```
+
+## Citation
 
 ```bibtex
-@article{YourName,
-  title={Your Title},
-  author={Your team},
-  journal={Location},
-  year={Year}
+@article{noriy_clara:_2023,
+  title = {{CLARA}: {Multilingual} {Contrastive} {Learning} for {Audio} {Representation} {Acquisition}},
+  shorttitle = {{CLARA}},
+  author = {Noriy, Kari A. and Yang, Xiaosong and Budka, Marcin and Zhang, Jian Jun},
+  note = {arXiv:2310.11830 [cs, eess]},
+  url = {http://arxiv.org/abs/2310.11830},
+  doi = {10.48550/arXiv.2310.11830},
+  year = {2023}
 }
 ```

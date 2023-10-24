@@ -2,8 +2,8 @@
 user 			= 1000:0
 
 # docker image and container details
-Docker_name		= $(shell whoami)/clasp
-container_name	= clasp
+Docker_name		= $(shell whoami)/clara
+container_name	= clara
 
 # forwards ports
 ports 			= -p 1234:1234 --ipc=host 

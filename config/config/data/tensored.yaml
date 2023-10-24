@@ -1,0 +1,12 @@
+class_path: datamodule.TensoredTDM
+init_args:
+  root_data_path: s3://laion-west/knoriy/tensored/
+  dataset_list: ./config/dataset_list.txt
+  exclude_list: ./config/exclude_list.txt
+  batch_size: 16
+  num_workers: 16
+  persistent_workers: true
+  shuffle: true
+  cache_path: null
+  use_cache: true
+  recache: true

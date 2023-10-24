@@ -1,0 +1,12 @@
+{
+  "teens": 0,
+  "twenties": 1,
+  "thirties": 2,
+  "fourties": 3,
+  "fifties": 4,
+  "sixties": 5,
+  "seventies": 6,
+  "eighties": 7,
+  "nineties": 8,
+  "hundreds": 9
+}

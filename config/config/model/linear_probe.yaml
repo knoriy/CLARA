@@ -1,0 +1,16 @@
+class_path: clara.LinearProbeCLARA
+init_args:
+  in_features: 512
+  num_classes: 5
+  dropout: 0.6
+  clara_checkpoint_path: ./logs/CLARA/Emotion_datasets_76acc_42epoch_60M/checkpoints/epoch=41-step=3402.ckpt
+  task: emotion
+
+  # LR Scheduler params
+  learning_rate: 1e-4
+  learning_rate_patience: 10
+  LR_sheduler_T_max: 50
+  LR_sheduler_warmup_steps: 5
+  LR_sheduler_min_lr: 2e-5
+  LR_sheduler_decay: 1.0
+  lr_interval: epoch

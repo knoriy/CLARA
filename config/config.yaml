@@ -1,0 +1,94 @@
+# pytorch_lightning==2.0.1
+seed_everything: 1234
+trainer:
+  accelerator: auto
+  # strategy:
+  #   class_path: pytorch_lightning.strategies.DDPStrategy
+  #   init_args:
+  #     find_unused_parameters: False
+  devices: auto
+  num_nodes: 1
+  precision: 32-true
+  logger:
+    - class_path: pytorch_lightning.loggers.WandbLogger
+      init_args:
+        name: resnext-full-dataset
+        save_dir: logs
+        project: CLARA
+  callbacks:
+    - class_path: pytorch_lightning.callbacks.ModelCheckpoint
+      init_args:
+          verbose: True
+    - class_path: pytorch_lightning.callbacks.LearningRateMonitor
+    # - class_path: pytorch_lightning.callbacks.EarlyStopping
+    #   init_args:
+    #       patience: 10
+    #       monitor: val_loss
+  fast_dev_run: false
+  max_epochs: 1000
+  min_epochs: null
+  max_steps: -1
+  min_steps: null
+  max_time: null
+  limit_train_batches: null
+  limit_val_batches: null
+  limit_test_batches: null
+  limit_predict_batches: null
+  overfit_batches: 0.0
+  val_check_interval: null
+  check_val_every_n_epoch: 1
+  num_sanity_val_steps: null
+  log_every_n_steps: null
+  enable_checkpointing: null
+  enable_progress_bar: null
+  enable_model_summary: null
+  accumulate_grad_batches: 10
+  gradient_clip_val: 1.0
+  gradient_clip_algorithm: null
+  deterministic: null
+  benchmark: null
+  inference_mode: true
+  use_distributed_sampler: true
+  # profiler: pytorch_lightning.profilers.AdvancedProfiler
+  detect_anomaly: false
+  barebones: false
+  plugins:
+    - class_path: lightning_fabric.plugins.environments.SLURMEnvironment
+      init_args:
+        auto_requeue: True
+        requeue_signal: SIGTERM
+        # requeue_signal: SIGUSR1
+  sync_batchnorm: false
+  reload_dataloaders_every_n_epochs: 0
+  default_root_dir: null
+model:
+  class_path: clara.PLCLARA
+  init_args:
+    hidden_dim: 128
+    text_encoder_width: 1024
+    text_encoder_embedding: 1024
+    text_encoder_layers: 1
+    text_encoder_heads: 4
+    vocab_size: 50373
+    n_mels: 80
+    audio_encoder_embedding: 1024
+    learning_rate: 0.001
+    learning_rate_patience: 10
+    LR_sheduler_T_max: 20
+    LR_sheduler_warmup_steps: 20
+    LR_sheduler_min_lr: 0.0
+    LR_sheduler_decay: 1.0
+data:
+  class_path: datamodule.TensoredTDM
+  init_args:
+    root_data_path: ./tmp/tensored
+    dataset_list: ./config/dataset_list.txt
+    exclude_list: ./config/exclude_list.txt
+    batch_size: 16
+    num_workers: 12
+    persistent_workers: true
+    shuffle: true
+    cache_path: null
+    use_cache: true
+    recache: true
+ckpt_path: null

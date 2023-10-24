@@ -1,28 +1,61 @@
-CMU_Arctic
-Clotho
-audiocaps
-EmoV_DB
-Knocking_sounds
-LibriSpeech
+##########
+# Speech #
+##########
 
-esc50_no_overlap
+# Emotion #
+EMNS
+EmoV_DB
+CREMA-D
+# ravdess
+ravdess_updated
+
 cambridge_dictionary
+# LJSpeech
+LJSpeech_updated
+librispeech_asr
+# LibriSpeech
+CMU_Arctic
+
+# common_voice
+mswc
+
+# #YT_dataset
+# #YT_DATASET
+
+#########################
+# Contains human voices #
+#########################
+Clotho
+VGGSound
+VocalSketch
 fine_grained_vocal_imitation_set
 
-VocalSketch
-ESC50_1
-ESC50_2
-ESC50_3
-ESC50_4
-ESC50_5
+######################
+# SFX                #
+######################
+
+audioset
+audioset_unbalanced_train_t5
+audioset_balanced_train_t5
+audioset_valid_t5
+audioset/test
+
+audiocaps
+# esc50_no_overlap
+Knocking_sounds
+
+esc50
+# ESC50_1
+# ESC50_2
+# ESC50_3
+# ESC50_4
+# ESC50_5
 Urbansound8K
+
+# FSD50K
+# fsd50k_class_label
+fsd50k_200_class_label
 
 Tunebot
 MACS
-LibriSpeech
-VGGSound
-CREMA-D
-midi50k
-common_voice
-
-mswc
+# midi50k

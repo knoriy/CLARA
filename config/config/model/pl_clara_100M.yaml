@@ -1,0 +1,38 @@
+class_path: clara.PLCLARA
+init_args:
+  # Model params
+  output_dim: 512
+  # Text encoder params
+  text_encoder_embedding: 512
+  text_encoder_pos_embedding_size: 4096
+  text_encoder_width: 512
+  text_encoder_layers: 10
+  text_encoder_heads: 8
+  text_encoder_out_channels: 512
+  text_encoder_project: 512
+  text_encoder_project_dropout_prob: 0.8
+  text_encoder_seq_dropout_prob: 0.5
+  vocab_size: 50373
+  # audio encoder params
+  n_mels: 80
+  audio_encoder_layers: 10
+  audio_encoder_embedding: 512
+  audio_encoder_pos_embedding_size: 4096
+  audio_encoder_num_latents: 512
+  audio_encoder_latent_dim: 512
+  audio_encoder_project: 512
+  audio_encoder_project_dropout_prob: 0.8
+  audio_encoder_cross_heads: 2
+  audio_encoder_latent_heads: 16
+  audio_encoder_cross_dim_head: 64
+  audio_encoder_latent_dim_head: 64
+  audio_encoder_weight_tie_layers: False
+  audio_encoder_seq_dropout_prob: 0.5
+  # LR Scheduler params
+  learning_rate: 1e-4
+  learning_rate_patience: 10
+  LR_sheduler_T_max: 5000
+  LR_sheduler_warmup_steps: 1000
+  LR_sheduler_min_lr: 1e-6
+  LR_sheduler_decay: 1.0
+  lr_interval: step

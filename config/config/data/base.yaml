@@ -1,0 +1,17 @@
+class_path: datamodule.MultilingualTDM
+init_args:
+  root_data_path: /tmp/CLARA/laion-west-audio/webdataset_tar/
+  # root_data_path: s3://laion-west-audio/webdataset_tar/
+  dataset_list: ./config/dataset_list.txt
+  exclude_list: ./config/exclude_list.txt
+  dataloader2: False
+  batch_size: 16
+  num_workers: 16
+  persistent_workers: false
+  shuffle: true
+  drop_last: true
+  pin_memory: true
+  cache_path: null
+  use_cache: False
+  recache: true
+  train_valid_test: ['train','valid','test']
