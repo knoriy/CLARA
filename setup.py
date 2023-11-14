@@ -18,6 +18,7 @@ setup(
         'inflect',
         'torchaudio',
         'transformers',
+        'boto3',
         ],
     packages=find_packages(),
 )
