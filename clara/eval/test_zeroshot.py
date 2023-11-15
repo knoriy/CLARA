@@ -4,43 +4,18 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.
 
 import tqdm
 import torch
-from torch.nn.utils.rnn import pad_sequence
 from torch.nn import functional as F
 
 from torchmetrics import MetricCollection, Recall, Accuracy, Precision, AveragePrecision
 
 from clara import PLCLARA
-from text.tokeniser import Tokeniser
 from utils import calculate_average
-from eval.util import get_dataset
+from eval.util import get_dataset, zeroshot_text
 
 ##############
 # Non Critical imports
 ##############
 from pprint import pprint
-
-##############
-# Zeroshot fn
-##############
-
-def zeroshot_classifier(model, classnames, templates, language='en'):
-	tokenizer = Tokeniser()
-	device = model.device
-	with torch.no_grad():
-		zeroshot_weights = []
-		all_texts = []
-		for classname in classnames:
-			texts = [torch.tensor(tokenizer.encode(template.format(classname), language)) for template in templates]
-			texts = pad_sequence(texts).T.contiguous().to(device)
-			all_texts.append(texts)
-			class_embeddings = model.encode_text(texts)
-			class_embedding = F.normalize(class_embeddings, dim=-1)
-			class_embedding = class_embedding.mean(dim=0)
-			class_embedding = model.model.text_transform(class_embedding)
-			class_embedding /= class_embedding.norm()
-			zeroshot_weights.append(class_embedding)
-		zeroshot_weights = torch.stack(zeroshot_weights).to(device)
-	return zeroshot_weights, all_texts
 
 def run(model, zeroshot_weights, dataloader, metric_fn:MetricCollection, task:str, limit_batches=-1):
 	device = model.device
@@ -64,15 +39,15 @@ def run(model, zeroshot_weights, dataloader, metric_fn:MetricCollection, task:st
 			# Audio Features
 			###############
 			audio_features = model.encode_audio(mels)
-			audio_features = F.normalize(audio_features, dim=-1)
 			audio_features = model.model.audio_transform(audio_features)
+			audio_features = F.normalize(audio_features, dim=-1)
 
 			###############
 			# Text Features
 			###############
 			# text_features = model.encode_text(labels)
-			# text_features = F.normalize(text_features, dim=-1)
 			# text_features = model.model.text_transform(text_features)
+			# text_features = F.normalize(text_features, dim=-1)
 
 			# logits_per_audio = (audio_temp * (audio_features @ text_features.T))
 

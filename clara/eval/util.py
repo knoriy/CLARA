@@ -4,8 +4,36 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
 import json
+import torch
+from torch.nn.utils.rnn import pad_sequence
+from torch.nn import functional as F
+
 from datamodule import *
 from utils import get_lists
+from text.tokeniser import Tokeniser
+
+##############
+# Zeroshot fn
+##############
+
+def zeroshot_text(model, classnames, templates, language='en'):
+	tokenizer = Tokeniser()
+	device = model.device
+	with torch.no_grad():
+		zeroshot_weights = []
+		all_texts = []
+		for classname in classnames:
+			texts = [torch.tensor(tokenizer.encode(template.format(classname), language)) for template in templates]
+			texts = pad_sequence(texts).T.contiguous().to(device)
+			all_texts.append(texts)
+			class_embeddings = model.encode_text(texts)
+			class_embedding = model.model.text_transform(class_embedding)
+			class_embedding = F.normalize(class_embeddings, dim=-1)
+			class_embedding /= class_embedding.norm()
+			zeroshot_weights.append(class_embedding)
+		zeroshot_weights = torch.stack(zeroshot_weights).to(device)
+	return zeroshot_weights, all_texts
+
 
 def get_dataset(task, dataset_name, root_cfg_path, root_data_path='s3://laion-west-audio/webdataset_tar/', batch_size=1, num_workers=0):
     ##########
