@@ -18,7 +18,7 @@ We provide our model for all to use, ready to download from Huggingface. Additio
 | Size     | Parameters | Model Download                                                              |
 |----------|------------|-----------------------------------------------------------------------------|
 | small    | # M        | [x]()                                                                       |
-| medium   | 109 M      | [✓](https://huggingface.co/knoriy/CLARA/resolve/main/clara-medium.ckpt)     |
+| medium   | 109 M      | [x]()     |
 | large    | # M        | [x]()                                                                       |
 
 ### Finetuned model of varous datasets
