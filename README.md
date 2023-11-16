@@ -13,7 +13,7 @@
 **Note**: This project is in active development. Contributions are encouraged and welcomed.
 
 ## Models
-We provide our model for all to use, ready to download from Huggingface. Additionally, we provide models fine-tuned on specific datasets, ensuring optimised performance for specialized tasks. Below, you'll find an organised listing of our base models and their fine-tuned counterparts, complete with download links for each.
+We will provide our models for all to use, ready to download from Huggingface. Additionally, we provide models fine-tuned on specific datasets, ensuring optimised performance for specialized tasks. Below, you'll find an organised listing of our base models and their fine-tuned counterparts, complete with download links for each.
 
 | Size     | Parameters | Model Download                                                              |
 |----------|------------|-----------------------------------------------------------------------------|
