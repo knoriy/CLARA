@@ -108,7 +108,7 @@ def main(args):
 	##############
 	dataset.setup()
 
-	zeroshot_weights, all_texts = zeroshot_classifier(model, classes, templates)
+	zeroshot_weights, all_texts = zeroshot_text(model, classes, templates)
 	tops = run(model, zeroshot_weights, dataset.test_dataloader(), metric, args.task)
 
 	return tops
