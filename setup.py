@@ -11,7 +11,7 @@ setup(
     url='https://github.com/knoriy/clara',
     install_requires=[
         'pytorch-lightning==2.1.0', 
-        'torch==2.1', 
+        'torch==2.2.0', 
         'torchdata==0.7',
         'librosa',
         'unidecode',
